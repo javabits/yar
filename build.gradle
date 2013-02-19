@@ -1,0 +1,22 @@
+ext.libs = [
+        junit: "junit:junit:4.11",
+        slf4j: "org.slf4j:slf4j-api:1.7.2"
+]
+
+subprojects {
+    apply plugin: 'java'
+
+    group = "org.yar"
+    version = '1.0-SNAPSHOT'
+    repositories {
+        mavenLocal()
+        mavenCentral()
+    }
+
+    dependencies {
+        compile libs.slf4j
+        testCompile libs.junit
+    }
+
+
+}
