@@ -14,35 +14,29 @@
  *    limitations under the License.
  */
 
-package org.yar;
+package org.yar.guice;
 
+import org.yar.Key;
+import org.yar.Supplier;
 
+import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * TODO add type token or type literal
- * TODO see if we use directly the guice key...??? and they type literal
- * Date: 2/8/13
- * Time: 5:13 PM
+ * TODO comment
+ * Date: 2/20/13
+ * Time: 9:35 AM
  *
  * @author Romain Gilles
- * @since 1.0
  */
-public interface Registry {
+public interface WatchableRegistrationContainer {
 
-    <T> List<Supplier<T>> getAll(Class<T> type);
+    List<SupplierRegistration<?>> getAll(Type type);
+    SupplierRegistration<?> getFirst(Type type);
+    <T> List<SupplierRegistration<T>> getAll(Key<T> key);
+    <T> SupplierRegistration<T> getFirst(Key<T> key);
 
-    <T> Supplier<T> get(Class<T> type);
+    boolean put(SupplierRegistration<?> registration);
 
-    <T> List<Supplier<T>> getAll(Key<T> key);
-
-    <T> Supplier<T> get(Key<T> key);
-
-    <T> Registration<T> put(Key<T> key, Supplier<? extends T> supplier);
-
-    void remove(Registration<?> registration);
-
-    <T> void addWatcher(Key<T> watchedKey, Watcher<? extends T> watcher);
-
-    void removeWatcher(Registration<?> watcherRegistration);
+    boolean remove(SupplierRegistration<?> registration);
 }

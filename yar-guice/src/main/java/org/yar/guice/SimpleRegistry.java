@@ -20,9 +20,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
-import org.yar.Key;
-import org.yar.Registry;
-import org.yar.Supplier;
+import org.yar.*;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
@@ -56,32 +54,28 @@ public class SimpleRegistry implements Registry {
 //                        }
 //                    });
 
-    private final ListMultimap<Type, Registration<?>> registry;
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
-
+    private final WatchableRegistrationContainer registrationContainer;
     public SimpleRegistry() {
-        registry = synchronizedListMultimap(ArrayListMultimap.<Type, Registration<?>>create());
         registryActionQueue = new LinkedBlockingQueue<>();
-        Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registry));
+        registrationContainer = new MultimapListWatchableRegistrationContainer();
+        Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registrationContainer));
         registryActionThread.setDaemon(true);
         registryActionThread.start();
     }
 
     @Override
     public <T> List<Supplier<T>> getAll(Class<T> type) {
-        List<Registration<?>> pairs = registry.get(type);
-        synchronized (registry) {
-            return copyOfEntries(pairs);
-        }
+        return copyOfEntries(registrationContainer.getAll(type));
+
 
     }
-
-    private <T> List<Supplier<T>> copyOfEntries(List<Registration<?>> pairs) {
-        return ImmutableList.copyOf(transform(pairs, new Function<SimpleRegistry.Registration<?>, Supplier<T>>() {
+    private <T> List<Supplier<T>> copyOfEntries(List<SupplierRegistration<?>> pairs) {
+        return ImmutableList.copyOf(transform(pairs, new Function<SupplierRegistration<?>, Supplier<T>>() {
 
             @Nullable
             @Override @SuppressWarnings("unchecked")
-            public Supplier<T> apply(@Nullable SimpleRegistry.Registration<?> registration) {
+            public Supplier<T> apply(@Nullable SupplierRegistration<?> registration) {
                 return (Supplier<T>)requireNonNull(registration, "registration").rightValue;
             }
         }));
@@ -89,54 +83,47 @@ public class SimpleRegistry implements Registry {
 
     @Override
     public <T> List<Supplier<T>> getAll(Key<T> key) {
-        List<Registration<?>> pairs = registry.get(key.type());
-        ImmutableList.Builder<Supplier<T>> suppliersByKey = ImmutableList.builder();
-        synchronized (registry) {
-            for (Registration<?> registryEntry : pairs) {
-                addSupplierIfKeyEquals(key, suppliersByKey, registryEntry);
-            }
-        }
-        return suppliersByKey.build();
-    }
+        List<SupplierRegistration<T>> pairs = registrationContainer.getAll(key);
 
-    @SuppressWarnings("unchecked")
-    private <T> void addSupplierIfKeyEquals(Key<T> key, ImmutableList.Builder<Supplier<T>> suppliersByKey, Registration<?> registryEntry) {
-        if (key.equals(registryEntry.leftValue))
-            suppliersByKey.add((Supplier<T>) registryEntry.rightValue);
+        return ImmutableList.copyOf(transform(pairs, new Function<SupplierRegistration<T>, Supplier<T>>() {
+            @Nullable
+            @Override @SuppressWarnings("unchecked")
+            public Supplier<T> apply(@Nullable SupplierRegistration<T> registration) {
+                return (Supplier<T>)requireNonNull(registration, "registration").rightValue;
+            }
+        }));
+
     }
 
     @Override @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Class<T> type) {
-        List<Registration<?>> pairs = registry.get(type);
-        synchronized (registry) {
-            if (!pairs.isEmpty()) {
-                return (Supplier<T>) pairs.get(0).rightValue;
-            }
-        }
-        return null;
+        SupplierRegistration<?> registration = registrationContainer.getFirst(type);
+        return (Supplier<T>) registration.rightValue;
     }
 
     @Override @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Key<T> key) {
-        List<Registration<?>> pairs = registry.get(key.type());
-        synchronized (registry) {
-            for (Registration<?> pair : pairs) {
-                if (key.equals(pair.leftValue)) {
-                    return (Supplier<T>) pair.rightValue;
-                }
-            }
-        }
-        return null;
+        SupplierRegistration<T> registration = registrationContainer.getFirst(key);
+        return (Supplier<T>) registration.rightValue;
     }
 
     @Override
-    public <T> Registration<T> put(Key<T> key, Supplier<? extends T> supplier) {
-        requireNonNull(key, "key");
+    public <T> SupplierRegistration<T> put(Key<T> key, Supplier<? extends T> supplier) {
+        checkKey(key, "key");
         checkSupplier(supplier);
-        Registration<T> registration = new Registration<>(key, supplier);
+        SupplierRegistration<T> registration = new SupplierRegistration<>(key, supplier);
         Add add = new Add(registration);
         executeActionOnRegistry(add);
         return registration;
+    }
+
+    private <T> GuiceKey<T> checkKey(Key<T> watchedKey, String attribute) {
+        requireNonNull(watchedKey, attribute);
+        if (watchedKey instanceof GuiceKey) {
+            return (GuiceKey<T>) watchedKey;
+        } else {
+            throw new IllegalArgumentException("The " + attribute + " parameter must be a GuiceKey instance");
+        }
     }
 
     private <T> void checkSupplier(Supplier<? extends T> supplier) {
@@ -173,26 +160,30 @@ public class SimpleRegistry implements Registry {
         }
     }
 
-    private Registration checkRegistration(org.yar.Registration<?> registration) {
+    private SupplierRegistration checkRegistration(org.yar.Registration<?> registration) {
         requireNonNull(registration, "registration");
-        if (!(registration instanceof Registration)) {
-            throw new IllegalArgumentException(String.format("Only %s registration class are supported", Registration.class.getName()));
+        if (!(registration instanceof SupplierRegistration)) {
+            throw new IllegalArgumentException(String.format("Only %s registration class are supported", SupplierRegistration.class.getName()));
         }
-        return Registration.class.cast(registration);
+        return SupplierRegistration.class.cast(registration);
     }
 
-    private static class Pair<L, R> {
-        final L leftValue;
-        final R rightValue;
 
-        private Pair(L leftValue, R rightValue) {
-            this.leftValue = leftValue;
-            this.rightValue = rightValue;
-        }
+    @Override
+    public <T> void addWatcher(Key<T> watchedKey, Watcher<? extends T> watcher) {
+        checkKey(watchedKey, "key");
+        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(watchedKey, watcher);
+        executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
+        throw new UnsupportedOperationException("TODO");
     }
 
-    static class Registration<T> extends Pair<Key<T>, Supplier<? extends T>> implements org.yar.Registration<T> {
-        private Registration(Key<T> leftValue, Supplier<? extends T> rightValue) {
+    @Override
+    public void removeWatcher(Registration<?> watcherRegistration) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    static class WatcherRegistration<T> extends Pair<Key<T>, Watcher<? extends T>> implements org.yar.Registration<T> {
+        private WatcherRegistration(Key<T> leftValue, Watcher<? extends T> rightValue) {
             super(leftValue, rightValue);
         }
 
@@ -203,7 +194,7 @@ public class SimpleRegistry implements Registry {
 
         @Override
         public String toString() {
-            return toStringHelper(SimpleRegistry.Registration.class)
+            return toStringHelper(SupplierRegistration.class)
                     .add("key", key())
                     .toString();
         }
@@ -211,14 +202,14 @@ public class SimpleRegistry implements Registry {
 
     static interface RegistryAction  {
         Key<?> key();
-        void execute(ListMultimap<Type, Registration<?>> registry);
+        void execute(WatchableRegistrationContainer registrationContainer);
         Future<Boolean> asFuture();
 
     }
 
     static abstract class AbstractAction implements RegistryAction {
-        final Registration<?> registration;
-        public AbstractAction(Registration<?> registration) {
+        private final Registration<?> registration;
+        AbstractAction(Registration<?> registration) {
             this.registration = registration;
         }
         @Override
@@ -230,19 +221,21 @@ public class SimpleRegistry implements Registry {
     static class Add extends AbstractAction implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final AddCall addCall;
+        private final SupplierRegistration<?> registration;
 
 
-        public Add(Registration<?> registration) {
+        Add(SupplierRegistration<?> registration) {
             super(registration);
+            this.registration = registration;
             addCall = new AddCall();
             this.futureTask = new FutureTask<>(addCall);
 
         }
 
         @Override
-        public void execute(ListMultimap<Type, Registration<?>> registry) {
+        public void execute(WatchableRegistrationContainer registrationContainer) {
             addCall.registration = registration;
-            addCall.registry = registry;
+            addCall.registrationContainer = registrationContainer;
             futureTask.run();
         }
 
@@ -252,11 +245,11 @@ public class SimpleRegistry implements Registry {
         }
 
         private static class AddCall implements Callable<Boolean> {
-            private ListMultimap<Type, Registration<?>> registry;
-            private Registration<?> registration;
+            private WatchableRegistrationContainer registrationContainer;
+            private SupplierRegistration<?> registration;
             @Override
             public Boolean call() throws Exception {
-                return registry.put(registration.key().type(), registration);
+                return registrationContainer.put(registration);
             }
         }
 
@@ -265,17 +258,19 @@ public class SimpleRegistry implements Registry {
     static class Remove extends AbstractAction implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final RemoveCall removeCall;
+        private final SupplierRegistration<?> registration;
 
-        public Remove(Registration<?> registration) {
+        Remove(SupplierRegistration<?> registration) {
             super(registration);
+            this.registration = registration;
             removeCall = new RemoveCall();
             this.futureTask = new FutureTask<>(removeCall);
         }
 
         @Override
-        public void execute(ListMultimap<Type, Registration<?>> registry) {
+        public void execute(WatchableRegistrationContainer registrationContainer) {
             removeCall.registration = registration;
-            removeCall.registry = registry;
+            removeCall.registrationContainer = registrationContainer;
             futureTask.run();
         }
 
@@ -285,11 +280,11 @@ public class SimpleRegistry implements Registry {
         }
 
         private static class RemoveCall implements Callable<Boolean> {
-            private ListMultimap<Type, Registration<?>> registry;
-            private Registration<?> registration;
+            private WatchableRegistrationContainer registrationContainer;
+            private SupplierRegistration<?> registration;
             @Override
             public Boolean call() throws Exception {
-                return registry.remove(registration.key(), registration);
+                return registrationContainer.remove(registration);
             }
 
         }
@@ -298,11 +293,11 @@ public class SimpleRegistry implements Registry {
 
     static class RegistryActionHandler implements Runnable {
         private final BlockingQueue<RegistryAction> registryActionQueue;
-        private final ListMultimap<Type, Registration<?>> registry;
+        private final WatchableRegistrationContainer registrationContainer;
 
-        public RegistryActionHandler(BlockingQueue<RegistryAction> registryActionQueue, ListMultimap<Type, Registration<?>> registry) {
+        RegistryActionHandler(BlockingQueue<RegistryAction> registryActionQueue, WatchableRegistrationContainer registrationContainer) {
             this.registryActionQueue = registryActionQueue;
-            this.registry = registry;
+            this.registrationContainer = registrationContainer;
         }
 
         @Override
@@ -310,11 +305,31 @@ public class SimpleRegistry implements Registry {
             for(;;) {
                 try {
                     RegistryAction registryAction = registryActionQueue.take();
-                    registryAction.execute(registry);
+                    registryAction.execute(registrationContainer);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private class AddWatcher<T> extends AbstractAction implements RegistryAction {
+
+        private final WatcherRegistration<T> watcherRegistration;
+
+        public AddWatcher(WatcherRegistration<T> watcherRegistration) {
+            super(watcherRegistration);
+            this.watcherRegistration = watcherRegistration;
+        }
+
+        @Override
+        public void execute(WatchableRegistrationContainer registrationContainer) {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public Future<Boolean> asFuture() {
+            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 }
