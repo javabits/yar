@@ -14,22 +14,26 @@
  *    limitations under the License.
  */
 
-package org.yar;
+package org.yar.guice;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+import javax.annotation.Nullable;
+import java.util.List;
 
 /**
- * TODO
- * Date: 2/8/13
- * Time: 6:03 PM
+ * TODO comment
+ * Date: 2/22/13
+ * Time: 11:49 AM
  *
  * @author Romain Gilles
- * @since 1.0
  */
-@SuppressWarnings("unused")
-public interface Key<T> {
-    Type type();
+public interface Container<K, V> {
 
-    Class<? extends Annotation> annotationType();
+    List<V> getAll(K key);
+
+    @Nullable
+    V getFirst(K key);
+
+    boolean put(K key, V value);
+
+    boolean remove(K key, V value);
 }

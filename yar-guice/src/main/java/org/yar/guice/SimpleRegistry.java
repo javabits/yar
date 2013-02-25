@@ -17,20 +17,15 @@
 package org.yar.guice;
 
 import com.google.common.base.Function;
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ListMultimap;
 import org.yar.*;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.concurrent.*;
 
-import static com.google.common.base.Objects.toStringHelper;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
-import static com.google.common.collect.Multimaps.synchronizedListMultimap;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 
@@ -58,7 +53,7 @@ public class SimpleRegistry implements Registry {
     private final WatchableRegistrationContainer registrationContainer;
     public SimpleRegistry() {
         registryActionQueue = new LinkedBlockingQueue<>();
-        registrationContainer = new MultimapListWatchableRegistrationContainer();
+        registrationContainer = new GuiceWatchableRegistrationContainer();
         Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registrationContainer));
         registryActionThread.setDaemon(true);
         registryActionThread.start();
@@ -143,7 +138,7 @@ public class SimpleRegistry implements Registry {
 
     @Override
     public void remove(org.yar.Registration<?> registration) {
-        RegistryAction action = new Remove(checkRegistration(registration));
+        RegistryAction action = new Remove(checkSupplierRegistration(registration));
         executeActionOnRegistry(action);
     }
 
@@ -160,44 +155,33 @@ public class SimpleRegistry implements Registry {
         }
     }
 
-    private SupplierRegistration checkRegistration(org.yar.Registration<?> registration) {
+    private SupplierRegistration checkSupplierRegistration(org.yar.Registration<?> registration) {
+        return checkRegistration(registration, SupplierRegistration.class);
+    }
+
+    private <T extends AbstractRegistration> T checkRegistration(Registration<?> registration, Class<T> registrationClass) {
         requireNonNull(registration, "registration");
-        if (!(registration instanceof SupplierRegistration)) {
-            throw new IllegalArgumentException(String.format("Only %s registration class are supported", SupplierRegistration.class.getName()));
+
+        if (!(registrationClass.isInstance(registration))) {
+            throw new IllegalArgumentException(String.format("Only %s registration class are supported", registrationClass.getName()));
         }
-        return SupplierRegistration.class.cast(registration);
+        return registrationClass.cast(registration);
     }
 
 
     @Override
-    public <T> void addWatcher(Key<T> watchedKey, Watcher<? extends T> watcher) {
+    public <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<? extends T>> watcher) {
         checkKey(watchedKey, "key");
         WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(watchedKey, watcher);
         executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
-        throw new UnsupportedOperationException("TODO");
+        return watcherRegistration;
     }
 
     @Override
     public void removeWatcher(Registration<?> watcherRegistration) {
-        //To change body of implemented methods use File | Settings | File Templates.
-    }
-
-    static class WatcherRegistration<T> extends Pair<Key<T>, Watcher<? extends T>> implements org.yar.Registration<T> {
-        private WatcherRegistration(Key<T> leftValue, Watcher<? extends T> rightValue) {
-            super(leftValue, rightValue);
-        }
-
-        @Override
-        public Key<T> key() {
-            return leftValue;
-        }
-
-        @Override
-        public String toString() {
-            return toStringHelper(SupplierRegistration.class)
-                    .add("key", key())
-                    .toString();
-        }
+        WatcherRegistration<?> registration = checkRegistration(watcherRegistration, WatcherRegistration.class);
+        RemoveWatcher<?> action = new RemoveWatcher<>(registration);
+        executeActionOnRegistry(action);
     }
 
     static interface RegistryAction  {
@@ -286,9 +270,76 @@ public class SimpleRegistry implements Registry {
             public Boolean call() throws Exception {
                 return registrationContainer.remove(registration);
             }
-
         }
 
+    }
+
+    private static class AddWatcher<T> extends AbstractAction implements RegistryAction {
+
+        private final WatcherRegistration<T> watcherRegistration;
+        private final AddWatcherCall addWatcherCall;
+        private final FutureTask<Boolean> futureTask;
+
+        public AddWatcher(WatcherRegistration<T> watcherRegistration) {
+            super(watcherRegistration);
+            this.watcherRegistration = watcherRegistration;
+            addWatcherCall = new AddWatcherCall();
+            this.futureTask = new FutureTask<>(addWatcherCall);
+        }
+
+        @Override
+        public void execute(WatchableRegistrationContainer registrationContainer) {
+            addWatcherCall.registrationContainer = registrationContainer;
+            futureTask.run();
+        }
+
+        @Override
+        public Future<Boolean> asFuture() {
+            return futureTask;
+        }
+
+        private class AddWatcherCall implements Callable<Boolean> {
+            private WatchableRegistrationContainer registrationContainer;
+
+            @Override
+            public Boolean call() throws Exception {
+                return registrationContainer.add(watcherRegistration);
+            }
+        }
+    }
+
+    private static class RemoveWatcher<T> extends AbstractAction implements RegistryAction {
+
+        private final WatcherRegistration<T> watcherRegistration;
+        private final RemoveWatcherCall removeWatcherCall;
+        private final FutureTask<Boolean> futureTask;
+
+        public RemoveWatcher(WatcherRegistration<T> watcherRegistration) {
+            super(watcherRegistration);
+            this.watcherRegistration = watcherRegistration;
+            removeWatcherCall = new RemoveWatcherCall();
+            this.futureTask = new FutureTask<>(removeWatcherCall);
+        }
+
+        @Override
+        public void execute(WatchableRegistrationContainer registrationContainer) {
+            removeWatcherCall.registrationContainer = registrationContainer;
+            futureTask.run();
+        }
+
+        @Override
+        public Future<Boolean> asFuture() {
+            return futureTask;
+        }
+
+        private class RemoveWatcherCall implements Callable<Boolean> {
+            private WatchableRegistrationContainer registrationContainer;
+
+            @Override
+            public Boolean call() throws Exception {
+                return registrationContainer.remove(watcherRegistration);
+            }
+        }
     }
 
     static class RegistryActionHandler implements Runnable {
@@ -310,26 +361,6 @@ public class SimpleRegistry implements Registry {
                     e.printStackTrace();
                 }
             }
-        }
-    }
-
-    private class AddWatcher<T> extends AbstractAction implements RegistryAction {
-
-        private final WatcherRegistration<T> watcherRegistration;
-
-        public AddWatcher(WatcherRegistration<T> watcherRegistration) {
-            super(watcherRegistration);
-            this.watcherRegistration = watcherRegistration;
-        }
-
-        @Override
-        public void execute(WatchableRegistrationContainer registrationContainer) {
-            //To change body of implemented methods use File | Settings | File Templates.
-        }
-
-        @Override
-        public Future<Boolean> asFuture() {
-            return null;  //To change body of implemented methods use File | Settings | File Templates.
         }
     }
 }

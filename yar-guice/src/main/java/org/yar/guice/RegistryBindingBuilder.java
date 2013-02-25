@@ -9,7 +9,6 @@ import org.yar.Supplier;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.util.Objects;
 
 import static java.util.Objects.requireNonNull;
 import static org.yar.guice.RegistrationBindingBuilderImpl.checkInterface;
@@ -25,26 +24,22 @@ import static org.yar.guice.RegistrationBindingBuilderImpl.checkInterface;
 public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilder<T> {
 
 
-    private final Binder binder;
     private Key<T> key;
     private AnnotatedBindingBuilder<T> annotatedBindingBuilder;
     private LinkedBindingBuilder<T> linkedBindingBuilder;
 
 
     public RegistryBindingBuilder(Binder binder, Key<T> key) {
-        this.binder = binder;
         this.key = checkInterface(key);
         linkedBindingBuilder = binder.bind(key);
     }
 
     public RegistryBindingBuilder(Binder binder, TypeLiteral<T> typeLiteral) {
-        this.binder = binder;
         key = Key.get(checkInterface(typeLiteral));
         linkedBindingBuilder = annotatedBindingBuilder = binder.bind(typeLiteral);
     }
 
     public RegistryBindingBuilder(Binder binder, Class<T> clazz) {
-        this.binder = binder;
         key = Key.get(checkInterface(clazz));
         linkedBindingBuilder = annotatedBindingBuilder = binder.bind(clazz);
     }
@@ -64,7 +59,7 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
     }
 
     @Override
-    public ScopedBindingBuilder fromRegistry() {
+    public ScopedBindingBuilder toRegistry() {
         return linkedBindingBuilder.toProvider(new RegistryProvider<>(key));
     }
 
@@ -141,6 +136,7 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
     public void asEagerSingleton() {
         linkedBindingBuilder.asEagerSingleton();
     }
+
     //TODO introduce dynamic management through Watcher and regarding the ?scope? maybe
     private static class RegistryProvider<T> implements Provider<T> {
 

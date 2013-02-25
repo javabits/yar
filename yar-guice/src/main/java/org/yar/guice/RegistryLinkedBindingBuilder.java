@@ -16,13 +16,8 @@
 
 package org.yar.guice;
 
-import com.google.inject.Key;
-import com.google.inject.Provider;
-import com.google.inject.TypeLiteral;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
-
-import java.lang.reflect.Constructor;
 
 /**
  * TODO comment
@@ -33,5 +28,5 @@ import java.lang.reflect.Constructor;
  */
 public interface RegistryLinkedBindingBuilder<T> extends LinkedBindingBuilder<T> {
 
-    ScopedBindingBuilder fromRegistry();
+    ScopedBindingBuilder toRegistry();
 }

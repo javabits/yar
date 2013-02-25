@@ -14,22 +14,33 @@
  *    limitations under the License.
  */
 
-package org.yar;
+package org.yar.guice;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+import org.yar.Key;
+
+import static com.google.common.base.Objects.toStringHelper;
 
 /**
- * TODO
- * Date: 2/8/13
- * Time: 6:03 PM
+ * TODO comment
+ * Date: 2/21/13
+ * Time: 9:38 AM
  *
  * @author Romain Gilles
- * @since 1.0
  */
-@SuppressWarnings("unused")
-public interface Key<T> {
-    Type type();
+public class AbstractRegistration<T, L> extends Pair<Key<T>, L> implements org.yar.Registration<T> {
+    AbstractRegistration(Key<T> leftValue, L rightValue) {
+        super(leftValue, rightValue);
+    }
 
-    Class<? extends Annotation> annotationType();
+    @Override
+    public Key<T> key() {
+        return leftValue;
+    }
+
+    @Override
+    public String toString() {
+        return toStringHelper(getClass())
+                .add("key", key())
+                .toString();
+    }
 }

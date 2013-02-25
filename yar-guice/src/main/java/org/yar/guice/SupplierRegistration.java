@@ -17,10 +17,7 @@
 package org.yar.guice;
 
 import org.yar.Key;
-import org.yar.Registration;
 import org.yar.Supplier;
-
-import static com.google.common.base.Objects.toStringHelper;
 
 /**
 * TODO comment
@@ -29,20 +26,8 @@ import static com.google.common.base.Objects.toStringHelper;
 *
 * @author Romain Gilles
 */
-class SupplierRegistration<T> extends Pair<Key<T>, Supplier<? extends T>> implements Registration<T> {
+class SupplierRegistration<T> extends AbstractRegistration<T, Supplier<? extends T>>{
     SupplierRegistration(Key<T> leftValue, Supplier<? extends T> rightValue) {
         super(leftValue, rightValue);
-    }
-
-    @Override
-    public Key<T> key() {
-        return leftValue;
-    }
-
-    @Override
-    public String toString() {
-        return toStringHelper(SupplierRegistration.class)
-                .add("key", key())
-                .toString();
     }
 }

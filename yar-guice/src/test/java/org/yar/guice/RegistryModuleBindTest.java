@@ -50,7 +50,7 @@ public class RegistryModuleBindTest {
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(MyInterface.class).fromRegistry();
+                bind(MyInterface.class).toRegistry();
             }
         });
         assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));

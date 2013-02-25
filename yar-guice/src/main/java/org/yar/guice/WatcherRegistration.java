@@ -14,22 +14,21 @@
  *    limitations under the License.
  */
 
-package org.yar;
+package org.yar.guice;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
+import org.yar.Key;
+import org.yar.Supplier;
+import org.yar.Watcher;
 
 /**
- * TODO
- * Date: 2/8/13
- * Time: 6:03 PM
- *
- * @author Romain Gilles
- * @since 1.0
- */
-@SuppressWarnings("unused")
-public interface Key<T> {
-    Type type();
-
-    Class<? extends Annotation> annotationType();
+* TODO comment
+* Date: 2/20/13
+* Time: 7:04 PM
+*
+* @author Romain Gilles
+*/
+class WatcherRegistration<T> extends AbstractRegistration<T, Watcher<Supplier<? extends T>>> {
+    WatcherRegistration(Key<T> leftValue, Watcher<Supplier<? extends T>> rightValue) {
+        super(leftValue, rightValue);
+    }
 }

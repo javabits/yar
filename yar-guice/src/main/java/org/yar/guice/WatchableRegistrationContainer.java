@@ -17,7 +17,6 @@
 package org.yar.guice;
 
 import org.yar.Key;
-import org.yar.Supplier;
 
 import java.lang.reflect.Type;
 import java.util.List;
@@ -39,4 +38,8 @@ public interface WatchableRegistrationContainer {
     boolean put(SupplierRegistration<?> registration);
 
     boolean remove(SupplierRegistration<?> registration);
+
+    <T> boolean add(WatcherRegistration<T> watcherRegistration);
+
+    boolean remove(WatcherRegistration<?> watcherRegistration);
 }

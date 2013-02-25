@@ -17,16 +17,13 @@
 package org.yar.guice;
 
 import com.google.inject.binder.AnnotatedBindingBuilder;
-import com.google.inject.binder.LinkedBindingBuilder;
 
 import java.lang.annotation.Annotation;
 
 /**
- * Created with IntelliJ IDEA.
- * User: rogilles
  * Date: 2/9/13
  * Time: 2:17 PM
- * To change this template use File | Settings | File Templates.
+ * @author Romain Gilles
  */
 public interface RegistrationAnnotatedBindingBuilder<T> extends RegistrationLinkedBindingBuilder<T>, AnnotatedBindingBuilder<T> {
     /**

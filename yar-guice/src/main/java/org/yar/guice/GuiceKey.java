@@ -19,6 +19,7 @@ package org.yar.guice;
 import org.yar.Key;
 
 import javax.annotation.concurrent.Immutable;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
 import static java.util.Objects.requireNonNull;
@@ -42,6 +43,11 @@ public class GuiceKey<T> implements Key<T> {
     @Override
     public Type type() {
         return key.getTypeLiteral().getType();
+    }
+
+    @Override
+    public Class<? extends Annotation> annotationType() {
+        return key.getAnnotationType();
     }
 
     @Override

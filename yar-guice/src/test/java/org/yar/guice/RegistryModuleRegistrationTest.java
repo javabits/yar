@@ -17,11 +17,11 @@
 package org.yar.guice;
 
 import com.google.inject.*;
-import com.google.inject.Key;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import org.junit.Test;
-import org.yar.*;
+import org.yar.Registry;
+import org.yar.Supplier;
 
 import javax.inject.Provider;
 import javax.inject.Qualifier;
