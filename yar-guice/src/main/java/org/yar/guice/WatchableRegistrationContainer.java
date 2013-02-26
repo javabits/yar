@@ -18,6 +18,7 @@ package org.yar.guice;
 
 import org.yar.Key;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -31,8 +32,10 @@ import java.util.List;
 public interface WatchableRegistrationContainer {
 
     List<SupplierRegistration<?>> getAll(Type type);
+    @Nullable
     SupplierRegistration<?> getFirst(Type type);
     <T> List<SupplierRegistration<T>> getAll(Key<T> key);
+    @Nullable
     <T> SupplierRegistration<T> getFirst(Key<T> key);
 
     boolean put(SupplierRegistration<?> registration);

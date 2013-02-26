@@ -16,36 +16,18 @@
 
 package org.yar;
 
-
 import javax.annotation.Nullable;
-import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
- * TODO add type token or type literal
- * TODO see if we use directly the guice key...??? and they type literal
- * Date: 2/8/13
- * Time: 5:13 PM
- *
+ * Date: 2/25/13
+ * Time: 10:17 PM
  * @author Romain Gilles
  * @since 1.0
  */
-public interface Registry {
-
-    <T> List<Supplier<T>> getAll(Class<T> type);
-
+public interface BlockingRegistry extends Registry {
     @Nullable
-    <T> Supplier<T> get(Class<T> type);
-
-    <T> List<Supplier<T>> getAll(Key<T> key);
-
+    <T> Supplier<T> get(Class<T> type, long timeout, TimeUnit unit);
     @Nullable
-    <T> Supplier<T> get(Key<T> key);
-
-    <T> Registration<T> put(Key<T> key, Supplier<? extends T> supplier);
-
-    void remove(Registration<?> registration);
-
-    <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<? extends T>> watcher);
-
-    void removeWatcher(Registration<?> watcherRegistration);
+    <T> Supplier<T> get(Key<T> key, long timeout, TimeUnit unit);
 }

@@ -90,12 +90,14 @@ public class SimpleRegistry implements Registry {
 
     }
 
+    @Nullable
     @Override @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Class<T> type) {
         SupplierRegistration<?> registration = registrationContainer.getFirst(type);
         return (Supplier<T>) registration.rightValue;
     }
 
+    @Nullable
     @Override @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Key<T> key) {
         SupplierRegistration<T> registration = registrationContainer.getFirst(key);

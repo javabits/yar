@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableList;
 import org.yar.Key;
 import org.yar.Registration;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.List;
 
@@ -49,6 +50,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         return supplierRegistry.getAll(type);
     }
 
+    @Nullable
     @Override
     public SupplierRegistration<?> getFirst(Type type) {
         return supplierRegistry.getFirst(type);
@@ -79,6 +81,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
                 || key.equals(registryEntry.key());
     }
 
+    @Nullable
     @Override
     @SuppressWarnings("unchecked")
     public <T> SupplierRegistration<T> getFirst(Key<T> key) {
