@@ -74,6 +74,14 @@ public class BlockingSupplierRegistry extends SimpleRegistry {
         @Nullable
         @Override
         public T get(long timeout, TimeUnit unit) {
+            readLock.lock();
+            try {
+                if (delegate != null) {
+                    return delegate.get();
+                }
+            } finally {
+                readLock.unlock();
+            }
             if (timeout < 0L) {
                 return infiniteBlockingGet();
             } else if (timeout == 0L) {
@@ -82,13 +90,13 @@ public class BlockingSupplierRegistry extends SimpleRegistry {
                 }
                 return null;
             } else {
-                return blockingGet(timeout, unit);
+                return timeoutBlockingGet(timeout, unit);
             }
         }
 
-        private T blockingGet(long timeout, TimeUnit unit) {
+        private T timeoutBlockingGet(long timeout, TimeUnit unit) {
             long nanos = unit.toNanos(timeout);
-            lock.lock();
+            writeLock.lock();
             try {
                 while (delegate == null) {
                     if (nanos <= 0L) {
@@ -100,13 +108,13 @@ public class BlockingSupplierRegistry extends SimpleRegistry {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
 
 
         private T infiniteBlockingGet() {
-            lock.lock();
+            writeLock.lock();
             try {
                 while (delegate == null) {
                     notEmpty.await();
@@ -115,7 +123,7 @@ public class BlockingSupplierRegistry extends SimpleRegistry {
             } catch (InterruptedException e) {
                 throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
     }

@@ -96,8 +96,16 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
 
         @Override
         public T get() {
+            readLock.lock();
+            try {
+                if (delegate != null) {
+                    return delegate.get();
+                }
+            } finally {
+                readLock.unlock();
+            }
             long nanos = unit.toNanos(timeout);
-            lock.lock();
+            writeLock.lock();
             try {
                 while (delegate == null) {
                     if (nanos <= 0L) {
@@ -109,7 +117,7 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
             } catch (InterruptedException e) {
                 throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
     }
@@ -123,7 +131,15 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
 
         @Override
         public T get() {
-            lock.lock();
+            readLock.lock();
+            try {
+                if (delegate != null) {
+                    return delegate.get();
+                }
+            } finally {
+                readLock.unlock();
+            }
+            writeLock.lock();
             try {
                 while (delegate == null) {
                     notEmpty.await();
@@ -132,7 +148,7 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
             } catch (InterruptedException e) {
                 throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
             } finally {
-                lock.unlock();
+                writeLock.unlock();
             }
         }
     }
