@@ -16,86 +16,77 @@
 
 package org.yar.guice;
 
+import org.yar.BlockingSupplier;
 import org.yar.Key;
 import org.yar.Supplier;
-import org.yar.Watcher;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.Objects.requireNonNull;
-
 /**
  * TODO comment
- * Date: 2/25/13
- * Time: 10:30 PM
+ * Date: 2/28/13
+ * Time: 10:57 AM
  *
  * @author Romain Gilles
  */
-public class BlockingRegistry extends SimpleRegistry implements org.yar.BlockingRegistry {
-
+public class BlockingSupplierRegistry extends SimpleRegistry {
     public static final long DEFAULT_TIMEOUT = 0L;
 
     private final long defaultTimeout;
 
-    public BlockingRegistry() {
+    public BlockingSupplierRegistry() {
         this(DEFAULT_TIMEOUT);
     }
 
-    public BlockingRegistry(long defaultTimeout) {
+    public BlockingSupplierRegistry(long defaultTimeout) {
         this.defaultTimeout = defaultTimeout;
     }
 
-    @Nullable
     @Override
-    public <T> Supplier<T> get(Key<T> key) {
-        return createSupplier(key, super.get(key), defaultTimeout, TimeUnit.MILLISECONDS);
+    public <T> BlockingSupplier<T> get(Class<T> type) {
+        return get(GuiceKey.of(type));
     }
 
-    @Nullable
     @Override
-    public <T> Supplier<T> get(Class<T> type, long timeout, TimeUnit unit) {
-        return get(GuiceKey.of(type), timeout, unit);
+    public <T> BlockingSupplier<T> get(Key<T> key) {
+        return new TimeoutBlockingSupplier<>(key, super.get(key), defaultTimeout, TimeUnit.NANOSECONDS);
     }
 
-    @Nullable
-    @Override
-    public <T> Supplier<T> get(Key<T> key, long timeout, TimeUnit unit) {
-        return createSupplier(key, super.get(key), timeout, unit);
-    }
-
-
-    private <T> Supplier<T> createSupplier(Key<T> key, Supplier<T> originalValue, long timeout, TimeUnit unit) {
-        if (timeout == 0) { //direct
-            return originalValue;
-        } else if (timeout < 0) {
-            return new InfiniteBlockingSupplier<>(key, originalValue);
-        } else {
-            return new TimeoutBlockingSupplier<>(key, originalValue, timeout, unit);
-        }
-    }
-
-    abstract class AbstractBlockingSupplier<T> extends org.yar.guice.AbstractBlockingSupplier<T> {
-
-        AbstractBlockingSupplier(Key<T> key, Supplier<T> delegate) {
-            super(delegate);
-            addWatcher(key, this);
-        }
-    }
-
-    class TimeoutBlockingSupplier<T> extends AbstractBlockingSupplier<T> {
+    class TimeoutBlockingSupplier<T> extends AbstractBlockingSupplier<T> implements BlockingSupplier<T> {
         private final long timeout;
         private final TimeUnit unit;
 
         TimeoutBlockingSupplier(Key<T> key, Supplier<T> delegate, long timeout, TimeUnit unit) {
-            super(key, delegate);
+            super(delegate);
+            addWatcher(key, this);
             this.timeout = timeout;
             this.unit = unit;
 
         }
 
+        @Nullable
         @Override
         public T get() {
+            return get(timeout, unit);
+        }
+
+        @Nullable
+        @Override
+        public T get(long timeout, TimeUnit unit) {
+            if (timeout < 0L) {
+                return infiniteBlockingGet();
+            } else if (timeout == 0L) {
+                if (delegate != null) {
+                    return delegate.get();
+                }
+                return null;
+            } else {
+                return blockingGet(timeout, unit);
+            }
+        }
+
+        private T blockingGet(long timeout, TimeUnit unit) {
             long nanos = unit.toNanos(timeout);
             lock.lock();
             try {
@@ -112,17 +103,9 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
                 lock.unlock();
             }
         }
-    }
 
 
-
-    class InfiniteBlockingSupplier<T> extends AbstractBlockingSupplier<T> {
-        InfiniteBlockingSupplier(Key<T> key, Supplier<T> delegate) {
-            super(key, delegate);
-        }
-
-        @Override
-        public T get() {
+        private T infiniteBlockingGet() {
             lock.lock();
             try {
                 while (delegate == null) {

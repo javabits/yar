@@ -11,7 +11,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 
 import static java.util.Objects.requireNonNull;
-import static org.yar.guice.RegistrationBindingBuilderImpl.checkInterface;
 
 /**
  * TODO comment
@@ -30,18 +29,18 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
 
 
     public RegistryBindingBuilder(Binder binder, Key<T> key) {
-        this.key = checkInterface(key);
+        this.key = requireNonNull(key, "key");
         linkedBindingBuilder = binder.bind(key);
     }
 
     public RegistryBindingBuilder(Binder binder, TypeLiteral<T> typeLiteral) {
-        key = Key.get(checkInterface(typeLiteral));
+        key = Key.get(typeLiteral);
         linkedBindingBuilder = annotatedBindingBuilder = binder.bind(typeLiteral);
     }
 
     public RegistryBindingBuilder(Binder binder, Class<T> clazz) {
-        key = Key.get(checkInterface(clazz));
-        linkedBindingBuilder = annotatedBindingBuilder = binder.bind(clazz);
+        key = Key.get(clazz);
+        linkedBindingBuilder = annotatedBindingBuilder = requireNonNull(binder, "binder").bind(clazz);
     }
 
     @Override

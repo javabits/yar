@@ -20,7 +20,6 @@ import com.google.inject.*;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
-import com.google.inject.internal.UniqueAnnotations;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -44,39 +43,21 @@ class RegistrationBindingBuilderImpl<T> implements RegistrationAnnotatedBindingB
 
     RegistrationBindingBuilderImpl(Binder binder, Class<T> type) {
         this.binder = requireNonNull(binder, "binder");
-        key = Key.get(checkInterface(type));
+        key = Key.get(type);
         linkedBindingBuilder = annotatedBindingBuilder = binder.bind(type);
-    }
-
-    static <T> Class<T> checkInterface(Class<T> type) {
-        if (!requireNonNull(type, "type").isInterface()) {
-            throw new IllegalArgumentException("Only interface are supported in the Registry");
-        } else {
-            return type;
-        }
     }
 
     RegistrationBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral) {
         this.binder = requireNonNull(binder, "binder");
-        key = Key.get(checkInterface(typeLiteral));
+        key = Key.get(typeLiteral);
         linkedBindingBuilder = annotatedBindingBuilder = binder.bind(typeLiteral);
-    }
-
-    static <T> TypeLiteral<T> checkInterface(TypeLiteral<T> typeLiteral) {
-        checkInterface(requireNonNull(typeLiteral, "typeLiteral").getRawType());
-        return typeLiteral;
     }
 
     RegistrationBindingBuilderImpl(Binder binder, Key<T> key) {
         this.binder = requireNonNull(binder, "binder");
-        this.key = checkInterface(key);
-        linkedBindingBuilder = binder.bind(key);
-    }
-
-    static <T> Key<T> checkInterface(Key<T> key) {
         requireNonNull(key, "key");
-        checkInterface(key.getTypeLiteral());
-        return key;
+        this.key = key;
+        linkedBindingBuilder = binder.bind(key);
     }
 
 

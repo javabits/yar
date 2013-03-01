@@ -26,8 +26,8 @@ import org.yar.Supplier;
 *
 * @author Romain Gilles
 */
-class SupplierRegistration<T> extends AbstractRegistration<T, Supplier<? extends T>>{
-    SupplierRegistration(Key<T> leftValue, Supplier<? extends T> rightValue) {
+class SupplierRegistration<T> extends AbstractRegistration<T, Supplier<T>>{
+    SupplierRegistration(Key<T> leftValue, Supplier<T> rightValue) {
         super(leftValue, rightValue);
     }
 }

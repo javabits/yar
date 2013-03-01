@@ -146,8 +146,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         for (SupplierRegistration<T> supplierRegistration : getAll(watcherRegistration.key())) {
             watcherRegistration.rightValue.add(supplierRegistration.rightValue);
         }
-        putToRegistry(watcherRegistry, watcherRegistration);
-        return false;
+        return putToRegistry(watcherRegistry, watcherRegistration);
     }
 
     @Override

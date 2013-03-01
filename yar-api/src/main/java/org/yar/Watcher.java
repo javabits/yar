@@ -20,10 +20,9 @@ import javax.annotation.Nullable;
 
 /**
  * TODO
- * @author rogilles
  * Date: 2/19/13
  * Time: 9:27 AM
- * To change this template use File | Settings | File Templates.
+ * @author Romain Gilles
  */
 public interface Watcher<T> {
 

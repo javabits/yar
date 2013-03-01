@@ -16,13 +16,16 @@
 
 package org.yar.guice;
 
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import org.yar.Registration;
 import org.yar.Registry;
 
 import javax.inject.Inject;
+import java.util.List;
 
 /**
  * TODO comment
@@ -34,7 +37,7 @@ import javax.inject.Inject;
 public class RegistrationBindingHandler {
     private final Injector injector;
     private final Registry registry;
-
+    private volatile List<Registration<?>> registrations;
     @Inject
     public RegistrationBindingHandler(Injector injector, Registry registry) {
         this.injector = injector;
@@ -43,9 +46,17 @@ public class RegistrationBindingHandler {
     }
 
     private void registerBindings() {
-        for (Binding<GuiceRegistration> registrationBinding  : injector.findBindingsByType(TypeLiteral.get(GuiceRegistration.class))) {
+        ImmutableList.Builder<Registration<?>> registrationsBuilder = ImmutableList.builder();
+        for (Binding<GuiceRegistration> registrationBinding : injector.findBindingsByType(TypeLiteral.get(GuiceRegistration.class))) {
             Key<?> key = registrationBinding.getProvider().get().key();
-            registry.put(GuiceKey.of(key), new GuiceSupplier(injector.getProvider(key)));
+            registrationsBuilder.add(registry.put(GuiceKey.of(key), new GuiceSupplier(injector.getProvider(key))));
+        }
+        registrations = registrationsBuilder.build();
+    }
+
+    public void clear() {
+        for (Registration<?> registration : registrations) {
+            registry.remove(registration);
         }
     }
 }

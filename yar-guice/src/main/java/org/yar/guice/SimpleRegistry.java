@@ -94,6 +94,9 @@ public class SimpleRegistry implements Registry {
     @Override @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Class<T> type) {
         SupplierRegistration<?> registration = registrationContainer.getFirst(type);
+        if (registration == null) {
+            return null;
+        }
         return (Supplier<T>) registration.rightValue;
     }
 
@@ -101,11 +104,14 @@ public class SimpleRegistry implements Registry {
     @Override @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Key<T> key) {
         SupplierRegistration<T> registration = registrationContainer.getFirst(key);
-        return (Supplier<T>) registration.rightValue;
+        if (registration == null) {
+            return null;
+        }
+        return registration.rightValue;
     }
 
     @Override
-    public <T> SupplierRegistration<T> put(Key<T> key, Supplier<? extends T> supplier) {
+    public <T> SupplierRegistration<T> put(Key<T> key, Supplier<T> supplier) {
         checkKey(key, "key");
         checkSupplier(supplier);
         SupplierRegistration<T> registration = new SupplierRegistration<>(key, supplier);
@@ -172,7 +178,7 @@ public class SimpleRegistry implements Registry {
 
 
     @Override
-    public <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<? extends T>> watcher) {
+    public <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<T>> watcher) {
         checkKey(watchedKey, "key");
         WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(watchedKey, watcher);
         executeActionOnRegistry(new AddWatcher<>(watcherRegistration));

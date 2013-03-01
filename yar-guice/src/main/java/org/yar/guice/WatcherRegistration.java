@@ -27,8 +27,8 @@ import org.yar.Watcher;
 *
 * @author Romain Gilles
 */
-class WatcherRegistration<T> extends AbstractRegistration<T, Watcher<Supplier<? extends T>>> {
-    WatcherRegistration(Key<T> leftValue, Watcher<Supplier<? extends T>> rightValue) {
+class WatcherRegistration<T> extends AbstractRegistration<T, Watcher<Supplier<T>>> {
+    WatcherRegistration(Key<T> leftValue, Watcher<Supplier<T>> rightValue) {
         super(leftValue, rightValue);
     }
 }

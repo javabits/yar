@@ -8,14 +8,21 @@
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>Yar</name>
-    <description>YAR: Yet Another Registry</description>
-
+    <description>YAR: stands for Yet Another Registry. It is dynamic registry implementation as OSGi service registry
+        but with Supplier/Provider instead of Service instance of ServiceFactory. This will allow you more control over
+        your object lifecycle.
+    </description>
+    <url>https://github.com/rgilles/yar</url>
     <inceptionYear>2013</inceptionYear>
+
     <licenses>
         <license>
-            <name></name>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
         </license>
     </licenses>
+
     <modules>
         <module>yar-parent</module>
         <module>yar-api</module>
@@ -31,6 +38,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
     <scm>
         <connection>scm:git:https://github.com/rgilles/yar.git</connection>
         <developerConnection>scm:git:https://github.com/rgilles/yar.git</developerConnection>
@@ -38,7 +46,28 @@
     </scm>
 
     <build>
-
+        <plugins>
+            <!--
+             | Standard LICENSE and NOTICE files
+            -->
+            <plugin>
+                <artifactId>maven-remote-resources-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>process</goal>
+                        </goals>
+                        <configuration>
+                            <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
+                            <resourceBundles>
+                                <resourceBundle>org.apache:apache-jar-resource-bundle:1.4</resourceBundle>
+                            </resourceBundles>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
 </project>

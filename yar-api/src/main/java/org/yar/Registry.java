@@ -41,11 +41,11 @@ public interface Registry {
     @Nullable
     <T> Supplier<T> get(Key<T> key);
 
-    <T> Registration<T> put(Key<T> key, Supplier<? extends T> supplier);
+    <T> Registration<T> put(Key<T> key, Supplier<T> supplier);
 
     void remove(Registration<?> registration);
 
-    <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<? extends T>> watcher);
+    <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<T>> watcher);
 
     void removeWatcher(Registration<?> watcherRegistration);
 }

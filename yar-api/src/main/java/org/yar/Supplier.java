@@ -16,6 +16,8 @@
 
 package org.yar;
 
+import javax.annotation.Nullable;
+
 /**
  * TODO use the guava class instead
  * @author Romain Gilles
@@ -24,5 +26,6 @@ package org.yar;
  * @since 1.0
  */
 public interface Supplier<T> {
+    @Nullable
     T get();
 }
