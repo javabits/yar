@@ -36,19 +36,9 @@ public class RegistryModuleBindTest {
     @Test
     public void testBind() {
         final Registry registry = new SimpleRegistry();
-        Module module = new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Registry.class).toInstance(registry);
-            }
-        };
+        Module module = createModuleRegistryDeclaration(registry, Registry.class);
 
-        registry.put(GuiceKey.of(MyInterface.class),GuiceSupplier.of(new Provider<MyInterface>() {
-            @Override
-            public MyInterface get() {
-                return new MyInterface() {};
-            }
-        }));
+        putMyInterfaceSupplierToRegistry(registry);
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
@@ -62,76 +52,78 @@ public class RegistryModuleBindTest {
     @Test
     public void testBindSupplier() {
         final Registry registry = new SimpleRegistry();
-        Module module = new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Registry.class).toInstance(registry);
-            }
-        };
+        putMyInterfaceSupplierToRegistry(registry);
+        Module module = createModuleRegistryDeclaration(registry, Registry.class);
 
-        registry.put(GuiceKey.of(MyInterface.class),GuiceSupplier.of(new Provider<MyInterface>() {
-            @Override
-            public MyInterface get() {
-                return new MyInterface() {};
-            }
-        }));
-        Injector injector = Guice.createInjector(module, new RegistryModule() {
-            @Override
-            protected void configureRegistry() {
-                bind(new TypeLiteral<Supplier<MyInterface>> (){}).toRegistry();
-            }
-        });
+        Injector injector = createSupplierBindingInjector(module);
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>> (){})), is(not(nullValue())));
     }
 
     @Test(expected = CreationException.class)
     public void testBindBlockingSupplierErrorOnNonBlockingRegistry() {
         final Registry registry = new SimpleRegistry();
-        Module module = new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Registry.class).toInstance(registry);
-            }
-        };
+        final Class<Registry> clazz = Registry.class;
+        Module module = createModuleRegistryDeclaration(registry, clazz);
 
-        registry.put(GuiceKey.of(MyInterface.class),GuiceSupplier.of(new Provider<MyInterface>() {
-            @Override
-            public MyInterface get() {
-                return new MyInterface() {};
-            }
-        }));
-        Injector injector = Guice.createInjector(module, new RegistryModule() {
-            @Override
-            protected void configureRegistry() {
-                bind(new TypeLiteral<BlockingSupplier<MyInterface>> (){}).toRegistry();
-            }
-        });
+        putMyInterfaceSupplierToRegistry(registry);
+        Injector injector = createBlockingSupplierBindingInjector(module);
         assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>> (){})), is(not(nullValue())));
+    }
+
+    private <T extends Registry> Module createModuleRegistryDeclaration(final T registry, final Class<T> clazz) {
+        return new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(clazz).toInstance(registry);
+                }
+            };
     }
 
     @Test
     public void testBindBlockingSupplier() {
         final Registry registry = new BlockingSupplierRegistry();
-        Module module = new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(Registry.class).toInstance(registry);
-            }
-        };
+        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        putMyInterfaceSupplierToRegistry(registry);
+        Injector injector = createSupplierBindingInjector(module);
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>> (){})), is(not(nullValue())));
+    }
 
-        registry.put(GuiceKey.of(MyInterface.class),GuiceSupplier.of(new Provider<MyInterface>() {
-            @Override
-            public MyInterface get() {
-                return new MyInterface() {};
-            }
-        }));
-        Injector injector = Guice.createInjector(module, new RegistryModule() {
+    private Injector createSupplierBindingInjector(Module module) {
+        RegistryModule supplierBindingRegistryModule = createSupplierBindingRegistryModule();
+        return createInjector(module, supplierBindingRegistryModule);
+    }
+
+    private Injector createInjector(Module module, RegistryModule registryModule) {
+        return Guice.createInjector(Stage.PRODUCTION, module, registryModule);
+    }
+
+    private RegistryModule createSupplierBindingRegistryModule() {
+        return new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(new TypeLiteral<Supplier<MyInterface>> (){}).toRegistry();
+                bind(new TypeLiteral<Supplier<MyInterface>>() {
+                }).toRegistry();
             }
-        });
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>> (){})), is(not(nullValue())));
+        };
+    }
+    private RegistryModule createBlockingSupplierBindingRegistryModule() {
+        return new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+                }).toRegistry();
+            }
+        };
+    }
+
+    private void putMyInterfaceSupplierToRegistry(Registry registry) {
+        registry.put(GuiceKey.of(MyInterface.class), GuiceSupplier.of(new Provider<MyInterface>() {
+            @Override
+            public MyInterface get() {
+                return new MyInterface() {
+                };
+            }
+        }));
     }
 
     @Test
@@ -146,19 +138,16 @@ public class RegistryModuleBindTest {
             }
         };
 
-        registry.put(GuiceKey.of(MyInterface.class),GuiceSupplier.of(new Provider<MyInterface>() {
-            @Override
-            public MyInterface get() {
-                return new MyInterface() {};
-            }
+        putMyInterfaceSupplierToRegistry(registry);
+        Injector injector = createBlockingSupplierBindingInjector(module);
+        Supplier<MyInterface> supplier = injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
         }));
-        Injector injector = Guice.createInjector(module, new RegistryModule() {
-            @Override
-            protected void configureRegistry() {
-                bind(new TypeLiteral<BlockingSupplier<MyInterface>> (){}).toRegistry();
-            }
-        });
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>> (){})), is(not(nullValue())));
+        assertThat(supplier, is(not(nullValue())));
+        assertThat(supplier.get(), is(not(nullValue())));
+    }
+
+    private Injector createBlockingSupplierBindingInjector(Module module) {
+        return createInjector(module, createBlockingSupplierBindingRegistryModule());
     }
 
     static interface MyInterface {

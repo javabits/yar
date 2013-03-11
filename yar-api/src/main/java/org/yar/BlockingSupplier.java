@@ -13,5 +13,5 @@ public interface BlockingSupplier<T> extends Supplier<T> {
     @Override
     T get();
     @Nullable
-    <T> T get(long timeout, TimeUnit unit);
+    T get(long timeout, TimeUnit unit);
 }

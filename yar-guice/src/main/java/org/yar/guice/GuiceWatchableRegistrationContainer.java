@@ -35,8 +35,12 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     private final Container<Type, SupplierRegistration<?>> supplierRegistry;
     private final Container<Type, WatcherRegistration<?>> watcherRegistry;
 
+//    public GuiceWatchableRegistrationContainer() {
+//        this(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer());
+//    }
+
     public GuiceWatchableRegistrationContainer() {
-        this(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer());
+        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer());
     }
 
     public GuiceWatchableRegistrationContainer(Container<Type, SupplierRegistration<?>> supplierRegistry
@@ -156,5 +160,13 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
     private Type getRegistryKey(Registration<?> watcherRegistration) {
         return watcherRegistration.key().type();
+    }
+
+    static GuiceWatchableRegistrationContainer newMultimapGuiceWatchableRegistrationContainer() {
+        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer());
+    }
+
+    static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer() {
+        return new GuiceWatchableRegistrationContainer(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer());
     }
 }

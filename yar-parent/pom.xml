@@ -33,6 +33,7 @@
     </description>
 
     <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.compliance>1.7</java.compliance>
         <!-- third parties versions -->
         <guice.version>3.0</guice.version>
@@ -114,6 +115,7 @@
                     <configuration>
                         <source>${java.compliance}</source>
                         <target>${java.compliance}</target>
+                        <compilerArgument>-Xlint:unchecked</compilerArgument>
                     </configuration>
                 </plugin>
                 <plugin>

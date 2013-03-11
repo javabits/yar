@@ -52,8 +52,12 @@ public class SimpleRegistry implements Registry {
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
     public SimpleRegistry() {
+        this(new GuiceWatchableRegistrationContainer());
+    }
+
+    SimpleRegistry(WatchableRegistrationContainer registrationContainer) {
+        this.registrationContainer = registrationContainer;
         registryActionQueue = new LinkedBlockingQueue<>();
-        registrationContainer = new GuiceWatchableRegistrationContainer();
         Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registrationContainer));
         registryActionThread.setDaemon(true);
         registryActionThread.start();
@@ -370,5 +374,12 @@ public class SimpleRegistry implements Registry {
                 }
             }
         }
+    }
+
+    static SimpleRegistry newMultimapRegistry() {
+        return new SimpleRegistry(GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer());
+    }
+    static SimpleRegistry newLoadingCacheRegistry() {
+        return new SimpleRegistry(GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer());
     }
 }

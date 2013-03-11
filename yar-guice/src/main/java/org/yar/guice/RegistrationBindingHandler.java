@@ -49,9 +49,14 @@ public class RegistrationBindingHandler {
         ImmutableList.Builder<Registration<?>> registrationsBuilder = ImmutableList.builder();
         for (Binding<GuiceRegistration> registrationBinding : injector.findBindingsByType(TypeLiteral.get(GuiceRegistration.class))) {
             Key<?> key = registrationBinding.getProvider().get().key();
-            registrationsBuilder.add(registry.put(GuiceKey.of(key), new GuiceSupplier(injector.getProvider(key))));
+            registrationsBuilder.add(putRegistrationToRegistry(key));
         }
         registrations = registrationsBuilder.build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Registration<?> putRegistrationToRegistry(Key<?> key) {
+        return registry.put(GuiceKey.of(key), new GuiceSupplier(injector.getProvider(key)));
     }
 
     public void clear() {

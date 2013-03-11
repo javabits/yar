@@ -46,6 +46,12 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
         this.defaultTimeout = defaultTimeout;
     }
 
+    public BlockingRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
+        super(registrationContainer);
+        this.defaultTimeout = defaultTimeout;
+    }
+
+
     @Nullable
     @Override
     public <T> Supplier<T> get(Key<T> key) {
@@ -151,5 +157,12 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
                 writeLock.unlock();
             }
         }
+    }
+
+    static BlockingRegistry newMultimapRegistry(long defaultTimeout) {
+        return new BlockingRegistry(GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
+    }
+    static BlockingRegistry newLoadingCacheRegistry(long defaultTimeout) {
+        return new BlockingRegistry(GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
 }
