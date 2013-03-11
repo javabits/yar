@@ -20,6 +20,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
+import org.yar.BlockingSupplier;
+import org.yar.Supplier;
 
 import java.lang.reflect.Method;
 
@@ -50,7 +52,6 @@ public abstract class AbstractRegistryModule extends AbstractModule {
                 bindRegistration(binder(), Key.get(method.getGenericReturnType()));
             }
         }
-
     }
 
     /**
@@ -73,19 +74,68 @@ public abstract class AbstractRegistryModule extends AbstractModule {
 
     @Override
     protected <T> RegistryLinkedBindingBuilder<T> bind(Key<T> key) {
-        RegistryAnnotatedBindingBuilder<T> registryAnnotatedBindingBuilder = new RegistryBindingBuilder<>(binder(), key);
-        return registryAnnotatedBindingBuilder;
+        return getRegistryBindingBuilderFactory(key.getTypeLiteral()).newFrom(key);
     }
 
     @Override
     protected <T> RegistryAnnotatedBindingBuilder<T> bind(TypeLiteral<T> typeLiteral) {
-        RegistryAnnotatedBindingBuilder<T> registryAnnotatedBindingBuilder = new RegistryBindingBuilder<>(binder(), typeLiteral);
-        return registryAnnotatedBindingBuilder;
+        return getRegistryBindingBuilderFactory(typeLiteral).newFrom(typeLiteral);
+    }
+
+    private <T> RegistryBindingBuilderFactory getRegistryBindingBuilderFactory(TypeLiteral<T> typeLiteral) {
+        if (BlockingSupplier.class.isAssignableFrom(typeLiteral.getRawType())) {
+            return new BlockingSupplierRegistryBindingBuilderFactory();
+        }
+        if (Supplier.class.isAssignableFrom(typeLiteral.getRawType())) {
+            return new SupplierRegistryBindingBuilderFactory();
+        }
+        return new SimpleRegistryBindingBuilderFactory();
     }
 
     @Override
     protected <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
         RegistryAnnotatedBindingBuilder<T> registryAnnotatedBindingBuilder = new RegistryBindingBuilder<>(binder(), clazz);
         return registryAnnotatedBindingBuilder;
+    }
+
+    private interface RegistryBindingBuilderFactory {
+        <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral);
+        <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key);
+    }
+
+    private class SimpleRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
+        @Override
+        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
+            return new RegistryBindingBuilder<>(binder(), typeLiteral);
+        }
+
+        @Override
+        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
+            return new RegistryBindingBuilder<>(binder(), key);
+        }
+    }
+
+    private class SupplierRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
+        @Override
+        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
+            return new SupplierRegistryBindingBuilder<>(binder(), typeLiteral);
+        }
+
+        @Override
+        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
+            return new SupplierRegistryBindingBuilder<>(binder(), key);
+        }
+    }
+
+    private class BlockingSupplierRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
+        @Override
+        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
+            return new BlockingSupplierRegistryBindingBuilder<>(binder(), typeLiteral);
+        }
+
+        @Override
+        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
+            return new BlockingSupplierRegistryBindingBuilder<>(binder(), key);
+        }
     }
 }

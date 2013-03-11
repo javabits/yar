@@ -43,6 +43,10 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
         linkedBindingBuilder = annotatedBindingBuilder = requireNonNull(binder, "binder").bind(clazz);
     }
 
+    Key<T> key() {
+        return key;
+    }
+
     @Override
     public RegistryLinkedBindingBuilder<T> annotatedWith(Class<? extends Annotation> annotationType) {
         key = Key.get(key.getTypeLiteral(), annotationType);
@@ -59,7 +63,11 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
 
     @Override
     public ScopedBindingBuilder toRegistry() {
-        return linkedBindingBuilder.toProvider(new RegistryProvider<>(key));
+        return linkedBindingBuilder.toProvider(newRegistryProvider());
+    }
+
+    Provider<T> newRegistryProvider() {
+        return new RegistryProvider<>(key());
     }
 
     @Override
@@ -137,13 +145,17 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
     }
 
     //TODO introduce dynamic management through Watcher and regarding the ?scope? maybe
-    private static class RegistryProvider<T> implements Provider<T> {
+    static class RegistryProvider<T> implements Provider<T> {
 
         private final Key<T> key;
         private Registry registry;
 
-        private RegistryProvider(Key<T> key) {
+        RegistryProvider(Key<T> key) {
             this.key = key;
+        }
+
+        Key<T> key() {
+            return key;
         }
 
         @Override
@@ -157,7 +169,7 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
             return requireNonNull(supplier, "supplier");
         }
 
-        private Registry registry() {
+        Registry registry() {
             return requireNonNull(registry, "registry");
         }
 

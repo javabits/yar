@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Romain Gilles
  */
-public class BlockingSupplierRegistry extends SimpleRegistry {
+public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.BlockingSupplierRegistry {
     public static final long DEFAULT_TIMEOUT = 0L;
 
     private final long defaultTimeout;
