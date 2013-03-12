@@ -18,7 +18,6 @@ package org.yar.guice;
 
 import org.yar.Key;
 import org.yar.Supplier;
-import org.yar.Watcher;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
@@ -36,9 +35,11 @@ import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuice
  */
 public class BlockingRegistry extends SimpleRegistry implements org.yar.BlockingRegistry {
 
+    public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
     public static final long DEFAULT_TIMEOUT = 0L;
 
     private final long defaultTimeout;
+    private final TimeUnit defaultTimeUnit;
 
     public BlockingRegistry() {
         this(DEFAULT_TIMEOUT);
@@ -46,18 +47,20 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
 
     public BlockingRegistry(long defaultTimeout) {
         this.defaultTimeout = defaultTimeout;
+        defaultTimeUnit = DEFAULT_TIME_UNIT;
     }
 
     public BlockingRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
         super(registrationContainer);
         this.defaultTimeout = defaultTimeout;
+        defaultTimeUnit = DEFAULT_TIME_UNIT;
     }
 
 
     @Nullable
     @Override
     public <T> Supplier<T> get(Key<T> key) {
-        return createSupplier(key, super.get(key), defaultTimeout, TimeUnit.MILLISECONDS);
+        return createSupplier(key, super.get(key), defaultTimeout, defaultTimeUnit);
     }
 
     @Nullable
@@ -161,10 +164,10 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
         }
     }
 
-    static BlockingRegistry newMultimapRegistry(long defaultTimeout) {
+    static BlockingRegistry newMultimapBlockingRegistry(long defaultTimeout) {
         return new BlockingRegistry(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
-    static BlockingRegistry newLoadingCacheRegistry(long defaultTimeout) {
+    static BlockingRegistry newLoadingCacheBlockingRegistry(long defaultTimeout) {
         return new BlockingRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
 }

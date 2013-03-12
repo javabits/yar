@@ -27,6 +27,10 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.yar.guice.GuiceYars.newLoadingCacheBasedRegistry;
+import static org.yar.guice.GuiceYars.newLoadingCacheBlockingSupplierRegistry;
+import static org.yar.guice.GuiceYars.createRegistryDeclarationModule;
+
 
 /**
  * TODO comment
@@ -54,8 +58,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindListToRegistry() {
-        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
-        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        Module module = createRegistryDeclarationModuleWithSimpleRegistry();
         final TypeLiteral<List<MyInterface>> listTypeLiteral = new TypeLiteral<List<MyInterface>>() {
         };
         Injector injector = Guice.createInjector(module, new RegistryModule() {
@@ -70,16 +73,20 @@ public class RegistryModuleBindTest {
         assertThat(myInterfaceList, is(not(emptyIterable())));
     }
 
+    private Module createRegistryDeclarationModuleWithSimpleRegistry() {
+        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
+        return createRegistryDeclarationModule(registry);
+    }
+
     private Registry createLoadingCacheRegistryWithMyInterfaceSupplier() {
-        final Registry registry = SimpleRegistry.newLoadingCacheRegistry();
+        final Registry registry = newLoadingCacheBasedRegistry();
         putMyInterfaceSupplierToRegistry(registry);
         return registry;
     }
 
     @Test
     public void testBindCollectionToRegistry() {
-        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
-        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        Module module = createRegistryDeclarationModuleWithSimpleRegistry();
         final TypeLiteral<Collection<MyInterface>> listTypeLiteral = new TypeLiteral<Collection<MyInterface>>() {
         };
         Injector injector = Guice.createInjector(module, new RegistryModule() {
@@ -96,8 +103,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindIterableToRegistry() {
-        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
-        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        Module module = createRegistryDeclarationModuleWithSimpleRegistry();
         final TypeLiteral<Iterable<MyInterface>> listTypeLiteral = new TypeLiteral<Iterable<MyInterface>>() {
         };
         Injector injector = Guice.createInjector(module, new RegistryModule() {
@@ -114,41 +120,37 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindSupplier() {
-        final Registry registry = new SimpleRegistry();
-        putMyInterfaceSupplierToRegistry(registry);
-        Module module = createModuleRegistryDeclaration(registry, Registry.class);
-
+        Module module = createRegistryDeclarationModuleWithSimpleRegistry();
         Injector injector = createSupplierBindingInjector(module);
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>> (){})), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
     }
 
     @Test(expected = CreationException.class)
     public void testBindBlockingSupplierErrorOnNonBlockingRegistry() {
-        final Registry registry = new SimpleRegistry();
-        final Class<Registry> clazz = Registry.class;
-        Module module = createModuleRegistryDeclaration(registry, clazz);
-
-        putMyInterfaceSupplierToRegistry(registry);
+        Module module = createRegistryDeclarationModuleWithSimpleRegistry();
         Injector injector = createBlockingSupplierBindingInjector(module);
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>> (){})), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        })), is(not(nullValue())));
     }
 
     private <T extends Registry> Module createModuleRegistryDeclaration(final T registry, final Class<T> clazz) {
         return new AbstractModule() {
-                @Override
-                protected void configure() {
-                    bind(clazz).toInstance(registry);
-                }
-            };
+            @Override
+            protected void configure() {
+                bind(clazz).toInstance(registry);
+            }
+        };
     }
 
     @Test
     public void testBindBlockingSupplier() {
-        final Registry registry = new BlockingSupplierRegistry();
-        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        final Registry registry = newLoadingCacheBlockingSupplierRegistry();
+        Module module = createRegistryDeclarationModule(registry);
         putMyInterfaceSupplierToRegistry(registry);
         Injector injector = createSupplierBindingInjector(module);
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>> (){})), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
     }
 
     private Injector createSupplierBindingInjector(Module module) {
@@ -169,6 +171,7 @@ public class RegistryModuleBindTest {
             }
         };
     }
+
     private RegistryModule createBlockingSupplierBindingRegistryModule() {
         return new RegistryModule() {
             @Override
@@ -191,17 +194,9 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindBlockingSupplier2() {
-        final org.yar.BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
-        Module module = new AbstractModule() {
-            @Override
-            protected void configure() {
-                Key<org.yar.BlockingSupplierRegistry> blockingSupplierRegistryKey = Key.get(org.yar.BlockingSupplierRegistry.class);
-                bind(Registry.class).to(blockingSupplierRegistryKey);
-                bind(blockingSupplierRegistryKey).toInstance(registry);
-            }
-        };
-
+        final org.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
         putMyInterfaceSupplierToRegistry(registry);
+        Module module = createRegistryDeclarationModule(registry);
         Injector injector = createBlockingSupplierBindingInjector(module);
         Supplier<MyInterface> supplier = injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
         }));

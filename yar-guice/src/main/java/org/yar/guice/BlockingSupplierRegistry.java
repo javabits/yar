@@ -34,9 +34,11 @@ import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuice
  * @author Romain Gilles
  */
 public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.BlockingSupplierRegistry {
+    public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
     public static final long DEFAULT_TIMEOUT = 0L;
 
     private final long defaultTimeout;
+    private final TimeUnit defaultTimeUnit;
 
     public BlockingSupplierRegistry() {
         this(DEFAULT_TIMEOUT);
@@ -44,11 +46,13 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
 
     public BlockingSupplierRegistry(long defaultTimeout) {
         this.defaultTimeout = defaultTimeout;
+        defaultTimeUnit = DEFAULT_TIME_UNIT;
     }
 
     public BlockingSupplierRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
         super(registrationContainer);
         this.defaultTimeout = defaultTimeout;
+        defaultTimeUnit = DEFAULT_TIME_UNIT;
     }
 
 
@@ -59,7 +63,7 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
 
     @Override
     public <T> BlockingSupplier<T> get(Key<T> key) {
-        return new TimeoutBlockingSupplier<>(key, super.get(key), defaultTimeout, TimeUnit.NANOSECONDS);
+        return new TimeoutBlockingSupplier<>(key, super.get(key), defaultTimeout, defaultTimeUnit);
     }
 
     class TimeoutBlockingSupplier<T> extends AbstractBlockingSupplier<T> implements BlockingSupplier<T> {
@@ -137,10 +141,19 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
         }
     }
 
-    static BlockingSupplierRegistry newMultimapRegistry(long defaultTimeout) {
+    static BlockingSupplierRegistry newMultimapBlockingSupplierRegistry() {
+        return newMultimapBlockingSupplierRegistry(DEFAULT_TIMEOUT);
+    }
+
+    static BlockingSupplierRegistry newMultimapBlockingSupplierRegistry(long defaultTimeout) {
         return new BlockingSupplierRegistry(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
-    static BlockingSupplierRegistry newLoadingCacheRegistry(long defaultTimeout) {
+
+    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry() {
+        return newLoadingCacheBlockingSupplierRegistry(DEFAULT_TIMEOUT);
+    }
+
+    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(long defaultTimeout) {
         return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
 
