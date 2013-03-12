@@ -15,6 +15,7 @@
   ~    See the License for the specific language governing permissions and
   ~    limitations under the License.
   -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -26,24 +27,20 @@
         <relativePath>../yar-parent/pom.xml</relativePath>
     </parent>
 
-    <artifactId>yar-guice</artifactId>
+    <artifactId>yar-guice-osgi</artifactId>
     <packaging>bundle</packaging>
 
-    <name>Yar :: Guice</name>
-    <description>Yar Guice: provide a implementation / integration base on guice</description>
+    <name>Yar :: Guice :: OSGi</name>
+    <description>Yar Guice OSGi: provides a implementation / integration of Yar Guice into OSGi framework</description>
 
     <dependencies>
         <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.yar</groupId>
-            <artifactId>yar-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
+            <artifactId>yar-guice</artifactId>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
