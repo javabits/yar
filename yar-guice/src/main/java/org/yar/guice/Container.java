@@ -36,6 +36,4 @@ public interface Container<K, V> {
     boolean put(K key, V value);
 
     boolean remove(K key, V value);
-
-    List<V> getViewOf(K key);
 }

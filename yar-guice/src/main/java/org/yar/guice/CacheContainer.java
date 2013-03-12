@@ -27,8 +27,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
 import static com.google.common.base.Throwables.propagate;
-import static com.google.common.collect.ImmutableList.copyOf;
 import static com.google.common.collect.Lists.newArrayList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * TODO comment
@@ -64,20 +64,10 @@ public class CacheContainer<K, V> implements Container<K, V> {
         this.loadingCache = loadingCache;
     }
 
-
-    @Override
-    public List<V> getViewOf(K key) {
-        try {
-            return loadingCache.get(key);
-        } catch (ExecutionException e) {
-            throw propagate(e);
-        }
-    }
-
     @Override
     public List<V> getAll(K key) {
         try {
-            return copyOf(loadingCache.get(key));
+            return unmodifiableList(loadingCache.get(key));
         } catch (ExecutionException e) {
             throw propagate(e);
         }

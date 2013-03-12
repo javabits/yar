@@ -48,11 +48,7 @@ class ListMultimapContainer<K, V> implements Container<K, V> {
     }
 
     @Override
-    public List<V> getViewOf(K key) {
-        return delegate.get(key);
-    }
-
-    @Override @Nullable
+    @Nullable
     public V getFirst(K key) {
         List<V> pairs = delegate.get(key);
         synchronized (delegate) {
