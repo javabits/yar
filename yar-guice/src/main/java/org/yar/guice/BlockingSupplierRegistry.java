@@ -23,6 +23,9 @@ import org.yar.Supplier;
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
+import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
+import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
+
 /**
  * TODO comment
  * Date: 2/28/13
@@ -42,6 +45,12 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
     public BlockingSupplierRegistry(long defaultTimeout) {
         this.defaultTimeout = defaultTimeout;
     }
+
+    public BlockingSupplierRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
+        super(registrationContainer);
+        this.defaultTimeout = defaultTimeout;
+    }
+
 
     @Override
     public <T> BlockingSupplier<T> get(Class<T> type) {
@@ -127,4 +136,12 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
             }
         }
     }
+
+    static BlockingSupplierRegistry newMultimapRegistry(long defaultTimeout) {
+        return new BlockingSupplierRegistry(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
+    }
+    static BlockingSupplierRegistry newLoadingCacheRegistry(long defaultTimeout) {
+        return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
+    }
+
 }

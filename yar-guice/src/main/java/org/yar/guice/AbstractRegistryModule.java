@@ -24,6 +24,8 @@ import org.yar.BlockingSupplier;
 import org.yar.Supplier;
 
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.List;
 
 import static org.yar.guice.RegistrationBindingBuilderImpl.bindRegistration;
 
@@ -89,17 +91,30 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         if (Supplier.class.isAssignableFrom(typeLiteral.getRawType())) {
             return new SupplierRegistryBindingBuilderFactory();
         }
+        if (isSupportedCollectionsInterface(typeLiteral)) {
+            return new CollectionsRegistryBindingBuilderFactory();
+        }
         return new SimpleRegistryBindingBuilderFactory();
+    }
+
+    private <T> boolean isSupportedCollectionsInterface(TypeLiteral<T> typeLiteral) {
+        return isClassEqualsToLiteralRowType(List.class, typeLiteral)
+                || isClassEqualsToLiteralRowType(Collection.class, typeLiteral)
+                || isClassEqualsToLiteralRowType(Iterable.class, typeLiteral);
+    }
+
+    private <T> boolean isClassEqualsToLiteralRowType(Class<?> type, TypeLiteral<T> typeLiteral) {
+        return type.equals(typeLiteral.getRawType());
     }
 
     @Override
     protected <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
-        RegistryAnnotatedBindingBuilder<T> registryAnnotatedBindingBuilder = new RegistryBindingBuilder<>(binder(), clazz);
-        return registryAnnotatedBindingBuilder;
+        return new RegistryBindingBuilder<>(binder(), clazz);
     }
 
     private interface RegistryBindingBuilderFactory {
         <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral);
+
         <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key);
     }
 
@@ -136,6 +151,18 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         @Override
         public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
             return new BlockingSupplierRegistryBindingBuilder<>(binder(), key);
+        }
+    }
+
+    private class CollectionsRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
+        @Override
+        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
+            return new CollectionsRegistryBindingBuilder<>(binder(), typeLiteral);
+        }
+
+        @Override
+        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
+            return new CollectionsRegistryBindingBuilder<>(binder(), key);
         }
     }
 }

@@ -22,6 +22,9 @@ import org.yar.BlockingSupplier;
 import org.yar.Registry;
 import org.yar.Supplier;
 
+import java.util.Collection;
+import java.util.List;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -37,7 +40,6 @@ public class RegistryModuleBindTest {
     public void testBind() {
         final Registry registry = new SimpleRegistry();
         Module module = createModuleRegistryDeclaration(registry, Registry.class);
-
         putMyInterfaceSupplierToRegistry(registry);
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
@@ -47,6 +49,67 @@ public class RegistryModuleBindTest {
         });
         assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
         assertThat(injector.getInstance(MyInterface.class), is(not(injector.getInstance(MyInterface.class))));
+    }
+
+
+    @Test
+    public void testBindListToRegistry() {
+        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
+        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        final TypeLiteral<List<MyInterface>> listTypeLiteral = new TypeLiteral<List<MyInterface>>() {
+        };
+        Injector injector = Guice.createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(listTypeLiteral).toRegistry();
+            }
+        });
+        Key<List<MyInterface>> listKey = Key.get(listTypeLiteral);
+        Iterable<MyInterface> myInterfaceList = injector.getInstance(listKey);
+        assertThat(myInterfaceList, is(not(nullValue())));
+        assertThat(myInterfaceList, is(not(emptyIterable())));
+    }
+
+    private Registry createLoadingCacheRegistryWithMyInterfaceSupplier() {
+        final Registry registry = SimpleRegistry.newLoadingCacheRegistry();
+        putMyInterfaceSupplierToRegistry(registry);
+        return registry;
+    }
+
+    @Test
+    public void testBindCollectionToRegistry() {
+        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
+        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        final TypeLiteral<Collection<MyInterface>> listTypeLiteral = new TypeLiteral<Collection<MyInterface>>() {
+        };
+        Injector injector = Guice.createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(listTypeLiteral).toRegistry();
+            }
+        });
+        Key<Collection<MyInterface>> listKey = Key.get(listTypeLiteral);
+        Iterable<MyInterface> myInterfaceList = injector.getInstance(listKey);
+        assertThat(myInterfaceList, is(not(nullValue())));
+        assertThat(myInterfaceList, is(not(emptyIterable())));
+    }
+
+    @Test
+    public void testBindIterableToRegistry() {
+        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
+        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        final TypeLiteral<Iterable<MyInterface>> listTypeLiteral = new TypeLiteral<Iterable<MyInterface>>() {
+        };
+        Injector injector = Guice.createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(listTypeLiteral).toRegistry();
+            }
+        });
+        Key<Iterable<MyInterface>> listKey = Key.get(listTypeLiteral);
+        Iterable<MyInterface> myInterfaceList = injector.getInstance(listKey);
+        assertThat(myInterfaceList, is(not(nullValue())));
+        assertThat(myInterfaceList, is(not(emptyIterable())));
     }
 
     @Test

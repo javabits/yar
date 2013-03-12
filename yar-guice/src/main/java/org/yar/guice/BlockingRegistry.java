@@ -24,6 +24,8 @@ import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
+import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
+import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
 /**
  * TODO comment
@@ -160,9 +162,9 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
     }
 
     static BlockingRegistry newMultimapRegistry(long defaultTimeout) {
-        return new BlockingRegistry(GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
+        return new BlockingRegistry(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
     static BlockingRegistry newLoadingCacheRegistry(long defaultTimeout) {
-        return new BlockingRegistry(GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
+        return new BlockingRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
 }

@@ -28,6 +28,8 @@ import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
+import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
 /**
  * TODO comment
@@ -377,9 +379,9 @@ public class SimpleRegistry implements Registry {
     }
 
     static SimpleRegistry newMultimapRegistry() {
-        return new SimpleRegistry(GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer());
+        return new SimpleRegistry(newMultimapGuiceWatchableRegistrationContainer());
     }
     static SimpleRegistry newLoadingCacheRegistry() {
-        return new SimpleRegistry(GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer());
+        return new SimpleRegistry(newLoadingCacheGuiceWatchableRegistrationContainer());
     }
 }
