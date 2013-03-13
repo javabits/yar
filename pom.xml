@@ -28,6 +28,7 @@
         <module>yar-api</module>
         <module>yar-guice</module>
         <module>yar-guice-osgi</module>
+        <module>yar-osgi-it</module>
     </modules>
 
     <dependencyManagement>
@@ -40,6 +41,11 @@
             <dependency>
                 <groupId>org.yar</groupId>
                 <artifactId>yar-guice</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.yar</groupId>
+                <artifactId>yar-guice-osgi</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

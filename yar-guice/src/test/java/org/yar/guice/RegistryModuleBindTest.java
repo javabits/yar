@@ -29,7 +29,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.yar.guice.GuiceYars.newLoadingCacheBasedRegistry;
 import static org.yar.guice.GuiceYars.newLoadingCacheBlockingSupplierRegistry;
-import static org.yar.guice.GuiceYars.createRegistryDeclarationModule;
+import static org.yar.guice.GuiceYars.newRegistryDeclarationModule;
 
 
 /**
@@ -75,7 +75,7 @@ public class RegistryModuleBindTest {
 
     private Module createRegistryDeclarationModuleWithSimpleRegistry() {
         final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
-        return createRegistryDeclarationModule(registry);
+        return GuiceYars.newRegistryDeclarationModule(registry);
     }
 
     private Registry createLoadingCacheRegistryWithMyInterfaceSupplier() {
@@ -146,7 +146,7 @@ public class RegistryModuleBindTest {
     @Test
     public void testBindBlockingSupplier() {
         final Registry registry = newLoadingCacheBlockingSupplierRegistry();
-        Module module = createRegistryDeclarationModule(registry);
+        Module module = GuiceYars.newRegistryDeclarationModule(registry);
         putMyInterfaceSupplierToRegistry(registry);
         Injector injector = createSupplierBindingInjector(module);
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
@@ -196,7 +196,7 @@ public class RegistryModuleBindTest {
     public void testBindBlockingSupplier2() {
         final org.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
         putMyInterfaceSupplierToRegistry(registry);
-        Module module = createRegistryDeclarationModule(registry);
+        Module module = newRegistryDeclarationModule(registry);
         Injector injector = createBlockingSupplierBindingInjector(module);
         Supplier<MyInterface> supplier = injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
         }));

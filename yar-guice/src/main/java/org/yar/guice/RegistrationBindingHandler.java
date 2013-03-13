@@ -34,7 +34,7 @@ import java.util.List;
  *
  * @author Romain Gilles
  */
-public class RegistrationBindingHandler {
+public class RegistrationBindingHandler implements RegistrationHandler {
     private final Injector injector;
     private final Registry registry;
     private volatile List<Registration<?>> registrations;
@@ -59,9 +59,14 @@ public class RegistrationBindingHandler {
         return registry.put(GuiceKey.of(key), new GuiceSupplier(injector.getProvider(key)));
     }
 
+    @Override
     public void clear() {
         for (Registration<?> registration : registrations) {
             registry.remove(registration);
         }
+    }
+
+    public List<Registration<?>> registrations() {
+        return registrations;
     }
 }

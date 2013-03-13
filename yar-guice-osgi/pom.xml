@@ -50,54 +50,65 @@
         <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
-<!--
+
         <plugins>
             <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>jarjar-maven-plugin</artifactId>
-                <version>1.4</version>
+                <groupId>org.apache.felix</groupId>
+                <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
-                    <includes>
-                        <include>com.google.inject:guice</include>
-                    </includes>
-                    <rules>
-                        <rule>
-                            <pattern>com.google.inject.internal.UniqueAnnotations</pattern>
-                            <result>org.yar.guice.UniqueAnnotations</result>
-                        </rule>
-                        <keep>
-                            <pattern>com.google.inject.internal.UniqueAnnotations</pattern>
-                        </keep>
-                    </rules>
+                    <instructions>
+                        <Bundle-Activator>org.yar.guice.osgi.internal.Activator</Bundle-Activator>
+                    </instructions>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>jarjar-classes</id>
-                        <phase>process-test-classes</phase>
-                        <goals>
-                            <goal>jarjar</goal>
-                        </goals>
-                        <configuration>
-                            <input>{classes}</input>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>jarjar-test-classes</id>
-                        <phase>process-test-classes</phase>
-                        <goals>
-                            <goal>jarjar</goal>
-                        </goals>
-                        <configuration>
-                            <input>{test-classes}</input>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
+            <!--
+                        <plugin>
+                            <groupId>org.sonatype.plugins</groupId>
+                            <artifactId>jarjar-maven-plugin</artifactId>
+                            <version>1.4</version>
+                            <configuration>
+                                <includes>
+                                    <include>com.google.inject:guice</include>
+                                </includes>
+                                <rules>
+                                    <rule>
+                                        <pattern>com.google.inject.internal.UniqueAnnotations</pattern>
+                                        <result>org.yar.guice.UniqueAnnotations</result>
+                                    </rule>
+                                    <keep>
+                                        <pattern>com.google.inject.internal.UniqueAnnotations</pattern>
+                                    </keep>
+                                </rules>
+                            </configuration>
+                            <executions>
+                                <execution>
+                                    <id>jarjar-classes</id>
+                                    <phase>process-test-classes</phase>
+                                    <goals>
+                                        <goal>jarjar</goal>
+                                    </goals>
+                                    <configuration>
+                                        <input>{classes}</input>
+                                    </configuration>
+                                </execution>
+                                <execution>
+                                    <id>jarjar-test-classes</id>
+                                    <phase>process-test-classes</phase>
+                                    <goals>
+                                        <goal>jarjar</goal>
+                                    </goals>
+                                    <configuration>
+                                        <input>{test-classes}</input>
+                                    </configuration>
+                                </execution>
+                            </executions>
+                        </plugin>
+            -->
         </plugins>
--->
     </build>
 </project>

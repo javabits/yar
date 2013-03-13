@@ -16,21 +16,13 @@
 
 package org.yar.guice;
 
-import javax.inject.Singleton;
-
 /**
- * TODO comment
- * Only one {@code RegistryModule} per injector.
- * Date: 2/8/13
- * Time: 5:18 PM
+ * TODO comment it
+ * Date: 3/13/13
+ * Time: 10:35 AM
  *
  * @author Romain Gilles
- * @since 1.0
  */
-public abstract class RegistryModule extends AbstractRegistryModule {
-
-    @Override
-    void doBeforeConfiguration() {
-        super.bind(RegistrationHandler.class).to(RegistrationBindingHandler.class).in(Singleton.class);
-    }
+public interface RegistrationHandler {
+    void clear();
 }

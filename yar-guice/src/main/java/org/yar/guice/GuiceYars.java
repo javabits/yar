@@ -75,7 +75,7 @@ public final class GuiceYars {
         return BlockingSupplierRegistry.newMultimapBlockingSupplierRegistry(defaultTimeoutInMillis);
     }
 
-    public static Module createRegistryDeclarationModule(final Registry registry) {
+    public static Module newRegistryDeclarationModule(final Registry registry) {
         return new AbstractModule() {
             @Override
             protected void configure() {
@@ -84,7 +84,7 @@ public final class GuiceYars {
         };
     }
 
-    public static Module createRegistryDeclarationModule(final org.yar.BlockingSupplierRegistry registry) {
+    public static Module newRegistryDeclarationModule(final org.yar.BlockingSupplierRegistry registry) {
         return new AbstractModule() {
             @Override
             protected void configure() {
