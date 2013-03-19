@@ -14,23 +14,30 @@
  *    limitations under the License.
  */
 
-package org.yar.guice;
+package org.yar;
 
-import org.yar.Key;
-import org.yar.Registration;
-
-import java.util.List;
+import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
- * TODO comment it
- * Date: 3/13/13
- * Time: 10:35 AM
+ * TODO comment
+ * Date: 3/19/13
+ * Time: 8:55 AM
  *
  * @author Romain Gilles
  */
-public interface RegistrationHandler {
+public abstract class AbstractMultiElementWatcher<T> extends AbstractWatcher<T> {
 
-    List<Key<?>> registeredKeys();
+    private Map<T, Boolean> trackedElements = new IdentityHashMap<>();
+    @Override
+    protected void track(T handle) {
+        if (handle != null) {
+            trackedElements.put(handle, Boolean.TRUE);
+        }
+    }
 
-    void clear();
+    @Override
+    protected boolean isTracked(T element) {
+        return trackedElements.containsKey(element);
+    }
 }

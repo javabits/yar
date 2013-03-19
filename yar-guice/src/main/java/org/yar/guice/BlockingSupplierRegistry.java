@@ -16,13 +16,16 @@
 
 package org.yar.guice;
 
+import com.google.inject.matcher.Matchers;
 import org.yar.BlockingSupplier;
 import org.yar.Key;
+import org.yar.KeyMatchers;
 import org.yar.Supplier;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
+import static org.yar.KeyMatchers.newKeyMatcher;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -72,10 +75,9 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
 
         TimeoutBlockingSupplier(Key<T> key, Supplier<T> delegate, long timeout, TimeUnit unit) {
             super(delegate);
-            addWatcher(key, this);
             this.timeout = timeout;
             this.unit = unit;
-
+            addWatcher(newKeyMatcher(key), this);
         }
 
         @Nullable

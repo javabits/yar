@@ -16,21 +16,16 @@
 
 package org.yar.guice;
 
-import org.yar.Key;
-import org.yar.Registration;
-
-import java.util.List;
+import org.yar.Watcher;
 
 /**
- * TODO comment it
- * Date: 3/13/13
- * Time: 10:35 AM
+ * TODO comment
+ * Date: 3/14/13
+ * Time: 10:15 AM
  *
  * @author Romain Gilles
  */
-public interface RegistrationHandler {
+public interface RegistryListener<T> extends Watcher<T> {
 
-    List<Key<?>> registeredKeys();
 
-    void clear();
 }

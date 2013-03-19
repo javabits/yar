@@ -14,23 +14,25 @@
  *    limitations under the License.
  */
 
-package org.yar.guice;
-
-import org.yar.Key;
-import org.yar.Registration;
-
-import java.util.List;
+package org.yar;
 
 /**
- * TODO comment it
- * Date: 3/13/13
- * Time: 10:35 AM
+ * TODO comment
+ * Date: 3/19/13
+ * Time: 8:58 AM
  *
  * @author Romain Gilles
  */
-public interface RegistrationHandler {
+public abstract class AbstractSingleElementWatcher<T> extends AbstractWatcher<T> {
+    private T trackedElement;
 
-    List<Key<?>> registeredKeys();
+    @Override
+    final protected void track(T element) {
+        trackedElement = element;
+    }
 
-    void clear();
+    @Override
+    final protected boolean isTracked(T element) {
+        return trackedElement == element;
+    }
 }

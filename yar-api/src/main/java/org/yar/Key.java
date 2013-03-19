@@ -32,4 +32,6 @@ public interface Key<T> {
     Type type();
 
     Class<? extends Annotation> annotationType();
+
+    Annotation annotation();
 }

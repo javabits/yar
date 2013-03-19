@@ -17,11 +17,12 @@
 package org.yar.guice;
 
 import com.google.inject.*;
+import com.google.inject.Key;
+import com.google.inject.matcher.Matcher;
 import org.junit.Test;
-import org.yar.BlockingSupplier;
-import org.yar.Registry;
-import org.yar.Supplier;
+import org.yar.*;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
 
@@ -182,8 +183,8 @@ public class RegistryModuleBindTest {
         };
     }
 
-    private void putMyInterfaceSupplierToRegistry(Registry registry) {
-        registry.put(GuiceKey.of(MyInterface.class), GuiceSupplier.of(new Provider<MyInterface>() {
+    private Registration<MyInterface> putMyInterfaceSupplierToRegistry(Registry registry) {
+        return registry.put(GuiceKey.of(MyInterface.class), GuiceSupplier.of(new Provider<MyInterface>() {
             @Override
             public MyInterface get() {
                 return new MyInterface() {
@@ -195,8 +196,8 @@ public class RegistryModuleBindTest {
     @Test
     public void testBindBlockingSupplier2() {
         final org.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
-        putMyInterfaceSupplierToRegistry(registry);
         Module module = newRegistryDeclarationModule(registry);
+        putMyInterfaceSupplierToRegistry(registry);
         Injector injector = createBlockingSupplierBindingInjector(module);
         Supplier<MyInterface> supplier = injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
         }));
@@ -208,7 +209,188 @@ public class RegistryModuleBindTest {
         return createInjector(module, createBlockingSupplierBindingRegistryModule());
     }
 
+    @Test
+    public void testBindListenerBasic() {
+        final org.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        final Object[] matches = new Object[]{0, null, null};
+
+        Injector injector = createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bindListener(
+                        new org.yar.Matcher<Key<MyInterface>>() {
+                            @Override
+                            public boolean matches(Key<MyInterface> item) {
+                                boolean equals = Key.get(MyInterface.class).equals(item);
+                                matches[0] = (Integer)matches[0] + (equals ? 1:0);
+                                return equals;
+                            }
+                        }, new RegistryListener<MyInterface>() {
+                            @Nullable
+                            @Override
+                            public MyInterface add(MyInterface element) {
+                                matches[1] = element;
+                                return element;
+                            }
+
+                            @Override
+                            public void remove(MyInterface element) {
+                                matches[2] = element;
+                            }
+                        }
+                );
+            }
+        });
+        SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>)putMyInterfaceSupplierToRegistry(registry);
+        registry.remove(myInterfaceRegistration);
+        assertThat(((Integer) matches[0]), is(2));
+        assertThat(((MyInterface)matches[1]), is(notNullValue()));
+        assertThat(((MyInterface)matches[2]), is((MyInterface) matches[1]));
+    }
+
+
+    @Test
+    public void testBindListenerSingleElement() {
+        final org.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        final Object[] matches = new Object[]{0, null, null};
+
+        Injector injector = createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bindListener(
+                        new org.yar.Matcher<Key<MyInterface>>() {
+                            @Override
+                            public boolean matches(Key<MyInterface> item) {
+                                boolean equals = Key.get(MyInterface.class).equals(item);
+                                matches[0] = (Integer) matches[0] + (equals ? 1 : 0);
+                                return equals;
+                            }
+                        }, new MyInterfaceSingleElementWatcher(matches)
+                );
+            }
+        });
+        SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>)putMyInterfaceSupplierToRegistry(registry);
+        registry.remove(myInterfaceRegistration);
+        assertThat(((Integer) matches[0]), is(2));
+        assertThat(((MyInterface)matches[1]), is(notNullValue()));
+        assertThat(((MyInterface)matches[2]), is((MyInterface) matches[1]));
+    }
+
+
+    @Test
+    public void testBindListener() {
+        final org.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        Injector injector = createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bindListener(new org.yar.Matcher<Key<MyInterface>>() {
+                                 @Override
+                                 public boolean matches(Key<MyInterface> item) {
+                                     return false;  //To change body of implemented methods use File | Settings | File Templates.
+                                 }
+                             }, new RegistryListener<MyInterface>() {
+                                 @Nullable
+                                 @Override
+                                 public MyInterface add(MyInterface element) {
+                                     return null;  //To change body of implemented methods use File | Settings | File Templates.
+                                 }
+
+                                 @Override
+                                 public void remove(MyInterface element) {
+                                     //To change body of implemented methods use File | Settings | File Templates.
+                                 }
+                             }
+                );
+
+                bindListener(new org.yar.Matcher<Key<MyInterface>>() {
+                                 @Override
+                                 public boolean matches(Key<MyInterface> item) {
+                                     return false;  //To change body of implemented methods use File | Settings | File Templates.
+                                 }
+                             }, new RegistryListener<Object>() {
+                                 @Nullable
+                                 @Override
+                                 public MyInterface add(Object element) {
+                                     return null;  //To change body of implemented methods use File | Settings | File Templates.
+                                 }
+
+                                 @Override
+                                 public void remove(Object element) {
+                                     //To change body of implemented methods use File | Settings | File Templates.
+                                 }
+                             }
+                );
+
+//                bindListenerBounded(new org.yar.Matcher<Key<? extends MyInterface>>() {
+//                                 @Override
+//                                 public boolean matches(Key<? extends MyInterface> item) {
+//                                     return false;  //To change body of implemented methods use File | Settings | File Templates.
+//                                 }
+//                             }, new RegistryListener<MyInterface>() {
+//                                 @Nullable
+//                                 @Override
+//                                 public MyInterface add(MyInterface element) {
+//                                     return null;  //To change body of implemented methods use File | Settings | File Templates.
+//                                 }
+//
+//                                 @Override
+//                                 public void remove(MyInterface element) {
+//                                     //To change body of implemented methods use File | Settings | File Templates.
+//                                 }
+//                             }
+//                );
+//                bindListenerBounded(new org.yar.Matcher<Key<? extends MyInterface>>() {
+//                                 @Override
+//                                 public boolean matches(Key<? extends MyInterface> item) {
+//                                     return false;  //To change body of implemented methods use File | Settings | File Templates.
+//                                 }
+//                             }, new RegistryListener<Object>() {
+//                                 @Nullable
+//                                 @Override
+//                                 public MyInterface add(Object element) {
+//                                     return null;  //To change body of implemented methods use File | Settings | File Templates.
+//                                 }
+//
+//                                 @Override
+//                                 public void remove(Object element) {
+//                                     //To change body of implemented methods use File | Settings | File Templates.
+//                                 }
+//                             }
+//                );
+            }
+        });
+        putMyInterfaceSupplierToRegistry(registry);
+
+    }
+
     static interface MyInterface {
 
+    }
+
+    static class MyInterfaceSingleElementWatcher extends AbstractSingleElementWatcher<MyInterface> implements RegistryListener<MyInterface> {
+
+        final private Object[] matches;
+
+        MyInterfaceSingleElementWatcher(Object[] matches) {
+            this.matches = matches;
+        }
+
+        @Nullable
+        @Override
+        public MyInterface doAdd(MyInterface element) {
+            if (matches[1] !=  null) {
+                return null;
+            }
+            matches[1] = element;
+            return element;
+        }
+
+        @Override
+        public void doRemove(MyInterface element) {
+            matches[2] = element;
+        }
     }
 }

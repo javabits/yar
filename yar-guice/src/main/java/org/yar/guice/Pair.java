@@ -24,11 +24,11 @@ package org.yar.guice;
 * @author Romain Gilles
 */
 class Pair<L, R> {
-    final L leftValue;
-    final R rightValue;
+    final L left;
+    final R right;
 
     Pair(L leftValue, R rightValue) {
-        this.leftValue = leftValue;
-        this.rightValue = rightValue;
+        this.left = leftValue;
+        this.right = rightValue;
     }
 }

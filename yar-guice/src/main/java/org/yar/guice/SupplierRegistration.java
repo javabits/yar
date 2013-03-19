@@ -26,8 +26,13 @@ import org.yar.Supplier;
 *
 * @author Romain Gilles
 */
-class SupplierRegistration<T> extends AbstractRegistration<T, Supplier<T>>{
+class SupplierRegistration<T> extends Pair<Key<T>, Supplier<T>> implements org.yar.Registration<T> {
     SupplierRegistration(Key<T> leftValue, Supplier<T> rightValue) {
         super(leftValue, rightValue);
+    }
+
+    @Override
+    public Key<T> key() {
+        return left;
     }
 }

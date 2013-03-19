@@ -97,4 +97,9 @@ public class CacheContainer<K, V> implements Container<K, V> {
             throw propagate(e);
         }
     }
+
+    @Override
+    public List<Pair<K, V>> getEntries() {//TODO
+        throw new UnsupportedOperationException("TODO implement It !!!");
+    }
 }

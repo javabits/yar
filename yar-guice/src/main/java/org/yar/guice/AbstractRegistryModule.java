@@ -61,6 +61,45 @@ public abstract class AbstractRegistryModule extends AbstractModule {
      */
     protected abstract void configureRegistry();
 
+    protected <T> void bindListener(org.yar.Matcher<Key<T>> matcher, Key<RegistryListener<? super T>> key) {
+        if (isBlockingSupplier(matcher)) {
+
+        } else if (isSupplier(matcher)) {
+
+        } else {
+            bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, key));
+        }
+    }
+
+    private <T> boolean isBlockingSupplier(org.yar.Matcher<Key<T>> matcher) {
+        return isBlockingSupplier(Matchers.getTargetTypeLiteral(matcher));  //To change body of created methods use File | Settings | File Templates.
+    }
+
+    protected <T> boolean isSupplier(org.yar.Matcher<Key<T>> matcher) {
+        return isSupplier(Matchers.getTargetTypeLiteral(matcher));
+    }
+
+    protected <T> void bindListener(org.yar.Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
+        if (isBlockingSupplier(matcher)) {
+            throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
+        } else if (isSupplier(matcher)) {
+
+        } else {
+            bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, listener));
+        }
+    }
+
+
+//    protected <T> void bindListenerBounded(org.yar.Matcher<Key<? extends T>> typeMatcher, RegistryListener<? super T> listener) {
+//        if (isBlockingSupplier(typeLiteral)) {
+//
+//        } else if (isSupplier(typeLiteral)) {
+//
+//        } else {
+//
+//        }
+//    }
+
     protected <T> RegistrationLinkedBindingBuilder<T> register(Key<T> key) {
         return new RegistrationBindingBuilderImpl<>(binder(), key);
     }
@@ -76,7 +115,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
 
     @Override
     protected <T> RegistryLinkedBindingBuilder<T> bind(Key<T> key) {
-        return getRegistryBindingBuilderFactory(key.getTypeLiteral()).newFrom(key);
+        return getRegistryBindingBuilderFactory(key).newFrom(key);
     }
 
     @Override
@@ -84,17 +123,34 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         return getRegistryBindingBuilderFactory(typeLiteral).newFrom(typeLiteral);
     }
 
+    @Override
+    protected <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
+        return new RegistryBindingBuilder<>(binder(), clazz);
+    }
+
+    private <T> RegistryBindingBuilderFactory getRegistryBindingBuilderFactory(Key<T> key) {
+        return getRegistryBindingBuilderFactory(key.getTypeLiteral());
+    }
+
     private <T> RegistryBindingBuilderFactory getRegistryBindingBuilderFactory(TypeLiteral<T> typeLiteral) {
-        if (BlockingSupplier.class.isAssignableFrom(typeLiteral.getRawType())) {
+        if (isBlockingSupplier(typeLiteral)) {
             return new BlockingSupplierRegistryBindingBuilderFactory();
         }
-        if (Supplier.class.isAssignableFrom(typeLiteral.getRawType())) {
+        if (isSupplier(typeLiteral)) {
             return new SupplierRegistryBindingBuilderFactory();
         }
         if (isSupportedCollectionsInterface(typeLiteral)) {
             return new CollectionsRegistryBindingBuilderFactory();
         }
         return new SimpleRegistryBindingBuilderFactory();
+    }
+
+    private <T> boolean isBlockingSupplier(TypeLiteral<T> typeLiteral) {
+        return BlockingSupplier.class.isAssignableFrom(typeLiteral.getRawType());
+    }
+
+    private <T> boolean isSupplier(TypeLiteral<T> typeLiteral) {
+        return Supplier.class.isAssignableFrom(typeLiteral.getRawType());
     }
 
     private <T> boolean isSupportedCollectionsInterface(TypeLiteral<T> typeLiteral) {
@@ -105,11 +161,6 @@ public abstract class AbstractRegistryModule extends AbstractModule {
 
     private <T> boolean isClassEqualsToLiteralRowType(Class<?> type, TypeLiteral<T> typeLiteral) {
         return type.equals(typeLiteral.getRawType());
-    }
-
-    @Override
-    protected <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
-        return new RegistryBindingBuilder<>(binder(), clazz);
     }
 
     private interface RegistryBindingBuilderFactory {

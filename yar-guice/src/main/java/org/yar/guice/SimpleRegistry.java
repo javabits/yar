@@ -71,13 +71,13 @@ public class SimpleRegistry implements Registry {
 
 
     }
-    private <T> List<Supplier<T>> copyOfEntries(List<SupplierRegistration<?>> pairs) {
+    private static <T> List<Supplier<T>> copyOfEntries(List<SupplierRegistration<?>> pairs) {
         return ImmutableList.copyOf(transform(pairs, new Function<SupplierRegistration<?>, Supplier<T>>() {
 
             @Nullable
             @Override @SuppressWarnings("unchecked")
             public Supplier<T> apply(@Nullable SupplierRegistration<?> registration) {
-                return (Supplier<T>)requireNonNull(registration, "registration").rightValue;
+                return (Supplier<T>)requireNonNull(registration, "registration").right;
             }
         }));
     }
@@ -86,14 +86,19 @@ public class SimpleRegistry implements Registry {
     public <T> List<Supplier<T>> getAll(Key<T> key) {
         List<SupplierRegistration<T>> pairs = registrationContainer.getAll(key);
 
+        return transformToSuppliers(pairs);
+
+    }
+
+    private static <T> ImmutableList<Supplier<T>> transformToSuppliers(List<SupplierRegistration<T>> pairs) {
         return ImmutableList.copyOf(transform(pairs, new Function<SupplierRegistration<T>, Supplier<T>>() {
             @Nullable
-            @Override @SuppressWarnings("unchecked")
+            @Override
+            @SuppressWarnings("unchecked")
             public Supplier<T> apply(@Nullable SupplierRegistration<T> registration) {
-                return (Supplier<T>)requireNonNull(registration, "registration").rightValue;
+                return requireNonNull(registration, "registration").right;
             }
         }));
-
     }
 
     @Nullable
@@ -103,7 +108,7 @@ public class SimpleRegistry implements Registry {
         if (registration == null) {
             return null;
         }
-        return (Supplier<T>) registration.rightValue;
+        return (Supplier<T>) registration.right;
     }
 
     @Nullable
@@ -113,7 +118,7 @@ public class SimpleRegistry implements Registry {
         if (registration == null) {
             return null;
         }
-        return registration.rightValue;
+        return registration.right;
     }
 
     @Override
@@ -169,11 +174,11 @@ public class SimpleRegistry implements Registry {
         }
     }
 
-    private SupplierRegistration checkSupplierRegistration(org.yar.Registration<?> registration) {
+    private SupplierRegistration<?> checkSupplierRegistration(org.yar.Registration<?> registration) {
         return checkRegistration(registration, SupplierRegistration.class);
     }
 
-    private <T extends AbstractRegistration> T checkRegistration(Registration<?> registration, Class<T> registrationClass) {
+    private <T extends Registration> T checkRegistration(Registration<?> registration, Class<T> registrationClass) {
         requireNonNull(registration, "registration");
 
         if (!(registrationClass.isInstance(registration))) {
@@ -182,13 +187,16 @@ public class SimpleRegistry implements Registry {
         return registrationClass.cast(registration);
     }
 
-
     @Override
-    public <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<T>> watcher) {
-        checkKey(watchedKey, "key");
-        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(watchedKey, watcher);
+    public <T> Registration<T> addWatcher(KeyMatcher<T> keyMatcher, Watcher<Supplier<T>> watcher) {
+        checkKeyMatcher(keyMatcher, "keyMatcher");
+        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(keyMatcher, watcher);
         executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
         return watcherRegistration;
+    }
+
+    private <T> KeyMatcher<T> checkKeyMatcher(KeyMatcher<T> matcher, String attribute) {
+        return requireNonNull(matcher, attribute);
     }
 
     @Override

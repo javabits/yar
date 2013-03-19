@@ -17,12 +17,14 @@
 package org.yar.guice;
 
 import org.yar.Key;
+import org.yar.KeyMatchers;
 import org.yar.Supplier;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
+import static org.yar.KeyMatchers.newKeyMatcher;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -90,7 +92,7 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
 
         AbstractBlockingSupplier(Key<T> key, Supplier<T> delegate) {
             super(delegate);
-            addWatcher(key, this);
+            addWatcher(newKeyMatcher(key), this);
         }
     }
 
@@ -102,7 +104,6 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
             super(key, delegate);
             this.timeout = timeout;
             this.unit = unit;
-
         }
 
         @Override

@@ -14,23 +14,19 @@
  *    limitations under the License.
  */
 
-package org.yar.guice;
-
-import org.yar.Key;
-import org.yar.Registration;
-
-import java.util.List;
+package org.yar;
 
 /**
- * TODO comment it
- * Date: 3/13/13
- * Time: 10:35 AM
+ * Returns {@code true} or {@code false} for a given input.
+ * Date: 3/15/13
  *
+ * @param <T> the matching type
  * @author Romain Gilles
  */
-public interface RegistrationHandler {
+public interface Matcher<T> {
+    /**
+     * Returns {@code true} if this matches {@code item}, {@code false} otherwise.
+     */
+    boolean matches(T item);
 
-    List<Key<?>> registeredKeys();
-
-    void clear();
 }

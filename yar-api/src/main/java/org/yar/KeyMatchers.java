@@ -14,33 +14,35 @@
  *    limitations under the License.
  */
 
-package org.yar.guice;
+package org.yar;
 
-import org.yar.Key;
-
-import static com.google.common.base.Objects.toStringHelper;
+import static java.util.Objects.requireNonNull;
 
 /**
  * TODO comment
- * Date: 2/21/13
- * Time: 9:38 AM
+ * Date: 3/15/13
  *
  * @author Romain Gilles
  */
-public class AbstractRegistration<T, L> extends Pair<Key<T>, L> implements org.yar.Registration<T> {
-    AbstractRegistration(Key<T> leftValue, L rightValue) {
-        super(leftValue, rightValue);
+public final class KeyMatchers {
+
+    private KeyMatchers() {
+        throw new AssertionError("not for you!");
     }
 
-    @Override
-    public Key<T> key() {
-        return leftValue;
-    }
+    public static <T> KeyMatcher<T> newKeyMatcher(final Key<T> key) {
+        requireNonNull(key, "key");
+        return new KeyMatcher<T>() {
 
-    @Override
-    public String toString() {
-        return toStringHelper(getClass())
-                .add("key", key())
-                .toString();
+            @Override
+            public boolean matches(Key<T> otherKey) {
+                return key.equals(otherKey);
+            }
+
+            @Override
+            public Key<T> key() {
+                return key;
+            }
+        };
     }
 }

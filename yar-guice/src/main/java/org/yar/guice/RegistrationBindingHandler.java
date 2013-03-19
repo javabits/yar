@@ -16,7 +16,9 @@
 
 package org.yar.guice;
 
+import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -24,8 +26,11 @@ import com.google.inject.TypeLiteral;
 import org.yar.Registration;
 import org.yar.Registry;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
+
+import static com.google.common.collect.Lists.transform;
 
 /**
  * TODO comment
@@ -37,21 +42,21 @@ import java.util.List;
 public class RegistrationBindingHandler implements RegistrationHandler {
     private final Injector injector;
     private final Registry registry;
-    private volatile List<Registration<?>> registrations;
+    private final List<Registration<?>> registrations;
     @Inject
     public RegistrationBindingHandler(Injector injector, Registry registry) {
         this.injector = injector;
         this.registry = registry;
-        registerBindings();
+        registrations = registerBindings();
     }
 
-    private void registerBindings() {
+    private List<Registration<?>> registerBindings() {
         ImmutableList.Builder<Registration<?>> registrationsBuilder = ImmutableList.builder();
         for (Binding<GuiceRegistration> registrationBinding : injector.findBindingsByType(TypeLiteral.get(GuiceRegistration.class))) {
             Key<?> key = registrationBinding.getProvider().get().key();
             registrationsBuilder.add(putRegistrationToRegistry(key));
         }
-        registrations = registrationsBuilder.build();
+        return registrationsBuilder.build();
     }
 
     @SuppressWarnings("unchecked")
@@ -60,13 +65,23 @@ public class RegistrationBindingHandler implements RegistrationHandler {
     }
 
     @Override
+    public List<org.yar.Key<?>> registeredKeys() {
+        return transform(registrations, new Function<Registration<?>, org.yar.Key<?>>() {
+            @Nullable
+            @Override
+            public org.yar.Key<?> apply(@Nullable Registration<?> registration) {
+                if (registration == null) {
+                    throw new NullPointerException("registration");
+                }
+                return registration.key();
+            }
+        });
+    }
+
+    @Override
     public void clear() {
         for (Registration<?> registration : registrations) {
             registry.remove(registration);
         }
-    }
-
-    public List<Registration<?>> registrations() {
-        return registrations;
     }
 }

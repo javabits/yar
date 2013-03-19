@@ -45,7 +45,7 @@ public interface Registry {
 
     void remove(Registration<?> registration);
 
-    <T> Registration<T> addWatcher(Key<T> watchedKey, Watcher<Supplier<T>> watcher);
+    <T> Registration<T> addWatcher(KeyMatcher<T> watchedKey, Watcher<Supplier<T>> watcher);
 
     void removeWatcher(Registration<?> watcherRegistration);
 }

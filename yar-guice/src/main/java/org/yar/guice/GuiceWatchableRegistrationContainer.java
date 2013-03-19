@@ -32,6 +32,22 @@ import java.util.List;
  * @author Romain Gilles
  */
 public class GuiceWatchableRegistrationContainer implements WatchableRegistrationContainer {
+
+    private enum Action {
+        ADD() {
+            @Override
+            <T> void execute(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration) {
+                watcherRegistration.right.add(supplierRegistration.right);
+            }
+        }, REMOVE() {
+            @Override
+            <T> void execute(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration) {
+                watcherRegistration.right.remove(supplierRegistration.right);
+            }
+        };
+        abstract <T> void execute(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration);
+    }
+
     private final Container<Type, SupplierRegistration<?>> supplierRegistry;
     private final Container<Type, WatcherRegistration<?>> watcherRegistry;
 
@@ -91,7 +107,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     public <T> SupplierRegistration<T> getFirst(Key<T> key) {
         List<SupplierRegistration<?>> all = supplierRegistry.getAll(key.type());
         for (SupplierRegistration<?> pair : all) {
-            if (key.equals(pair.leftValue)) {
+            if (key.equals(pair.left)) {
                 return (SupplierRegistration<T>) pair;
             }
         }
@@ -100,15 +116,15 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
     @Override
     public boolean put(SupplierRegistration<?> registration) {
-        updateWatcher(registration);
+        updateWatcher(registration, Action.ADD);
         return putToRegistry(supplierRegistry, registration);
     }
 
-    private <T> void updateWatcher(SupplierRegistration<T> registration) {
+    private <T> void updateWatcher(SupplierRegistration<T> registration, Action action) {
         Key<T> key = registration.key();
         List<WatcherRegistration<T>> watchers = getWatchers(key);
         for (WatcherRegistration<T> registryEntry : watchers) {
-            updateWatcherIfKeyEquals(registration, registryEntry);
+            fireAddToWatcherIfMatches(registryEntry, registration, action);
         }
     }
 
@@ -125,11 +141,6 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         return resultBuilder.build();
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> void updateWatcherIfKeyEquals(SupplierRegistration<T> registration, WatcherRegistration<T> registryEntry) {
-        registryEntry.rightValue.add(registration.rightValue);
-    }
-
     private <T extends Registration<?>> boolean putToRegistry(Container<Type, T> container, T registration) {
         return container.put(getRegistryKey(registration), registration);
     }
@@ -137,7 +148,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     @Override
     public boolean remove(SupplierRegistration<?> registration) {
         boolean removed = removeFromRegistry(supplierRegistry, registration);
-        updateWatcher(registration);
+        updateWatcher(registration, Action.REMOVE);
         return removed;
     }
 
@@ -148,9 +159,15 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     @Override
     public <T> boolean add(WatcherRegistration<T> watcherRegistration) {
         for (SupplierRegistration<T> supplierRegistration : getAll(watcherRegistration.key())) {
-            watcherRegistration.rightValue.add(supplierRegistration.rightValue);
+            fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, Action.ADD);
         }
         return putToRegistry(watcherRegistry, watcherRegistration);
+    }
+
+    private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
+        if (watcherRegistration.left.matches(supplierRegistration.key())) {
+            action.execute(watcherRegistration, supplierRegistration);
+        }
     }
 
     @Override

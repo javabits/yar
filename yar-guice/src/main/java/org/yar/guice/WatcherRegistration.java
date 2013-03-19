@@ -17,6 +17,7 @@
 package org.yar.guice;
 
 import org.yar.Key;
+import org.yar.KeyMatcher;
 import org.yar.Supplier;
 import org.yar.Watcher;
 
@@ -27,8 +28,14 @@ import org.yar.Watcher;
 *
 * @author Romain Gilles
 */
-class WatcherRegistration<T> extends AbstractRegistration<T, Watcher<Supplier<T>>> {
-    WatcherRegistration(Key<T> leftValue, Watcher<Supplier<T>> rightValue) {
+class WatcherRegistration<T> extends Pair<KeyMatcher<T>, Watcher<Supplier<T>>> implements org.yar.Registration<T> {
+
+    WatcherRegistration(KeyMatcher<T> leftValue, Watcher<Supplier<T>> rightValue) {
         super(leftValue, rightValue);
+    }
+
+    @Override
+    public Key<T> key() {
+        return left.key();
     }
 }

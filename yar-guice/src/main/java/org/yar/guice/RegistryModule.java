@@ -32,5 +32,6 @@ public abstract class RegistryModule extends AbstractRegistryModule {
     @Override
     void doBeforeConfiguration() {
         super.bind(RegistrationHandler.class).to(RegistrationBindingHandler.class).in(Singleton.class);
+        super.bind(RegistryListenerHandler.class).to(RegistryListenerBindingHandler.class).in(Singleton.class);
     }
 }

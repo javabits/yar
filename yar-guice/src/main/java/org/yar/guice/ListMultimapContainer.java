@@ -77,4 +77,8 @@ class ListMultimapContainer<K, V> implements Container<K, V> {
         return new ListMultimapContainer<>(ArrayListMultimap.<K, V>create());
     }
 
+    @Override
+    public List<Pair<K, V>> getEntries() {//TODO
+        throw new UnsupportedOperationException("TODO implement It !!!");
+    }
 }

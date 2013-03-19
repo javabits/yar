@@ -16,6 +16,7 @@
 
 package org.yar.guice;
 
+import org.yar.AbstractSingleElementWatcher;
 import org.yar.Supplier;
 import org.yar.Watcher;
 

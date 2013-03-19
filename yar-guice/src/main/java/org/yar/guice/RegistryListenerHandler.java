@@ -16,21 +16,11 @@
 
 package org.yar.guice;
 
-import org.yar.Key;
-import org.yar.Registration;
-
-import java.util.List;
-
 /**
- * TODO comment it
- * Date: 3/13/13
- * Time: 10:35 AM
+ * TODO comment
+ * Date: 3/17/13
  *
  * @author Romain Gilles
  */
-public interface RegistrationHandler {
-
-    List<Key<?>> registeredKeys();
-
-    void clear();
+public interface RegistryListenerHandler {
 }

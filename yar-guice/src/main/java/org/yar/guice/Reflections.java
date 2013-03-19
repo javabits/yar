@@ -41,7 +41,7 @@ public final class Reflections {
         if (actualTypeArguments.length == 1 && ( expectedType == null || expectedType.isAssignableFrom(getRowType(actualTypeArguments[0])))) {
             return actualTypeArguments[0];
         }
-        throw new IllegalArgumentException(String.format("matcher is not a parametrized type of %s: %s", expectedForm, matcherType));
+        throw new IllegalArgumentException(String.format("matcher is not a parametrized type of %s but it's %s", expectedForm, matcherType));
     }
 
     static Class<?> getRowType(Type type) {
