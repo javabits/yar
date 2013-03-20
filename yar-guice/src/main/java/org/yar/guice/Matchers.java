@@ -23,6 +23,10 @@ import org.yar.Matcher;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import static org.yar.guice.Reflections.getRowType;
+import static org.yar.guice.Reflections.getUniqueParameterType;
+import static org.yar.guice.Reflections.isParameterizedType;
+
 /**
  * TODO comment
  * Date: 3/17/13
@@ -31,6 +35,10 @@ import java.lang.reflect.Type;
  * @author Romain Gilles
  */
 public final class Matchers {
+
+    private static final String KEY_MATCHER_SIGNATURE = "Matcher<Key<T>>";
+    private static final String MATCHER_PARAMETER_TYPE_ERROR = "The matcher type must be implementation of " + KEY_MATCHER_SIGNATURE;
+
     public static <T> org.yar.Key<T> getYarKey(Matcher<Key<T>> matcher) {
         return GuiceKey.of(getKey(matcher));
     }
@@ -40,15 +48,23 @@ public final class Matchers {
     }
 
     public static <T> TypeLiteral<T> getTargetTypeLiteral(Matcher<Key<T>> matcher) {
-        ParameterizedType matcherType = Reflections.getParameterizedType(matcher.getClass(), Matcher.class);
-        Type keyType = Reflections.getUniqueParameterType(matcherType, Key.class, "Matcher<Key<T>>");
+        Type keyTargetType = getTargetType(matcher);
+        return getTypeLiteral(keyTargetType);
+    }
 
-        if (!(keyType instanceof ParameterizedType)) {
-            throw new IllegalArgumentException("matcher is not a parametrized type of Key<T>: " + matcherType);
+    @SuppressWarnings("unchecked")
+    private static <T> TypeLiteral<T> getTypeLiteral(Type keyTargetType) {
+        return (TypeLiteral<T>)TypeLiteral.get(keyTargetType);
+    }
+
+    private static <T> Type getTargetType(Matcher<Key<T>> matcher) {
+        Type matcherTargetType = getUniqueParameterType(matcher.getClass(), Matcher.class, KEY_MATCHER_SIGNATURE);
+        if (isParameterizedType(matcherTargetType) && Key.class.isAssignableFrom(getRowType(matcherTargetType))) {
+            return getUniqueParameterType((ParameterizedType) matcherTargetType, "Key<T>");
+        } else {
+            throw new IllegalArgumentException(MATCHER_PARAMETER_TYPE_ERROR);
         }
-        Type targetType = Reflections.getUniqueParameterType((ParameterizedType) keyType, "T");
 
-        return (TypeLiteral<T>)TypeLiteral.get(targetType);
     }
 
 }

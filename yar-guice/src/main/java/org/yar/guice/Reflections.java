@@ -44,19 +44,36 @@ public final class Reflections {
         throw new IllegalArgumentException(String.format("matcher is not a parametrized type of %s but it's %s", expectedForm, matcherType));
     }
 
+    static Type getUniqueParameterType(Class<?> type, Class<?> expectedOwner, String expectedForm) {
+        return getUniqueParameterType(getParameterizedType(type, expectedOwner), expectedForm);
+    }
+
     static Class<?> getRowType(Type type) {
-        if (type instanceof Class) {
+        if (isClassType(type)) {
             return (Class<?>) type;
         }
-        if (type instanceof ParameterizedType) {
+        if (isParameterizedType(type)) {
             return (Class<?>)((ParameterizedType) type).getRawType();
         }
 
         return null;  //To change body of created methods use File | Settings | File Templates.
     }
 
-    static ParameterizedType getParameterizedType(Class<?> matcher, Class<?> expectedType) {
+    public static boolean isClassType(Type type) {
+        return type instanceof Class;
+    }
+
+    public static boolean isParameterizedType(Type type) {
+        return type instanceof ParameterizedType;
+    }
+
+    private static ParameterizedType getParameterizedType(Class<?> matcher, Class<?> expectedType) {
         ParameterizedType matcherType = null;
+
+        Type superType = matcher.getGenericSuperclass();
+        if (expectedType.isAssignableFrom(getRowType(superType)) && isParameterizedType(superType)) {
+            return (ParameterizedType) superType;
+        }
         for (Type type : matcher.getGenericInterfaces()) {
             matcherType = asParameterizedType(type, expectedType);
         }
@@ -68,7 +85,7 @@ public final class Reflections {
 
     private static ParameterizedType asParameterizedType(Type type, Class<?> expectedType) {
         ParameterizedType result = null;
-        if (type instanceof ParameterizedType) {
+        if (isParameterizedType(type)) {
             ParameterizedType parameterizedType = (ParameterizedType) type;
             if (expectedType.isAssignableFrom((Class<?>) parameterizedType.getRawType())) {
                 result = parameterizedType;

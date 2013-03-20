@@ -22,13 +22,10 @@ import com.google.inject.Key;
 import org.yar.*;
 
 import javax.annotation.Nullable;
-
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import static java.util.Objects.requireNonNull;
 import static org.yar.guice.Matchers.getYarKey;
-import static org.yar.guice.Reflections.getParameterizedType;
 import static org.yar.guice.Reflections.getRowType;
 import static org.yar.guice.Reflections.getUniqueParameterType;
 
@@ -61,32 +58,7 @@ abstract class GuiceWatcherRegistration<T> {
     }
 
     private static <T> KeyMatcher<T> newKeyMatcher(final Matcher<Key<T>> keyMatcher) {
-        return new KeyMatcher<T>() {
-            private final Matcher<Key<T>> matcher = keyMatcher;
-            private final org.yar.Key<T> key = getYarKey(matcher);
-
-            @Override
-            public boolean matches(org.yar.Key<T> otherKey) {
-                return matcher.matches(getKey(otherKey));
-            }
-
-            private Key<T> getKey(org.yar.Key<T> otherKey) {
-                Key<T> otherGuiceKey;
-                if (otherKey.annotationType() != null)
-                    otherGuiceKey = (Key<T>) Key.get(otherKey.type(), otherKey.annotation());
-                else if (otherKey.annotationType() != null) {
-                    otherGuiceKey = (Key<T>) Key.get(otherKey.type(), otherKey.annotationType());
-                } else {
-                    otherGuiceKey = (Key<T>) Key.get(otherKey.type());
-                }
-                return otherGuiceKey;
-            }
-
-            @Override
-            public org.yar.Key<T> key() {
-                return key;
-            }
-        };
+        return new KeyMatcherWrapper<>(keyMatcher);
     }
 
     static class KeyGuiceWatcherRegistration<T> extends GuiceWatcherRegistration<T> {
@@ -126,8 +98,8 @@ abstract class GuiceWatcherRegistration<T> {
     }
 
     private static <T> Watcher<Supplier<T>> newWatcherAdapter(final RegistryListener listener) {
-        if (Supplier.class.isAssignableFrom(getRowType(getUniqueParameterType(getParameterizedType(listener.getClass()
-                , RegistryListener.class), "RegistryListener<T>")))) {
+        if (Supplier.class.isAssignableFrom(getRowType(getUniqueParameterType(listener.getClass()
+                , RegistryListener.class, "RegistryListener<T>")))) {
             return new SupplierWatcher<>(listener);
         } else if (listener instanceof AbstractSingleElementWatcher) {
             return new SupplierSingleTargetWatcher<>(listener);
@@ -139,6 +111,7 @@ abstract class GuiceWatcherRegistration<T> {
     private static class SupplierWatcher<T> implements Watcher<Supplier<T>> {
         private final Watcher<? super Supplier<T>> registryListener;
 
+        @SuppressWarnings("unchecked")
         public SupplierWatcher(Watcher listener) {
             registryListener = listener;
         }
@@ -194,6 +167,39 @@ abstract class GuiceWatcherRegistration<T> {
         @Override
         protected T removeTracked(Supplier<T> element) {
             return trackedElement;
+        }
+    }
+
+    private static class KeyMatcherWrapper<T> implements KeyMatcher<T> {
+        private final Matcher<Key<T>> matcher;
+        private final org.yar.Key<T> key;
+
+        public KeyMatcherWrapper(Matcher<Key<T>> keyMatcher) {
+            matcher = keyMatcher;
+            key = getYarKey(matcher);
+        }
+
+        @Override
+        public boolean matches(org.yar.Key<T> otherKey) {
+            return matcher.matches(getKey(otherKey));
+        }
+
+        @SuppressWarnings("unchecked")
+        private Key<T> getKey(org.yar.Key<T> otherKey) {
+            Key<T> otherGuiceKey;
+            if (otherKey.annotationType() != null)
+                otherGuiceKey = (Key<T>) Key.get(otherKey.type(), otherKey.annotation());
+            else if (otherKey.annotationType() != null) {
+                otherGuiceKey = (Key<T>) Key.get(otherKey.type(), otherKey.annotationType());
+            } else {
+                otherGuiceKey = (Key<T>) Key.get(otherKey.type());
+            }
+            return otherGuiceKey;
+        }
+
+        @Override
+        public org.yar.Key<T> key() {
+            return key;
         }
     }
 }
