@@ -24,5 +24,5 @@ package org.yar;
  * @author Romain Gilles
  */
 public interface Registration<T> {
-    Key<T> key();
+    Id<T> id();
 }

@@ -16,7 +16,7 @@
 
 package org.yar.guice;
 
-import org.yar.Key;
+import org.yar.Id;
 import org.yar.Supplier;
 
 /**
@@ -26,13 +26,13 @@ import org.yar.Supplier;
 *
 * @author Romain Gilles
 */
-class SupplierRegistration<T> extends Pair<Key<T>, Supplier<T>> implements org.yar.Registration<T> {
-    SupplierRegistration(Key<T> leftValue, Supplier<T> rightValue) {
+class SupplierRegistration<T> extends Pair<Id<T>, Supplier<T>> implements org.yar.Registration<T> {
+    SupplierRegistration(Id<T> leftValue, Supplier<T> rightValue) {
         super(leftValue, rightValue);
     }
 
     @Override
-    public Key<T> key() {
+    public Id<T> id() {
         return left;
     }
 }

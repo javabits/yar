@@ -16,15 +16,14 @@
 
 package org.yar.guice;
 
-import org.yar.Key;
-import org.yar.KeyMatchers;
+import org.yar.Id;
 import org.yar.Supplier;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
-import static org.yar.KeyMatchers.newKeyMatcher;
+import static org.yar.IdMatchers.newKeyMatcher;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -61,38 +60,38 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
 
     @Nullable
     @Override
-    public <T> Supplier<T> get(Key<T> key) {
-        return createSupplier(key, super.get(key), defaultTimeout, defaultTimeUnit);
+    public <T> Supplier<T> get(Id<T> id) {
+        return createSupplier(id, super.get(id), defaultTimeout, defaultTimeUnit);
     }
 
     @Nullable
     @Override
     public <T> Supplier<T> get(Class<T> type, long timeout, TimeUnit unit) {
-        return get(GuiceKey.of(type), timeout, unit);
+        return get(GuiceId.of(type), timeout, unit);
     }
 
     @Nullable
     @Override
-    public <T> Supplier<T> get(Key<T> key, long timeout, TimeUnit unit) {
-        return createSupplier(key, super.get(key), timeout, unit);
+    public <T> Supplier<T> get(Id<T> id, long timeout, TimeUnit unit) {
+        return createSupplier(id, super.get(id), timeout, unit);
     }
 
 
-    private <T> Supplier<T> createSupplier(Key<T> key, Supplier<T> originalValue, long timeout, TimeUnit unit) {
+    private <T> Supplier<T> createSupplier(Id<T> id, Supplier<T> originalValue, long timeout, TimeUnit unit) {
         if (timeout == 0) { //direct
             return originalValue;
         } else if (timeout < 0) {
-            return new InfiniteBlockingSupplier<>(key, originalValue);
+            return new InfiniteBlockingSupplier<>(id, originalValue);
         } else {
-            return new TimeoutBlockingSupplier<>(key, originalValue, timeout, unit);
+            return new TimeoutBlockingSupplier<>(id, originalValue, timeout, unit);
         }
     }
 
     abstract class AbstractBlockingSupplier<T> extends org.yar.guice.AbstractBlockingSupplier<T> {
 
-        AbstractBlockingSupplier(Key<T> key, Supplier<T> delegate) {
+        AbstractBlockingSupplier(Id<T> id, Supplier<T> delegate) {
             super(delegate);
-            addWatcher(newKeyMatcher(key), this);
+            addWatcher(newKeyMatcher(id), this);
         }
     }
 
@@ -100,8 +99,8 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
         private final long timeout;
         private final TimeUnit unit;
 
-        TimeoutBlockingSupplier(Key<T> key, Supplier<T> delegate, long timeout, TimeUnit unit) {
-            super(key, delegate);
+        TimeoutBlockingSupplier(Id<T> id, Supplier<T> delegate, long timeout, TimeUnit unit) {
+            super(id, delegate);
             this.timeout = timeout;
             this.unit = unit;
         }
@@ -137,8 +136,8 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
 
 
     class InfiniteBlockingSupplier<T> extends AbstractBlockingSupplier<T> {
-        InfiniteBlockingSupplier(Key<T> key, Supplier<T> delegate) {
-            super(key, delegate);
+        InfiniteBlockingSupplier(Id<T> id, Supplier<T> delegate) {
+            super(id, delegate);
         }
 
         @Override

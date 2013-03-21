@@ -20,6 +20,7 @@ import com.google.inject.*;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import org.junit.Test;
+import org.yar.Id;
 import org.yar.Registry;
 import org.yar.Supplier;
 
@@ -66,9 +67,9 @@ public class RegistryModuleRegistrationTest {
     }
 
     private void checkRegisteredService(Injector injector, Key<MyServiceInterface> key) {
-        org.yar.Key<MyServiceInterface> registryKey = GuiceKey.of(key);
+        Id<MyServiceInterface> registryId = GuiceId.of(key);
         Registry registry = injector.getInstance(Registry.class);
-        Supplier<MyServiceInterface> actualServiceSupplier = registry.get(registryKey);
+        Supplier<MyServiceInterface> actualServiceSupplier = registry.get(registryId);
         assertThat(actualServiceSupplier, is(not(nullValue())));
         assertThat(actualServiceSupplier.get(), is(not(nullValue())));
     }

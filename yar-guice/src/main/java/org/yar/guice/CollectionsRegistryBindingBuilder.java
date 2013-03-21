@@ -57,7 +57,7 @@ public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder
         }
 
         @SuppressWarnings("unchecked")
-        private GuiceKey<T> getCollectionsTypeParameter() {
+        private GuiceId<T> getCollectionsTypeParameter() {
             Type type = key().getTypeLiteral().getType();
             checkParameterizedType(type);
             ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -66,7 +66,7 @@ public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder
                 throw new IllegalArgumentException("Supplier type must be mono parameterized: " + type);
             }
 
-            return (GuiceKey<T>)GuiceKey.of(Key.get(actualTypeArguments[0]));
+            return (GuiceId<T>) GuiceId.of(Key.get(actualTypeArguments[0]));
         }
 
     }

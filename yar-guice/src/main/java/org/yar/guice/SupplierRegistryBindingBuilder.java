@@ -19,7 +19,6 @@ package org.yar.guice;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import org.yar.Supplier;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -59,7 +58,7 @@ public class SupplierRegistryBindingBuilder<T> extends RegistryBindingBuilder<T>
         }
 
         @SuppressWarnings("unchecked")
-        private GuiceKey<T> getSupplierTypeParameter() {
+        private GuiceId<T> getSupplierTypeParameter() {
             Type type = key().getTypeLiteral().getType();
             checkParameterizedType(type);
             ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -68,7 +67,7 @@ public class SupplierRegistryBindingBuilder<T> extends RegistryBindingBuilder<T>
                 throw new IllegalArgumentException("Supplier type must be mono parameterized: " + type);
             }
 
-            return (GuiceKey<T>)GuiceKey.of(Key.get(actualTypeArguments[0]));
+            return (GuiceId<T>) GuiceId.of(Key.get(actualTypeArguments[0]));
         }
 
     }

@@ -18,7 +18,6 @@ package org.yar.guice;
 
 import org.junit.Test;
 import org.yar.BlockingSupplier;
-import org.yar.Supplier;
 
 import javax.inject.Provider;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +59,7 @@ public class BlockingSupplierRegistryTest {
         });
         thread.start();
         Thread.sleep(2);
-        registry.put(GuiceKey.of(MyService.class), new GuiceSupplier<>(new Provider<MyService>() {
+        registry.put(GuiceId.of(MyService.class), new GuiceSupplier<>(new Provider<MyService>() {
             @Override
             public MyService get() {
                 return myService;

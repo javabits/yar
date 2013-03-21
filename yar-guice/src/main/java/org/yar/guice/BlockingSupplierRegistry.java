@@ -16,16 +16,14 @@
 
 package org.yar.guice;
 
-import com.google.inject.matcher.Matchers;
 import org.yar.BlockingSupplier;
-import org.yar.Key;
-import org.yar.KeyMatchers;
+import org.yar.Id;
 import org.yar.Supplier;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
-import static org.yar.KeyMatchers.newKeyMatcher;
+import static org.yar.IdMatchers.newKeyMatcher;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -61,23 +59,23 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
 
     @Override
     public <T> BlockingSupplier<T> get(Class<T> type) {
-        return get(GuiceKey.of(type));
+        return get(GuiceId.of(type));
     }
 
     @Override
-    public <T> BlockingSupplier<T> get(Key<T> key) {
-        return new TimeoutBlockingSupplier<>(key, super.get(key), defaultTimeout, defaultTimeUnit);
+    public <T> BlockingSupplier<T> get(Id<T> id) {
+        return new TimeoutBlockingSupplier<>(id, super.get(id), defaultTimeout, defaultTimeUnit);
     }
 
     class TimeoutBlockingSupplier<T> extends AbstractBlockingSupplier<T> implements BlockingSupplier<T> {
         private final long timeout;
         private final TimeUnit unit;
 
-        TimeoutBlockingSupplier(Key<T> key, Supplier<T> delegate, long timeout, TimeUnit unit) {
+        TimeoutBlockingSupplier(Id<T> id, Supplier<T> delegate, long timeout, TimeUnit unit) {
             super(delegate);
             this.timeout = timeout;
             this.unit = unit;
-            addWatcher(newKeyMatcher(key), this);
+            addWatcher(newKeyMatcher(id), this);
         }
 
         @Nullable

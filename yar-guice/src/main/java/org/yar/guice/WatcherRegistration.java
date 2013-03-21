@@ -16,8 +16,8 @@
 
 package org.yar.guice;
 
-import org.yar.Key;
-import org.yar.KeyMatcher;
+import org.yar.Id;
+import org.yar.IdMatcher;
 import org.yar.Supplier;
 import org.yar.Watcher;
 
@@ -31,15 +31,15 @@ import java.util.IdentityHashMap;
 *
 * @author Romain Gilles
 */
-class WatcherRegistration<T> extends Pair<KeyMatcher<T>, Watcher<Supplier<T>>> implements org.yar.Registration<T> {
+class WatcherRegistration<T> extends Pair<IdMatcher<T>, Watcher<Supplier<T>>> implements org.yar.Registration<T> {
 
-    WatcherRegistration(KeyMatcher<T> leftValue, Watcher<Supplier<T>> rightValue) {
+    WatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue) {
         super(leftValue, new WatcherDecorator<>(rightValue));
     }
 
     @Override
-    public Key<T> key() {
-        return left.key();
+    public Id<T> id() {
+        return left.id();
     }
 
     static class WatcherDecorator<T> implements Watcher<Supplier<T>> {

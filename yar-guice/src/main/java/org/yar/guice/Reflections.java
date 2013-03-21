@@ -17,8 +17,9 @@
 package org.yar.guice;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * TODO comment
@@ -38,26 +39,50 @@ public final class Reflections {
 
     static Type getUniqueParameterType(ParameterizedType matcherType, @Nullable Class<?> expectedType, String expectedForm) {
         Type[] actualTypeArguments = matcherType.getActualTypeArguments();
-        if (actualTypeArguments.length == 1 && ( expectedType == null || expectedType.isAssignableFrom(getRowType(actualTypeArguments[0])))) {
+        if (actualTypeArguments.length == 1 && (expectedType == null || expectedType.isAssignableFrom(getRawType(actualTypeArguments[0])))) {
             return actualTypeArguments[0];
         }
         throw new IllegalArgumentException(String.format("matcher is not a parametrized type of %s but it's %s", expectedForm, matcherType));
     }
 
-    static Type getUniqueParameterType(Class<?> type, Class<?> expectedOwner, String expectedForm) {
+    public static Type getUniqueParameterType(Class<?> type, Class<?> expectedOwner, String expectedForm) {
         return getUniqueParameterType(getParameterizedType(type, expectedOwner), expectedForm);
     }
 
-    static Class<?> getRowType(Type type) {
-        if (isClassType(type)) {
+    /**
+     * Copy paste from Guice MoreTypes
+     */
+    public static Class<?> getRawType(Type type) {
+        if (type instanceof Class<?>) {
+            // type is a normal class.
             return (Class<?>) type;
-        }
-        if (isParameterizedType(type)) {
-            return (Class<?>)((ParameterizedType) type).getRawType();
-        }
 
-        return null;  //To change body of created methods use File | Settings | File Templates.
+        } else if (type instanceof ParameterizedType) {
+            ParameterizedType parameterizedType = (ParameterizedType) type;
+
+            // I'm not exactly sure why getRawType() returns Type instead of Class.
+            // Neal isn't either but suspects some pathological case related
+            // to nested classes exists.
+            Type rawType = parameterizedType.getRawType();
+            checkArgument(rawType instanceof Class,
+                    "Expected a Class, but <%s> is of type %s", type, type.getClass().getName());
+            return (Class<?>) rawType;
+
+        } else if (type instanceof GenericArrayType) {
+            Type componentType = ((GenericArrayType) type).getGenericComponentType();
+            return Array.newInstance(getRawType(componentType), 0).getClass();
+
+        } else if (type instanceof TypeVariable) {
+            // we could use the variable's bounds, but that'll won't work if there are multiple.
+            // having a raw type that's more general than necessary is okay
+            return Object.class;
+
+        } else {
+            throw new IllegalArgumentException("Expected a Class, ParameterizedType, or "
+                    + "GenericArrayType, but <" + type + "> is of type " + type.getClass().getName());
+        }
     }
+
 
     public static boolean isClassType(Type type) {
         return type instanceof Class;
@@ -71,7 +96,7 @@ public final class Reflections {
         ParameterizedType matcherType = null;
 
         Type superType = matcher.getGenericSuperclass();
-        if (expectedType.isAssignableFrom(getRowType(superType)) && isParameterizedType(superType)) {
+        if (expectedType.isAssignableFrom(getRawType(superType)) && isParameterizedType(superType)) {
             return (ParameterizedType) superType;
         }
         for (Type type : matcher.getGenericInterfaces()) {

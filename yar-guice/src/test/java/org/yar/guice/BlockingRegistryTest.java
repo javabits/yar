@@ -53,7 +53,7 @@ public class BlockingRegistryTest {
             }
         });
         thread.start();
-        registry.put(GuiceKey.of(MyService.class), new GuiceSupplier<MyService>(null));
+        registry.put(GuiceId.of(MyService.class), new GuiceSupplier<MyService>(null));
         lock.lock();
         try {
             assertThat(myServiceSupplier[0], is(not(nullValue())));

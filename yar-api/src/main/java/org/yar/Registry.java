@@ -22,7 +22,7 @@ import java.util.List;
 
 /**
  * TODO add type token or type literal
- * TODO see if we use directly the guice key...??? and they type literal
+ * TODO see if we use directly the guice id...??? and they type literal
  * Date: 2/8/13
  * Time: 5:13 PM
  *
@@ -36,16 +36,16 @@ public interface Registry {
     @Nullable
     <T> Supplier<T> get(Class<T> type);
 
-    <T> List<Supplier<T>> getAll(Key<T> key);
+    <T> List<Supplier<T>> getAll(Id<T> id);
 
     @Nullable
-    <T> Supplier<T> get(Key<T> key);
+    <T> Supplier<T> get(Id<T> id);
 
-    <T> Registration<T> put(Key<T> key, Supplier<T> supplier);
+    <T> Registration<T> put(Id<T> id, Supplier<T> supplier);
 
     void remove(Registration<?> registration);
 
-    <T> Registration<T> addWatcher(KeyMatcher<T> watchedKey, Watcher<Supplier<T>> watcher);
+    <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<Supplier<T>> watcher);
 
     void removeWatcher(Registration<?> watcherRegistration);
 }

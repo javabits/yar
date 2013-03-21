@@ -16,8 +16,7 @@
 
 package org.yar.guice;
 
-import org.yar.Key;
-import org.yar.Registration;
+import org.yar.Id;
 
 import java.util.List;
 
@@ -30,7 +29,7 @@ import java.util.List;
  */
 public interface RegistrationHandler {
 
-    List<Key<?>> registeredKeys();
+    List<Id<?>> registeredKeys();
 
     void clear();
 }

@@ -32,5 +32,5 @@ public interface BlockingSupplierRegistry extends Registry {
 
     @Nullable
     @Override
-    <T> BlockingSupplier<T> get(Key<T> key);
+    <T> BlockingSupplier<T> get(Id<T> id);
 }

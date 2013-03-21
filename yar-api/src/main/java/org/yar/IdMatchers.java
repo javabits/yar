@@ -16,24 +16,37 @@
 
 package org.yar;
 
+import static java.util.Objects.requireNonNull;
+
 /**
- * Returns {@code true} or {@code false} for a given key input.
- * TODO future version have to support cation {@literal Matcher<?>} and bounds {@literal Matcher<? super XXX>} or {@literal Matcher<? extends XXX>}
+ * TODO comment
  * Date: 3/15/13
  *
- * @param <T> the matching type
  * @author Romain Gilles
  */
-public interface KeyMatcher<T> extends Matcher<Key<T>> {
-    /**
-     * Returns {@code true} if this matches {@code item}, {@code false} otherwise.
-     */
-    boolean matches(Key<T> otherKey);
+public final class IdMatchers {
 
-    /**
-     * Returns the template key that this matcher is looking for.
-     * It is used to pre-filter content to avoid you to receive to many notification.
-     */
-    Key<T> key();
+    private IdMatchers() {
+        throw new AssertionError("not for you!");
+    }
 
+    public static <T> Matcher<Id<T>> newMatcher(final Id<T> id) {
+        return newKeyMatcher(id);
+    }
+
+    public static <T> IdMatcher<T> newKeyMatcher(final Id<T> id) {
+        requireNonNull(id, "id");
+        return new IdMatcher<T>() {
+
+            @Override
+            public boolean matches(Id<T> otherId) {
+                return id.equals(otherId);
+            }
+
+            @Override
+            public Id<T> id() {
+                return id;
+            }
+        };
+    }
 }

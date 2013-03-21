@@ -17,7 +17,7 @@
 package org.yar.guice;
 
 import com.google.common.collect.ImmutableList;
-import org.yar.Key;
+import org.yar.Id;
 import org.yar.Registration;
 
 import javax.annotation.Nullable;
@@ -77,37 +77,37 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public <T> List<SupplierRegistration<T>> getAll(Key<T> key) {
-        return getSupplierRegistrationsFor(key, supplierRegistry);
+    public <T> List<SupplierRegistration<T>> getAll(Id<T> id) {
+        return getSupplierRegistrationsFor(id, supplierRegistry);
     }
 
-    private <T> List<SupplierRegistration<T>> getSupplierRegistrationsFor(Key<T> key, Container<Type, SupplierRegistration<?>> registry) {
-        List<SupplierRegistration<?>> pairs = registry.getAll(key.type());
+    private <T> List<SupplierRegistration<T>> getSupplierRegistrationsFor(Id<T> id, Container<Type, SupplierRegistration<?>> registry) {
+        List<SupplierRegistration<?>> pairs = registry.getAll(id.type());
         ImmutableList.Builder<SupplierRegistration<T>> suppliersByKey = ImmutableList.builder();
         for (SupplierRegistration<?> registryEntry : pairs) {
-            addSupplierIfKeyEquals(key, suppliersByKey, registryEntry);
+            addSupplierIfKeyEquals(id, suppliersByKey, registryEntry);
         }
         return suppliersByKey.build();
     }
 
     @SuppressWarnings("unchecked")
-    private <T> void addSupplierIfKeyEquals(Key<T> key, ImmutableList.Builder<SupplierRegistration<T>> suppliersByKey, SupplierRegistration<?> registryEntry) {
-        if (isKeyCompatibleToThisRegistration(key, registryEntry))
+    private <T> void addSupplierIfKeyEquals(Id<T> id, ImmutableList.Builder<SupplierRegistration<T>> suppliersByKey, SupplierRegistration<?> registryEntry) {
+        if (isKeyCompatibleToThisRegistration(id, registryEntry))
             suppliersByKey.add((SupplierRegistration<T>) registryEntry);
     }
 
-    private <T> boolean isKeyCompatibleToThisRegistration(Key<T> key, Registration<?> registryEntry) {
-        return key.annotationType() == null && key.type().equals(registryEntry.key().type())
-                || key.equals(registryEntry.key());
+    private <T> boolean isKeyCompatibleToThisRegistration(Id<T> id, Registration<?> registryEntry) {
+        return id.annotationType() == null && id.type().equals(registryEntry.id().type())
+                || id.equals(registryEntry.id());
     }
 
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public <T> SupplierRegistration<T> getFirst(Key<T> key) {
-        List<SupplierRegistration<?>> all = supplierRegistry.getAll(key.type());
+    public <T> SupplierRegistration<T> getFirst(Id<T> id) {
+        List<SupplierRegistration<?>> all = supplierRegistry.getAll(id.type());
         for (SupplierRegistration<?> pair : all) {
-            if (key.equals(pair.left)) {
+            if (id.equals(pair.left)) {
                 return (SupplierRegistration<T>) pair;
             }
         }
@@ -121,19 +121,19 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     private <T> void updateWatcher(SupplierRegistration<T> registration, Action action) {
-        Key<T> key = registration.key();
-        List<WatcherRegistration<T>> watchers = getWatchers(key);
+        Id<T> id = registration.id();
+        List<WatcherRegistration<T>> watchers = getWatchers(id);
         for (WatcherRegistration<T> registryEntry : watchers) {
             fireAddToWatcherIfMatches(registryEntry, registration, action);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <T> List<WatcherRegistration<T>> getWatchers(Key<T> key) {
+    private <T> List<WatcherRegistration<T>> getWatchers(Id<T> id) {
         ImmutableList.Builder<WatcherRegistration<T>> resultBuilder = ImmutableList.builder();
-        List<WatcherRegistration<?>> watchers = watcherRegistry.getAll(key.type());
+        List<WatcherRegistration<?>> watchers = watcherRegistry.getAll(id.type());
         for (WatcherRegistration<?> watcher : watchers) {
-            if (isKeyCompatibleToThisRegistration(key, watcher)) {
+            if (isKeyCompatibleToThisRegistration(id, watcher)) {
                 resultBuilder.add((WatcherRegistration<T>)watcher);
             }
         }
@@ -158,14 +158,14 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
     @Override
     public <T> boolean add(WatcherRegistration<T> watcherRegistration) {
-        for (SupplierRegistration<T> supplierRegistration : getAll(watcherRegistration.key())) {
+        for (SupplierRegistration<T> supplierRegistration : getAll(watcherRegistration.id())) {
             fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, Action.ADD);
         }
         return putToRegistry(watcherRegistry, watcherRegistration);
     }
 
     private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
-        if (watcherRegistration.left.matches(supplierRegistration.key())) {
+        if (watcherRegistration.left.matches(supplierRegistration.id())) {
             action.execute(watcherRegistration, supplierRegistration);
         }
     }
@@ -176,7 +176,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     private Type getRegistryKey(Registration<?> watcherRegistration) {
-        return watcherRegistration.key().type();
+        return watcherRegistration.id().type();
     }
 
     static GuiceWatchableRegistrationContainer newMultimapGuiceWatchableRegistrationContainer() {

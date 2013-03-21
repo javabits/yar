@@ -16,7 +16,7 @@
 
 package org.yar.guice;
 
-import org.yar.Key;
+import org.yar.Id;
 
 import javax.annotation.concurrent.Immutable;
 import java.lang.annotation.Annotation;
@@ -32,11 +32,11 @@ import static java.util.Objects.requireNonNull;
  * @author Romain Gilles
  */
 @Immutable
-public class GuiceKey<T> implements Key<T> {
+public class GuiceId<T> implements Id<T> {
 
     private final com.google.inject.Key<T> key;
 
-    GuiceKey(com.google.inject.Key<T> key) {
+    GuiceId(com.google.inject.Key<T> key) {
         this.key = requireNonNull(key, "key");
     }
 
@@ -60,7 +60,7 @@ public class GuiceKey<T> implements Key<T> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        GuiceKey guiceKey = (GuiceKey) o;
+        GuiceId guiceKey = (GuiceId) o;
 
         return key.equals(guiceKey.key);
     }
@@ -70,11 +70,11 @@ public class GuiceKey<T> implements Key<T> {
         return key.hashCode();
     }
 
-    static <T> Key<T> of( com.google.inject.Key<T> key) {
-        return new GuiceKey<>(key);
+    public static <T> Id<T> of( com.google.inject.Key<T> key) {
+        return new GuiceId<>(key);
     }
 
-    static <T> Key<T> of( Class<T> type) {
-        return new GuiceKey<>(com.google.inject.Key.get(type));
+    public static <T> Id<T> of( Class<T> type) {
+        return new GuiceId<>(com.google.inject.Key.get(type));
     }
 }

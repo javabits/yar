@@ -18,11 +18,11 @@ package org.yar.guice;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import org.yar.Id;
 import org.yar.Registration;
 import org.yar.Registry;
 
@@ -61,19 +61,19 @@ public class RegistrationBindingHandler implements RegistrationHandler {
 
     @SuppressWarnings("unchecked")
     private Registration<?> putRegistrationToRegistry(Key<?> key) {
-        return registry.put(GuiceKey.of(key), new GuiceSupplier(injector.getProvider(key)));
+        return registry.put(GuiceId.of(key), new GuiceSupplier(injector.getProvider(key)));
     }
 
     @Override
-    public List<org.yar.Key<?>> registeredKeys() {
-        return transform(registrations, new Function<Registration<?>, org.yar.Key<?>>() {
+    public List<Id<?>> registeredKeys() {
+        return transform(registrations, new Function<Registration<?>, Id<?>>() {
             @Nullable
             @Override
-            public org.yar.Key<?> apply(@Nullable Registration<?> registration) {
+            public Id<?> apply(@Nullable Registration<?> registration) {
                 if (registration == null) {
                     throw new NullPointerException("registration");
                 }
-                return registration.key();
+                return registration.id();
             }
         });
     }

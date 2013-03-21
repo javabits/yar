@@ -165,7 +165,7 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
         }
 
         private Supplier<T> getSupplier() {
-            Supplier<T> supplier = registry().get(GuiceKey.of(key));
+            Supplier<T> supplier = registry().get(GuiceId.of(key));
             return requireNonNull(supplier, "supplier");
         }
 

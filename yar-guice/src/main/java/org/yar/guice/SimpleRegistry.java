@@ -46,7 +46,7 @@ public class SimpleRegistry implements Registry {
 //    ConcurrentMap<KEYTYPE, Set<VALUETYPE>> hashMap = new MapMaker()
 //            .makeComputingMap(
 //                    new Function<KEYTYPE, VALUETYPE>() {
-//                        public Graph apply(KEYTYPE key) {
+//                        public Graph apply(KEYTYPE id) {
 //                            return new HashSet<VALUETYPE>();
 //                        }
 //                    });
@@ -83,8 +83,8 @@ public class SimpleRegistry implements Registry {
     }
 
     @Override
-    public <T> List<Supplier<T>> getAll(Key<T> key) {
-        List<SupplierRegistration<T>> pairs = registrationContainer.getAll(key);
+    public <T> List<Supplier<T>> getAll(Id<T> id) {
+        List<SupplierRegistration<T>> pairs = registrationContainer.getAll(id);
 
         return transformToSuppliers(pairs);
 
@@ -113,8 +113,8 @@ public class SimpleRegistry implements Registry {
 
     @Nullable
     @Override @SuppressWarnings("unchecked")
-    public <T> Supplier<T> get(Key<T> key) {
-        SupplierRegistration<T> registration = registrationContainer.getFirst(key);
+    public <T> Supplier<T> get(Id<T> id) {
+        SupplierRegistration<T> registration = registrationContainer.getFirst(id);
         if (registration == null) {
             return null;
         }
@@ -122,21 +122,21 @@ public class SimpleRegistry implements Registry {
     }
 
     @Override
-    public <T> SupplierRegistration<T> put(Key<T> key, Supplier<T> supplier) {
-        checkKey(key, "key");
+    public <T> SupplierRegistration<T> put(Id<T> id, Supplier<T> supplier) {
+        checkKey(id, "id");
         checkSupplier(supplier);
-        SupplierRegistration<T> registration = new SupplierRegistration<>(key, supplier);
+        SupplierRegistration<T> registration = new SupplierRegistration<>(id, supplier);
         Add add = new Add(registration);
         executeActionOnRegistry(add);
         return registration;
     }
 
-    private <T> GuiceKey<T> checkKey(Key<T> watchedKey, String attribute) {
-        requireNonNull(watchedKey, attribute);
-        if (watchedKey instanceof GuiceKey) {
-            return (GuiceKey<T>) watchedKey;
+    private <T> GuiceId<T> checkKey(Id<T> watchedId, String attribute) {
+        requireNonNull(watchedId, attribute);
+        if (watchedId instanceof GuiceId) {
+            return (GuiceId<T>) watchedId;
         } else {
-            throw new IllegalArgumentException("The " + attribute + " parameter must be a GuiceKey instance");
+            throw new IllegalArgumentException("The " + attribute + " parameter must be a GuiceId instance");
         }
     }
 
@@ -166,7 +166,7 @@ public class SimpleRegistry implements Registry {
         try {
             registryActionQueue.put(action);
             if (!action.asFuture().get()) {
-                throw new RuntimeException(String.format("Cannot execute action [%s] key [%s] on the registry", action.getClass().getSimpleName(), action.key()));
+                throw new RuntimeException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.key()));
             }
         } catch (InterruptedException | ExecutionException e) {
             //TODO try again??? on interrupted?
@@ -188,14 +188,14 @@ public class SimpleRegistry implements Registry {
     }
 
     @Override
-    public <T> Registration<T> addWatcher(KeyMatcher<T> keyMatcher, Watcher<Supplier<T>> watcher) {
-        checkKeyMatcher(keyMatcher, "keyMatcher");
-        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(keyMatcher, watcher);
+    public <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<Supplier<T>> watcher) {
+        checkKeyMatcher(idMatcher, "idMatcher");
+        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(idMatcher, watcher);
         executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
         return watcherRegistration;
     }
 
-    private <T> KeyMatcher<T> checkKeyMatcher(KeyMatcher<T> matcher, String attribute) {
+    private <T> IdMatcher<T> checkKeyMatcher(IdMatcher<T> matcher, String attribute) {
         return requireNonNull(matcher, attribute);
     }
 
@@ -207,7 +207,7 @@ public class SimpleRegistry implements Registry {
     }
 
     static interface RegistryAction  {
-        Key<?> key();
+        Id<?> key();
         void execute(WatchableRegistrationContainer registrationContainer);
         Future<Boolean> asFuture();
 
@@ -219,8 +219,8 @@ public class SimpleRegistry implements Registry {
             this.registration = registration;
         }
         @Override
-        public Key<?> key() {
-            return registration.key();
+        public Id<?> key() {
+            return registration.id();
         }
     }
 

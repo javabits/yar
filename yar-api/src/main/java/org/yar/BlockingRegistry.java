@@ -29,5 +29,5 @@ public interface BlockingRegistry extends Registry {
     @Nullable
     <T> Supplier<T> get(Class<T> type, long timeout, TimeUnit unit);
     @Nullable
-    <T> Supplier<T> get(Key<T> key, long timeout, TimeUnit unit);
+    <T> Supplier<T> get(Id<T> id, long timeout, TimeUnit unit);
 }

@@ -20,6 +20,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
+import com.google.inject.matcher.Matcher;
 import org.yar.BlockingSupplier;
 import org.yar.Supplier;
 
@@ -61,36 +62,36 @@ public abstract class AbstractRegistryModule extends AbstractModule {
      */
     protected abstract void configureRegistry();
 
-    protected <T> void bindListener(org.yar.Matcher<Key<T>> matcher, Key<RegistryListener<? super T>> key) {
+    protected <T> void bindListener(Matcher<Key<T>> matcher, Key<? extends RegistryListener<? super T>> key) {
         if (isBlockingSupplier(matcher)) {
-
+            throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
         } else if (isSupplier(matcher)) {
-
+            //TODO
         } else {
             bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, key));
         }
     }
 
-    private <T> boolean isBlockingSupplier(org.yar.Matcher<Key<T>> matcher) {
+    private <T> boolean isBlockingSupplier(Matcher<Key<T>> matcher) {
         return isBlockingSupplier(Matchers.getTargetTypeLiteral(matcher));  //To change body of created methods use File | Settings | File Templates.
     }
 
-    protected <T> boolean isSupplier(org.yar.Matcher<Key<T>> matcher) {
+    protected <T> boolean isSupplier(Matcher<Key<T>> matcher) {
         return isSupplier(Matchers.getTargetTypeLiteral(matcher));
     }
 
-    protected <T> void bindListener(org.yar.Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
+    protected <T> void bindListener(Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
         if (isBlockingSupplier(matcher)) {
             throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
         } else if (isSupplier(matcher)) {
-
+            //TODO
         } else {
             bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, listener));
         }
     }
 
 
-//    protected <T> void bindListenerBounded(org.yar.Matcher<Key<? extends T>> typeMatcher, RegistryListener<? super T> listener) {
+//    protected <T> void bindListenerBounded(Matcher<Key<? extends T>> typeMatcher, RegistryListener<? super T> listener) {
 //        if (isBlockingSupplier(typeLiteral)) {
 //
 //        } else if (isSupplier(typeLiteral)) {

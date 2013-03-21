@@ -61,7 +61,7 @@ public class BlockingSupplierRegistryBindingBuilder<T> extends RegistryBindingBu
         }
 
         @SuppressWarnings("unchecked")
-        private GuiceKey<T> getSupplierTypeParameter() {
+        private GuiceId<T> getSupplierTypeParameter() {
             Type type = key.getTypeLiteral().getType();
             checkParameterizedType(type);
             ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -70,7 +70,7 @@ public class BlockingSupplierRegistryBindingBuilder<T> extends RegistryBindingBu
                 throw new IllegalArgumentException("Supplier type must be mono parameterized: " + type);
             }
 
-            return (GuiceKey<T>) GuiceKey.of(Key.get(actualTypeArguments[0]));
+            return (GuiceId<T>) GuiceId.of(Key.get(actualTypeArguments[0]));
         }
 
         @Inject

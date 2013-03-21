@@ -28,7 +28,7 @@ import java.lang.reflect.Type;
  * @since 1.0
  */
 @SuppressWarnings("unused")
-public interface Key<T> {
+public interface Id<T> {
     Type type();
 
     Class<? extends Annotation> annotationType();

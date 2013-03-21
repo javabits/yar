@@ -18,7 +18,7 @@ package org.yar.guice;
 
 import com.google.inject.*;
 import com.google.inject.Key;
-import com.google.inject.matcher.Matcher;
+import com.google.inject.matcher.AbstractMatcher;
 import org.junit.Test;
 import org.yar.*;
 
@@ -184,7 +184,7 @@ public class RegistryModuleBindTest {
     }
 
     private Registration<MyInterface> putMyInterfaceSupplierToRegistry(Registry registry) {
-        return registry.put(GuiceKey.of(MyInterface.class), GuiceSupplier.of(new Provider<MyInterface>() {
+        return registry.put(GuiceId.of(MyInterface.class), GuiceSupplier.of(new Provider<MyInterface>() {
             @Override
             public MyInterface get() {
                 return new MyInterface() {
@@ -219,7 +219,7 @@ public class RegistryModuleBindTest {
             @Override
             protected void configureRegistry() {
                 bindListener(
-                        new org.yar.Matcher<Key<MyInterface>>() {
+                        new AbstractMatcher<Key<MyInterface>>() {
                             @Override
                             public boolean matches(Key<MyInterface> item) {
                                 boolean equals = Key.get(MyInterface.class).equals(item);
@@ -260,7 +260,7 @@ public class RegistryModuleBindTest {
             @Override
             protected void configureRegistry() {
                 bindListener(
-                        new org.yar.Matcher<Key<MyInterface>>() {
+                        new AbstractMatcher<Key<MyInterface>>() {
                             @Override
                             public boolean matches(Key<MyInterface> item) {
                                 boolean equals = Key.get(MyInterface.class).equals(item);
@@ -286,7 +286,7 @@ public class RegistryModuleBindTest {
         Injector injector = createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bindListener(new org.yar.Matcher<Key<MyInterface>>() {
+                bindListener(new AbstractMatcher<Key<MyInterface>>() {
                                  @Override
                                  public boolean matches(Key<MyInterface> item) {
                                      return false;  //To change body of implemented methods use File | Settings | File Templates.
@@ -305,7 +305,7 @@ public class RegistryModuleBindTest {
                              }
                 );
 
-                bindListener(new org.yar.Matcher<Key<MyInterface>>() {
+                bindListener(new AbstractMatcher<Key<MyInterface>>() {
                                  @Override
                                  public boolean matches(Key<MyInterface> item) {
                                      return false;  //To change body of implemented methods use File | Settings | File Templates.
@@ -324,9 +324,9 @@ public class RegistryModuleBindTest {
                              }
                 );
 
-//                bindListenerBounded(new org.yar.Matcher<Key<? extends MyInterface>>() {
+//                bindListenerBounded(new org.yar.Matcher<Id<? extends MyInterface>>() {
 //                                 @Override
-//                                 public boolean matches(Key<? extends MyInterface> item) {
+//                                 public boolean matches(Id<? extends MyInterface> item) {
 //                                     return false;  //To change body of implemented methods use File | Settings | File Templates.
 //                                 }
 //                             }, new RegistryListener<MyInterface>() {
@@ -342,9 +342,9 @@ public class RegistryModuleBindTest {
 //                                 }
 //                             }
 //                );
-//                bindListenerBounded(new org.yar.Matcher<Key<? extends MyInterface>>() {
+//                bindListenerBounded(new org.yar.Matcher<Id<? extends MyInterface>>() {
 //                                 @Override
-//                                 public boolean matches(Key<? extends MyInterface> item) {
+//                                 public boolean matches(Id<? extends MyInterface> item) {
 //                                     return false;  //To change body of implemented methods use File | Settings | File Templates.
 //                                 }
 //                             }, new RegistryListener<Object>() {
