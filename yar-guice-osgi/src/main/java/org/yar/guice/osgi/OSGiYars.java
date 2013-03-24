@@ -17,14 +17,8 @@
 package org.yar.guice.osgi;
 
 import com.google.common.collect.ImmutableList;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.google.inject.Module;
-import com.google.inject.Stage;
-import org.osgi.framework.BundleContext;
-import org.osgi.framework.BundleEvent;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.SynchronousBundleListener;
+import com.google.inject.*;
+import org.osgi.framework.*;
 import org.yar.BlockingSupplierRegistry;
 import org.yar.guice.RegistrationHandler;
 
@@ -49,22 +43,22 @@ public final class OSGiYars {
     }
 
     public static Injector newInjector(BundleContext bundleContext, Module... modules) {
-        return Guice.createInjector(getModules(bundleContext, asList(modules)));
+        return start(bundleContext, Guice.createInjector(getModules(bundleContext, asList(modules))));
     }
 
     public static Injector newInjector(BundleContext bundleContext, Stage stage, Module... modules) {
-        return Guice.createInjector(stage, getModules(bundleContext, asList(modules)));
+        return start(bundleContext, Guice.createInjector(stage, getModules(bundleContext, asList(modules))));
     }
 
     public static Injector newInjector(BundleContext bundleContext, Iterable<Module> modules) {
-        return Guice.createInjector(getModules(bundleContext, modules));
+        return start(bundleContext, Guice.createInjector(getModules(bundleContext, modules)));
     }
 
     public static Injector newInjector(BundleContext bundleContext, Stage stage, Iterable<Module> modules) {
-        return trackBundle(bundleContext, Guice.createInjector(stage, getModules(bundleContext, modules)));
+        return start(bundleContext, Guice.createInjector(stage, getModules(bundleContext, modules)));
     }
 
-    private static Injector trackBundle(BundleContext bundleContext, Injector injector) {
+    public static Injector start(BundleContext bundleContext, Injector injector) {
         registerInjector(bundleContext, injector);
         registerRegistrationHandler(bundleContext, injector);
         attachStoppingListener(bundleContext, injector);
@@ -84,17 +78,37 @@ public final class OSGiYars {
     }
 
     private static Iterable<Module> getModules(BundleContext bundleContext, Iterable<Module> modules) {
-        BlockingSupplierRegistry blockingSupplierRegistry = getBlockingSupplierRegistry(bundleContext);
         ImmutableList.Builder<Module> modulesBuilder = ImmutableList.builder();
-        modulesBuilder.add(newRegistryDeclarationModule(blockingSupplierRegistry));
+        modulesBuilder.add(newYarOSGiModule(bundleContext));
         modulesBuilder.addAll(modules);
         return modulesBuilder.build();
+    }
+
+    public static Module newYarOSGiModule(final BundleContext bundleContext) {
+        final BlockingSupplierRegistry blockingSupplierRegistry = getBlockingSupplierRegistry(bundleContext);
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                install(newRegistryDeclarationModule(blockingSupplierRegistry));
+                install(newOSGiModule(bundleContext));
+            }
+        };
+    }
+
+    private static Module newOSGiModule(final BundleContext bundleContext) {
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(BundleContext.class).toInstance(bundleContext);
+                bind(Bundle.class).toInstance(bundleContext.getBundle());
+            }
+        };
     }
 
     private static BlockingSupplierRegistry getBlockingSupplierRegistry(BundleContext bundleContext) {
         ServiceReference<BlockingSupplierRegistry> serviceReference = checkNotNull(bundleContext.getServiceReference(BlockingSupplierRegistry.class)
                 , SERVICE_REGISTRY_ERROR_MESSAGE);
-        return checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service");
+        return checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available");
     }
 
 
