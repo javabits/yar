@@ -26,21 +26,24 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
     private Key<T> key;
     private AnnotatedBindingBuilder<T> annotatedBindingBuilder;
     private LinkedBindingBuilder<T> linkedBindingBuilder;
-
+    private boolean laxTypeBinding = false;
 
     public RegistryBindingBuilder(Binder binder, Key<T> key) {
         this.key = requireNonNull(key, "key");
         linkedBindingBuilder = binder.bind(key);
+        laxTypeBinding = false;
     }
 
     public RegistryBindingBuilder(Binder binder, TypeLiteral<T> typeLiteral) {
         key = Key.get(typeLiteral);
         linkedBindingBuilder = annotatedBindingBuilder = binder.bind(typeLiteral);
+        laxTypeBinding = true;
     }
 
     public RegistryBindingBuilder(Binder binder, Class<T> clazz) {
         key = Key.get(clazz);
         linkedBindingBuilder = annotatedBindingBuilder = requireNonNull(binder, "binder").bind(clazz);
+        laxTypeBinding = true;
     }
 
     Key<T> key() {
@@ -50,6 +53,7 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
     @Override
     public RegistryLinkedBindingBuilder<T> annotatedWith(Class<? extends Annotation> annotationType) {
         key = Key.get(key.getTypeLiteral(), annotationType);
+        laxTypeBinding = false;
         annotatedBindingBuilder.annotatedWith(annotationType);
         return this;
     }
@@ -57,6 +61,7 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
     @Override
     public RegistryLinkedBindingBuilder<T> annotatedWith(Annotation annotation) {
         key = Key.get(key.getTypeLiteral(), annotation);
+        laxTypeBinding = false;
         annotatedBindingBuilder.annotatedWith(annotation);
         return this;
     }
@@ -142,6 +147,10 @@ public class RegistryBindingBuilder<T> implements RegistryAnnotatedBindingBuilde
     @Override
     public void asEagerSingleton() {
         linkedBindingBuilder.asEagerSingleton();
+    }
+
+    boolean isLaxTypeBinding() {
+        return laxTypeBinding;
     }
 
     //TODO introduce dynamic management through Watcher and regarding the ?scope? maybe

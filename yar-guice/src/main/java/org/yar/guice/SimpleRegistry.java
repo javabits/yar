@@ -67,19 +67,19 @@ public class SimpleRegistry implements Registry {
 
     @Override
     public <T> List<Supplier<T>> getAll(Class<T> type) {
-        return copyOfEntries(registrationContainer.getAll(type));
+        return viewOfEntries(registrationContainer.getAll(type));
 
 
     }
-    private static <T> List<Supplier<T>> copyOfEntries(List<SupplierRegistration<?>> pairs) {
-        return ImmutableList.copyOf(transform(pairs, new Function<SupplierRegistration<?>, Supplier<T>>() {
+    private static <T> List<Supplier<T>> viewOfEntries(List<SupplierRegistration<?>> pairs) {
+        return transform(pairs, new Function<SupplierRegistration<?>, Supplier<T>>() {
 
             @Nullable
             @Override @SuppressWarnings("unchecked")
             public Supplier<T> apply(@Nullable SupplierRegistration<?> registration) {
                 return (Supplier<T>)requireNonNull(registration, "registration").right;
             }
-        }));
+        });
     }
 
     @Override

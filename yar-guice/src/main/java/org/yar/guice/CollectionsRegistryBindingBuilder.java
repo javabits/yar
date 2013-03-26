@@ -16,12 +16,17 @@
 
 package org.yar.guice;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import org.yar.Supplier;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * TODO comment
@@ -41,23 +46,41 @@ public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder
 
     @Override
     RegistryBindingBuilder.RegistryProvider<T> newRegistryProvider() {
-        return new CollectionsRegistryProvider<>(key());
+        return new CollectionsRegistryProvider<>(key(), isLaxTypeBinding());
     }
 
     private static class CollectionsRegistryProvider<T> extends RegistryBindingBuilder.RegistryProvider<T> {
-
-        private CollectionsRegistryProvider(Key<T> key) {
+        private final boolean laxTypeBinding;
+        private CollectionsRegistryProvider(Key<T> key, boolean laxTypeBinding) {
             super(key);
+            this.laxTypeBinding = laxTypeBinding;
         }
 
         @Override
         @SuppressWarnings("unchecked")
         public T get() {
-            return (T)registry().getAll(getCollectionsTypeParameter());
+            return (T) Lists.transform(getAll(), new Function<Supplier<Object>, Object>() {
+                @Nullable
+                @Override
+                public Object apply(@Nullable Supplier<Object> input) {
+                    if (input == null) {
+                        return null;
+                    }
+                    return input.get();
+                }
+            });
+        }
+
+        private List getAll() {
+            if (laxTypeBinding) {
+                return registry().getAll(Reflections.getRawType(getCollectionsTypeParameter()));
+            } else {
+                return registry().getAll(GuiceId.of(Key.get(getCollectionsTypeParameter())));
+            }
         }
 
         @SuppressWarnings("unchecked")
-        private GuiceId<T> getCollectionsTypeParameter() {
+        private Type getCollectionsTypeParameter() {
             Type type = key().getTypeLiteral().getType();
             checkParameterizedType(type);
             ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -66,7 +89,7 @@ public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder
                 throw new IllegalArgumentException("Supplier type must be mono parameterized: " + type);
             }
 
-            return (GuiceId<T>) GuiceId.of(Key.get(actualTypeArguments[0]));
+            return actualTypeArguments[0];
         }
 
     }
