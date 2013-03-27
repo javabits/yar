@@ -16,6 +16,7 @@
 
 package org.yar.guice;
 
+import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import org.yar.*;
@@ -53,11 +54,13 @@ public class SimpleRegistry implements Registry {
 
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
+    private final FinalizableReferenceQueue referenceQueue;
     public SimpleRegistry() {
         this(new GuiceWatchableRegistrationContainer());
     }
 
     SimpleRegistry(WatchableRegistrationContainer registrationContainer) {
+        referenceQueue = new FinalizableReferenceQueue();
         this.registrationContainer = registrationContainer;
         registryActionQueue = new LinkedBlockingQueue<>();
         Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registrationContainer));
@@ -77,7 +80,7 @@ public class SimpleRegistry implements Registry {
             @Nullable
             @Override @SuppressWarnings("unchecked")
             public Supplier<T> apply(@Nullable SupplierRegistration<?> registration) {
-                return (Supplier<T>)requireNonNull(registration, "registration").right;
+                return (Supplier<T>)requireNonNull(registration, "registration").right();
             }
         });
     }
@@ -96,7 +99,7 @@ public class SimpleRegistry implements Registry {
             @Override
             @SuppressWarnings("unchecked")
             public Supplier<T> apply(@Nullable SupplierRegistration<T> registration) {
-                return requireNonNull(registration, "registration").right;
+                return requireNonNull(registration, "registration").right();
             }
         }));
     }
@@ -108,7 +111,7 @@ public class SimpleRegistry implements Registry {
         if (registration == null) {
             return null;
         }
-        return (Supplier<T>) registration.right;
+        return (Supplier<T>) registration.right();
     }
 
     @Nullable
@@ -118,7 +121,7 @@ public class SimpleRegistry implements Registry {
         if (registration == null) {
             return null;
         }
-        return registration.right;
+        return registration.right();
     }
 
     @Override
@@ -190,7 +193,7 @@ public class SimpleRegistry implements Registry {
     @Override
     public <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<Supplier<T>> watcher) {
         checkKeyMatcher(idMatcher, "idMatcher");
-        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(idMatcher, watcher);
+        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(idMatcher, watcher, referenceQueue, this);
         executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
         return watcherRegistration;
     }

@@ -16,9 +16,6 @@
 
 package org.yar.guice;
 
-import org.yar.Id;
-import org.yar.Supplier;
-
 /**
 * TODO comment
 * Date: 2/20/13
@@ -26,13 +23,22 @@ import org.yar.Supplier;
 *
 * @author Romain Gilles
 */
-class SupplierRegistration<T> extends StrongPair<Id<T>, Supplier<T>> implements org.yar.Registration<T> {
-    SupplierRegistration(Id<T> leftValue, Supplier<T> rightValue) {
-        super(leftValue, rightValue);
+class StrongPair<L, R> implements Pair<L,R> {
+    private final L left;
+    private final R right;
+
+    StrongPair(L leftValue, R rightValue) {
+        this.left = leftValue;
+        this.right = rightValue;
     }
 
     @Override
-    public Id<T> id() {
-        return left();
+    public L left() {
+        return left;
+    }
+
+    @Override
+    public R right() {
+        return right;
     }
 }

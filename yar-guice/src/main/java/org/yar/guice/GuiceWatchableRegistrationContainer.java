@@ -37,12 +37,12 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         ADD() {
             @Override
             <T> void execute(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration) {
-                watcherRegistration.right.add(supplierRegistration.right);
+                watcherRegistration.right().add(supplierRegistration.right());
             }
         }, REMOVE() {
             @Override
             <T> void execute(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration) {
-                watcherRegistration.right.remove(supplierRegistration.right);
+                watcherRegistration.right().remove(supplierRegistration.right());
             }
         };
         abstract <T> void execute(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration);
@@ -107,7 +107,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     public <T> SupplierRegistration<T> getFirst(Id<T> id) {
         List<SupplierRegistration<?>> all = supplierRegistry.getAll(id.type());
         for (SupplierRegistration<?> pair : all) {
-            if (id.equals(pair.left)) {
+            if (id.equals(pair.left())) {
                 return (SupplierRegistration<T>) pair;
             }
         }
@@ -165,7 +165,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
-        if (watcherRegistration.left.matches(supplierRegistration.id())) {
+        if (watcherRegistration.left().matches(supplierRegistration.id())) {
             action.execute(watcherRegistration, supplierRegistration);
         }
     }

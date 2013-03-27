@@ -16,12 +16,12 @@
 
 package org.yar.guice;
 
-import org.yar.Id;
-import org.yar.IdMatcher;
-import org.yar.Supplier;
-import org.yar.Watcher;
+import com.google.common.base.FinalizableReferenceQueue;
+import com.google.common.base.FinalizableWeakReference;
+import org.yar.*;
 
 import javax.annotation.Nullable;
+import java.lang.ref.WeakReference;
 import java.util.IdentityHashMap;
 
 /**
@@ -31,39 +31,78 @@ import java.util.IdentityHashMap;
 *
 * @author Romain Gilles
 */
-class WatcherRegistration<T> extends Pair<IdMatcher<T>, Watcher<Supplier<T>>> implements org.yar.Registration<T> {
+class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T>>> implements Pair<IdMatcher<T>, Watcher<Supplier<T>>>, org.yar.Registration<T> {
 
-    WatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue) {
-        super(leftValue, new WatcherDecorator<>(rightValue));
+    private final IdMatcher<T> left;
+    private final Watcher<Supplier<T>> right;
+    private final Registry registry;
+
+    WatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
+        super(rightValue, referenceQueue);
+        left = leftValue;
+        right = new WatcherDecorator<>(rightValue);
+        this.registry = registry;
     }
 
     @Override
     public Id<T> id() {
-        return left.id();
+        return left().id();
+    }
+
+    @Override
+    public IdMatcher<T> left() {
+        return left;
+    }
+
+    @Override
+    public Watcher<Supplier<T>> right() {
+        return right;
+    }
+
+    @Override
+    public void finalizeReferent() {
+        registry.remove(this);
     }
 
     static class WatcherDecorator<T> implements Watcher<Supplier<T>> {
-        private final Watcher<Supplier<T>> delegate;
+        private final WeakReference<Watcher<Supplier<T>>> delegate;
         private final IdentityHashMap<Supplier<T>, Supplier<T>> trackedElements = new IdentityHashMap<>();
         WatcherDecorator(Watcher<Supplier<T>> delegate) {
-            this.delegate = delegate;
+            this.delegate = new WeakReference<>(delegate);
         }
 
         @Nullable
         @Override
         public Supplier<T> add(Supplier<T> element) {
-            Supplier<T> trackedElement = delegate.add(element);
-            if (trackedElement != null) {
-                trackedElements.put(element, trackedElement);
+            Watcher<Supplier<T>> watcher = delegate.get();
+            if (watcher != null) {
+                Supplier<T> trackedElement = watcher.add(element);
+                if (trackedElement != null) {
+                    trackedElements.put(element, trackedElement);
+                }
+                return trackedElement;
+            } else {
+                return clearTrackedElements();
             }
-            return trackedElement;
+        }
+
+        private Supplier<T> clearTrackedElements() {
+            if (trackedElements.size() != 0) {
+                trackedElements.clear();
+            }
+            return null;
         }
 
         @Override
         public void remove(Supplier<T> element) {
             Supplier<T> trackedElement = trackedElements.remove(element);
             if (trackedElement != null) {
-                delegate.remove(trackedElement);
+                Watcher<Supplier<T>> watcher = delegate.get();
+                if (watcher != null) {
+                    watcher.remove(trackedElement);
+                } else {
+                    clearTrackedElements();
+                }
             }
         }
     }

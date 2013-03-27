@@ -17,18 +17,14 @@
 package org.yar.guice;
 
 /**
-* TODO comment
-* Date: 2/20/13
-* Time: 9:50 AM
-*
-* @author Romain Gilles
-*/
-class Pair<L, R> {
-    final L left;
-    final R right;
+ * TODO comment
+ * Date: 3/27/13
+ * Time: 11:08 PM
+ *
+ * @author Romain Gilles
+ */
+public interface Pair<L, R> {
+    L left();
 
-    Pair(L leftValue, R rightValue) {
-        this.left = leftValue;
-        this.right = rightValue;
-    }
+    R right();
 }
