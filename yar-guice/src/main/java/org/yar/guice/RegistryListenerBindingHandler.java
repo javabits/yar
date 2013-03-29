@@ -39,23 +39,34 @@ import static org.yar.guice.Matchers.getYarKey;
 public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     private final Injector injector;
     private final Registry registry;
+    //we keep a strong reference on the watcher to avoid it to be garbage collected
+    //therefore the lifecycle to this watcher is at least associated to the lifecycle of owning injector
+    private final List<Pair<Registration<?>,Watcher>> listenerRegistrations;
 
 
     @Inject
     public RegistryListenerBindingHandler(Injector injector, Registry registry) {
         this.injector = injector;
         this.registry = registry;
-        addListenerToRegistry();
+        this.listenerRegistrations = addListenerToRegistry();
     }
-
-    private List<Registration<?>> addListenerToRegistry() {
-        ImmutableList.Builder<Registration<?>> registrationsBuilder = ImmutableList.builder();
+    @SuppressWarnings("unchecked")
+    private List<Pair<Registration<?>, Watcher>> addListenerToRegistry() {
+        ImmutableList.Builder<Pair<Registration<?>, Watcher>> registrationsBuilder = ImmutableList.builder();
         for (Binding<GuiceWatcherRegistration> watcherRegistrationBinding : injector.findBindingsByType(TypeLiteral.get(GuiceWatcherRegistration.class))) {
             GuiceWatcherRegistration guiceWatcherRegistration = watcherRegistrationBinding.getProvider().get();
-            Registration<?> registration = registry.addWatcher(guiceWatcherRegistration.matcher(), guiceWatcherRegistration.watcher());
-            registrationsBuilder.add(registration);
+            Watcher watcher = guiceWatcherRegistration.watcher();
+            Registration<?> registration = registry.addWatcher(guiceWatcherRegistration.matcher(), watcher);
+            registrationsBuilder.add(new StrongPair<Registration<?>, Watcher>(registration, watcher));
         }
         return registrationsBuilder.build();
     }
 
+    @Override
+    public void clear() {
+        for (Pair<Registration<?>, Watcher> listenerRegistration : listenerRegistrations) {
+            registry.removeWatcher(listenerRegistration.left());
+        }
+
+    }
 }

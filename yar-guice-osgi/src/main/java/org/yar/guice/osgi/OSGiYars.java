@@ -21,6 +21,7 @@ import com.google.inject.*;
 import org.osgi.framework.*;
 import org.yar.BlockingSupplierRegistry;
 import org.yar.guice.RegistrationHandler;
+import org.yar.guice.RegistryListenerHandler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
@@ -60,7 +61,8 @@ public final class OSGiYars {
 
     public static Injector start(BundleContext bundleContext, Injector injector) {
         registerInjector(bundleContext, injector);
-        registerRegistrationHandler(bundleContext, injector);
+        registerRegistrationHandler(bundleContext, getRegistrationHandler(injector));
+        registerListenerHandler(bundleContext, getListenerHandler(injector));
         attachStoppingListener(bundleContext, injector);
         return injector;
     }
@@ -69,8 +71,20 @@ public final class OSGiYars {
         bundleContext.registerService(Injector.class, injector, null);
     }
 
-    private static void registerRegistrationHandler(BundleContext bundleContext, Injector injector) {
-        bundleContext.registerService(RegistrationHandler.class, injector.getInstance(RegistrationHandler.class), null);
+    private static void registerRegistrationHandler(BundleContext bundleContext, RegistrationHandler registrationHandler) {
+        bundleContext.registerService(RegistrationHandler.class, registrationHandler, null);
+    }
+
+    private static RegistrationHandler getRegistrationHandler(Injector injector) {
+        return injector.getInstance(RegistrationHandler.class);
+    }
+
+    private static void registerListenerHandler(BundleContext bundleContext, RegistryListenerHandler registryListenerHandler) {
+        bundleContext.registerService(RegistryListenerHandler.class, registryListenerHandler, null);
+    }
+
+    private static RegistryListenerHandler getListenerHandler(Injector injector) {
+        return injector.getInstance(RegistryListenerHandler.class);
     }
 
     private static void attachStoppingListener(BundleContext bundleContext, Injector injector) {
@@ -124,12 +138,22 @@ public final class OSGiYars {
             if (!isStopping(bundleEvent)) {
                 return;
             }
-            RegistrationHandler registrationHandler = injector.getInstance(RegistrationHandler.class);
-            registrationHandler.clear();
+            clearSupplierRegistration();
+            clearListenerRegistration();
         }
 
         private boolean isStopping(BundleEvent bundleEvent) {
             return BundleEvent.STOPPING == bundleEvent.getType();
+        }
+
+        private void clearSupplierRegistration() {
+            RegistrationHandler registrationHandler = getRegistrationHandler(injector);
+            registrationHandler.clear();
+        }
+
+        private void clearListenerRegistration() {
+            RegistryListenerHandler registryListenerHandler = getListenerHandler(injector);
+            registryListenerHandler.clear();
         }
     }
 }

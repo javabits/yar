@@ -29,7 +29,7 @@ import java.util.List;
  */
 public interface RegistrationHandler {
 
-    List<Id<?>> registeredKeys();
+    List<Id<?>> registrations();
 
     void clear();
 }

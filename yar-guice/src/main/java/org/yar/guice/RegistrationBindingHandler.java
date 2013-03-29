@@ -65,7 +65,7 @@ public class RegistrationBindingHandler implements RegistrationHandler {
     }
 
     @Override
-    public List<Id<?>> registeredKeys() {
+    public List<Id<?>> registrations() {
         return transform(registrations, new Function<Registration<?>, Id<?>>() {
             @Nullable
             @Override
