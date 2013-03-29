@@ -61,7 +61,7 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T
 
     @Override
     public void finalizeReferent() {
-        registry.remove(this);
+        registry.removeWatcher(this);
     }
 
     static class WatcherDecorator<T> implements Watcher<Supplier<T>> {

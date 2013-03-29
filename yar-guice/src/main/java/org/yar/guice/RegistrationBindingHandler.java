@@ -30,6 +30,7 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 
+import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
 
 /**
@@ -43,6 +44,7 @@ public class RegistrationBindingHandler implements RegistrationHandler {
     private final Injector injector;
     private final Registry registry;
     private final List<Registration<?>> registrations;
+
     @Inject
     public RegistrationBindingHandler(Injector injector, Registry registry) {
         this.injector = injector;
@@ -51,17 +53,31 @@ public class RegistrationBindingHandler implements RegistrationHandler {
     }
 
     private List<Registration<?>> registerBindings() {
-        ImmutableList.Builder<Registration<?>> registrationsBuilder = ImmutableList.builder();
+        List<Registration<?>> registrationsBuilder = newArrayList();
+        for (Pair<Id, GuiceSupplier> idGuiceSupplierPair : getSuppliers()) {
+            registrationsBuilder.add(putRegistrationToRegistry(idGuiceSupplierPair));
+        }
+        return registrationsBuilder;
+    }
+
+    //enforce load all providers before register them
+    private List<Pair<Id, GuiceSupplier>> getSuppliers() {
+        ImmutableList.Builder<Pair<Id, GuiceSupplier>> suppliersBuilder = ImmutableList.builder();
         for (Binding<GuiceRegistration> registrationBinding : injector.findBindingsByType(TypeLiteral.get(GuiceRegistration.class))) {
             Key<?> key = registrationBinding.getProvider().get().key();
-            registrationsBuilder.add(putRegistrationToRegistry(key));
+            suppliersBuilder.add(newPair(key));
         }
-        return registrationsBuilder.build();
+        return suppliersBuilder.build();
     }
 
     @SuppressWarnings("unchecked")
-    private Registration<?> putRegistrationToRegistry(Key<?> key) {
-        return registry.put(GuiceId.of(key), new GuiceSupplier(injector.getProvider(key)));
+    private StrongPair<Id, GuiceSupplier> newPair(Key<?> key) {
+        return new StrongPair<Id, GuiceSupplier>(GuiceId.of(key), new GuiceSupplier(injector.getProvider(key)));
+    }
+
+    @SuppressWarnings("unchecked")
+    private Registration<?> putRegistrationToRegistry(Pair<Id, GuiceSupplier> idGuiceSupplierPair) {
+        return registry.put(idGuiceSupplierPair.left(), idGuiceSupplierPair.right());
     }
 
     @Override
@@ -83,5 +99,6 @@ public class RegistrationBindingHandler implements RegistrationHandler {
         for (Registration<?> registration : registrations) {
             registry.remove(registration);
         }
+        registrations.clear();
     }
 }

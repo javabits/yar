@@ -19,15 +19,16 @@ package org.yar.guice;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
-import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import org.yar.*;
+import org.yar.IdMatcher;
+import org.yar.Registration;
+import org.yar.Registry;
+import org.yar.Watcher;
 
-import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 
-import static org.yar.guice.Matchers.getYarKey;
+import static com.google.common.collect.Lists.newArrayList;
 
 /**
  * TODO comment
@@ -41,7 +42,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     private final Registry registry;
     //we keep a strong reference on the watcher to avoid it to be garbage collected
     //therefore the lifecycle to this watcher is at least associated to the lifecycle of owning injector
-    private final List<Pair<Registration<?>,Watcher>> listenerRegistrations;
+    private final List<Pair<Registration<?>, Watcher>> listenerRegistrations;
 
 
     @Inject
@@ -50,14 +51,24 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
         this.registry = registry;
         this.listenerRegistrations = addListenerToRegistry();
     }
+
+    //enforce creation of all watcher before register it
     @SuppressWarnings("unchecked")
     private List<Pair<Registration<?>, Watcher>> addListenerToRegistry() {
-        ImmutableList.Builder<Pair<Registration<?>, Watcher>> registrationsBuilder = ImmutableList.builder();
+        List<Pair<Registration<?>, Watcher>> registrationsBuilder = newArrayList();
+        for (Pair<IdMatcher, Watcher> guiceWatcherRegistration : getRegisteredWatchers()) {
+            Watcher watcher = guiceWatcherRegistration.right();
+            Registration<?> registration = registry.addWatcher(guiceWatcherRegistration.left(), watcher);
+            registrationsBuilder.add(new StrongPair<Registration<?>, Watcher>(registration, watcher));
+        }
+        return registrationsBuilder;
+    }
+
+    private List<Pair<IdMatcher, Watcher>> getRegisteredWatchers() {
+        ImmutableList.Builder<Pair<IdMatcher, Watcher>> registrationsBuilder = ImmutableList.builder();
         for (Binding<GuiceWatcherRegistration> watcherRegistrationBinding : injector.findBindingsByType(TypeLiteral.get(GuiceWatcherRegistration.class))) {
             GuiceWatcherRegistration guiceWatcherRegistration = watcherRegistrationBinding.getProvider().get();
-            Watcher watcher = guiceWatcherRegistration.watcher();
-            Registration<?> registration = registry.addWatcher(guiceWatcherRegistration.matcher(), watcher);
-            registrationsBuilder.add(new StrongPair<Registration<?>, Watcher>(registration, watcher));
+            registrationsBuilder.add(new StrongPair<>(guiceWatcherRegistration.matcher(), guiceWatcherRegistration.watcher()));
         }
         return registrationsBuilder.build();
     }
@@ -67,6 +78,6 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
         for (Pair<Registration<?>, Watcher> listenerRegistration : listenerRegistrations) {
             registry.removeWatcher(listenerRegistration.left());
         }
-
+        listenerRegistrations.clear();
     }
 }
