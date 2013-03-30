@@ -41,6 +41,7 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
     private final long defaultTimeout;
     private final TimeUnit defaultTimeUnit;
 
+
     public BlockingSupplierRegistry() {
         this(DEFAULT_TIMEOUT);
     }
@@ -63,7 +64,7 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
     }
 
     @Override
-    public <T> BlockingSupplier<T> get(Id<T> id) {
+    public <T> BlockingSupplier<T> get(final Id<T> id) {
         return new TimeoutBlockingSupplier<>(id, super.get(id), defaultTimeout, defaultTimeUnit);
     }
 
@@ -71,8 +72,8 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
         private final long timeout;
         private final TimeUnit unit;
 
-        TimeoutBlockingSupplier(Id<T> id, Supplier<T> delegate, long timeout, TimeUnit unit) {
-            super(delegate);
+        TimeoutBlockingSupplier(final Id<T> id, Supplier<T> delegate, long timeout, TimeUnit unit) {
+            super(new FirstSupplierProvider<>(id), delegate);
             this.timeout = timeout;
             this.unit = unit;
             addWatcher(newKeyMatcher(id), this);
@@ -139,6 +140,8 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
                 writeLock.unlock();
             }
         }
+
+
     }
 
     static BlockingSupplierRegistry newMultimapBlockingSupplierRegistry() {
@@ -157,4 +160,17 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
         return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
 
+    private class FirstSupplierProvider<T> implements org.yar.guice.FirstSupplierProvider<T> {
+        private final Id<T> id;
+
+        public FirstSupplierProvider(Id<T> id) {
+            this.id = id;
+        }
+
+        @Nullable
+        @Override
+        public Supplier<T> get() {
+            return BlockingSupplierRegistry.super.get(id);
+        }
+    }
 }

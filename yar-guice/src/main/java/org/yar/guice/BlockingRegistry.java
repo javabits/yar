@@ -90,7 +90,7 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
     abstract class AbstractBlockingSupplier<T> extends org.yar.guice.AbstractBlockingSupplier<T> {
 
         AbstractBlockingSupplier(Id<T> id, Supplier<T> delegate) {
-            super(delegate);
+            super(new FirstSupplierProvider<>(id), delegate);
             addWatcher(newKeyMatcher(id), this);
         }
     }
@@ -169,5 +169,19 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
     }
     static BlockingRegistry newLoadingCacheBlockingRegistry(long defaultTimeout) {
         return new BlockingRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
+    }
+
+    private class FirstSupplierProvider<T> implements org.yar.guice.FirstSupplierProvider<T> {
+        private final Id<T> id;
+
+        public FirstSupplierProvider(Id<T> id) {
+            this.id = id;
+        }
+
+        @Nullable
+        @Override
+        public Supplier<T> get() {
+            return BlockingRegistry.super.get(id);
+        }
     }
 }

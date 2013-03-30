@@ -17,6 +17,7 @@
 package org.yar.guice;
 
 import org.yar.AbstractSingleElementWatcher;
+import org.yar.Registry;
 import org.yar.Supplier;
 import org.yar.Watcher;
 
@@ -42,9 +43,12 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, Watcher<Suppl
      */
     final Condition notEmpty = writeLock.newCondition();
 
+    private final FirstSupplierProvider<T> firstSupplierProvider;
+
     Supplier<T> delegate;
 
-    AbstractBlockingSupplier(Supplier<T> delegate) {
+    AbstractBlockingSupplier(FirstSupplierProvider<T> firstSupplierProvider, Supplier<T> delegate) {
+        this.firstSupplierProvider = firstSupplierProvider;
         this.delegate = delegate;
     }
 
@@ -55,9 +59,10 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, Watcher<Suppl
     @Override
     public final Supplier<T> add(Supplier<T> element) {
         requireNonNull(element, "element");
+        element = firstSupplierProvider.get();
         readLock.lock();
         try {
-            if (delegate != null) {
+            if (delegate == element) {
                 return null;
             }
         } finally {
@@ -91,7 +96,7 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, Watcher<Suppl
         writeLock.lock();
         try {
             if (delegate == element) { //identity test handle delegate == null also
-                delegate = null;
+                delegate = firstSupplierProvider.get();
             }
         } finally {
             writeLock.unlock();
