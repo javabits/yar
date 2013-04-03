@@ -51,14 +51,14 @@ public class BlockingSupplierRegistryTest {
                 try {
                     BlockingSupplier<MyService> myServiceBlockingSupplier = registry.get(MyService.class);
                     assertThat(myServiceBlockingSupplier, is(not(nullValue())));
-                    myServiceSupplier[0] = myServiceBlockingSupplier.get(100, TimeUnit.MILLISECONDS);
+                    myServiceSupplier[0] = myServiceBlockingSupplier.get(200, TimeUnit.MILLISECONDS);
                 } finally {
                     lock.unlock();
                 }
             }
         });
         thread.start();
-        Thread.sleep(2);
+        Thread.sleep(100);
         registry.put(GuiceId.of(MyService.class), new GuiceSupplier<>(new Provider<MyService>() {
             @Override
             public MyService get() {

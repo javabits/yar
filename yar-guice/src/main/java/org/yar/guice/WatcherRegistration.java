@@ -24,6 +24,9 @@ import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.IdentityHashMap;
 
+import static org.yar.guice.SupplierEvent.Type.ADD;
+import static org.yar.guice.SupplierEvent.Type.REMOVE;
+
 /**
 * TODO comment
 * Date: 2/20/13
@@ -37,10 +40,18 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T
     private final Watcher<Supplier<T>> right;
     private final Registry registry;
 
+
+    static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, SupplierListener supplierListener, FinalizableReferenceQueue referenceQueue, Registry registry) {
+        return new WatcherRegistration<>(leftValue, new SupplierWatcherToSupplierListenerAdapter<T>(supplierListener), referenceQueue, registry);
+    }
+    static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
+        return new WatcherRegistration(leftValue, new WatcherDecorator<>(rightValue), referenceQueue, registry);
+    }
+
     WatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
         super(rightValue, referenceQueue);
         left = leftValue;
-        right = new WatcherDecorator<>(rightValue);
+        right = rightValue;
         this.registry = registry;
     }
 
@@ -104,6 +115,26 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T
                     clearTrackedElements();
                 }
             }
+        }
+    }
+
+    private static class SupplierWatcherToSupplierListenerAdapter<T> implements Watcher<Supplier<T>> {
+        private final SupplierListener supplierListener;
+
+        public SupplierWatcherToSupplierListenerAdapter(SupplierListener supplierListener) {
+            this.supplierListener = supplierListener;
+        }
+
+        @Nullable
+        @Override
+        public Supplier<T> add(Supplier<T> supplier) {
+            supplierListener.supplierChanged(new SupplierEvent(ADD, supplier));
+            return supplier;
+        }
+
+        @Override
+        public void remove(Supplier<T> supplier) {
+            supplierListener.supplierChanged(new SupplierEvent(REMOVE, supplier));
         }
     }
 }

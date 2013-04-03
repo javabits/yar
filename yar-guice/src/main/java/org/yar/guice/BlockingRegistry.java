@@ -91,7 +91,7 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
 
         AbstractBlockingSupplier(Id<T> id, Supplier<T> delegate) {
             super(new FirstSupplierProvider<>(id), delegate);
-            addWatcher(newKeyMatcher(id), this);
+            addSupplierListener(newKeyMatcher(id), this);
         }
     }
 

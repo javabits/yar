@@ -116,20 +116,21 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
     @Override
     public boolean put(SupplierRegistration<?> registration) {
+        boolean added = putToRegistry(supplierRegistry, registration);
         updateWatcher(registration, Action.ADD);
-        return putToRegistry(supplierRegistry, registration);
+        return added;
     }
 
-    private <T> void updateWatcher(SupplierRegistration<T> registration, Action action) {
-        Id<T> id = registration.id();
-        List<WatcherRegistration<T>> watchers = getWatchers(id);
-        for (WatcherRegistration<T> registryEntry : watchers) {
-            fireAddToWatcherIfMatches(registryEntry, registration, action);
+    private <T> void updateWatcher(SupplierRegistration<T> supplierRegistration, Action action) {
+        Id<T> id = supplierRegistration.id();
+        List<WatcherRegistration<T>> watcherRegistrations = getWatcherRegistrations(id);
+        for (WatcherRegistration<T> watcherRegistration : watcherRegistrations) {
+            fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, action);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <T> List<WatcherRegistration<T>> getWatchers(Id<T> id) {
+    private <T> List<WatcherRegistration<T>> getWatcherRegistrations(Id<T> id) {
         ImmutableList.Builder<WatcherRegistration<T>> resultBuilder = ImmutableList.builder();
         List<WatcherRegistration<?>> watchers = watcherRegistry.getAll(id.type());
         for (WatcherRegistration<?> watcher : watchers) {

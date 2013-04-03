@@ -27,13 +27,13 @@ import java.util.concurrent.locks.*;
 import static java.util.Objects.requireNonNull;
 
 /**
-* TODO comment
-* Date: 2/28/13
-* Time: 11:11 AM
-*
-* @author Romain Gilles
-*/
-abstract class AbstractBlockingSupplier<T> implements Supplier<T>, Watcher<Supplier<T>> {
+ * TODO comment
+ * Date: 2/28/13
+ * Time: 11:11 AM
+ *
+ * @author Romain Gilles
+ */
+abstract class AbstractBlockingSupplier<T> implements Supplier<T>, SupplierListener {
 
     final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     final Lock readLock = readWriteLock.readLock();
@@ -53,11 +53,8 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, Watcher<Suppl
     }
 
 
-
-
     @Nullable
-    @Override
-    public final Supplier<T> add(Supplier<T> element) {
+    private Supplier<T> add(Supplier<T> element) {
         requireNonNull(element, "element");
         element = firstSupplierProvider.get();
         readLock.lock();
@@ -82,8 +79,7 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, Watcher<Suppl
         }
     }
 
-    @Override
-    public final void remove(Supplier<T> element) {
+    private void remove(Supplier<T> element) {
         requireNonNull(element, "element");
         readLock.lock();
         try {
@@ -101,5 +97,22 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, Watcher<Suppl
         } finally {
             writeLock.unlock();
         }
+    }
+
+    @Override
+    public void supplierChanged(SupplierEvent supplierEvent) {
+        SupplierEvent.Type type = supplierEvent.type();
+        switch (type) {
+            case ADD:
+                add((Supplier<T>) supplierEvent.supplier());
+                break;
+            case REMOVE:
+                remove((Supplier<T>) supplierEvent.supplier());
+                break;
+            default:
+                throw new IllegalStateException("Unknown supplier state: " + supplierEvent);
+        }
+
+
     }
 }

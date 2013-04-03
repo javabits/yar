@@ -76,7 +76,7 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
             super(new FirstSupplierProvider<>(id), delegate);
             this.timeout = timeout;
             this.unit = unit;
-            addWatcher(newKeyMatcher(id), this);
+            addSupplierListener(newKeyMatcher(id), this);
         }
 
         @Nullable

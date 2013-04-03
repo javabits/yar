@@ -31,6 +31,7 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
+import static org.yar.guice.WatcherRegistration.newWatcherRegistration;
 
 /**
  * TODO comment
@@ -42,15 +43,6 @@ import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuice
  * @author Romain Gilles
  */
 public class SimpleRegistry implements Registry {
-
-    //TODO test synchronized Multimap vs MapMaker/CacheBuilder
-//    ConcurrentMap<KEYTYPE, Set<VALUETYPE>> hashMap = new MapMaker()
-//            .makeComputingMap(
-//                    new Function<KEYTYPE, VALUETYPE>() {
-//                        public Graph apply(KEYTYPE id) {
-//                            return new HashSet<VALUETYPE>();
-//                        }
-//                    });
 
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
@@ -193,9 +185,19 @@ public class SimpleRegistry implements Registry {
     @Override
     public <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<Supplier<T>> watcher) {
         checkKeyMatcher(idMatcher, "idMatcher");
-        WatcherRegistration<T> watcherRegistration = new WatcherRegistration<>(idMatcher, watcher, referenceQueue, this);
+        WatcherRegistration<T> watcherRegistration = newWatcherRegistration(idMatcher, watcher, referenceQueue, this);
+        return addWatcherRegistration(watcherRegistration);
+    }
+
+    <T> Registration<T> addWatcherRegistration(WatcherRegistration<T> watcherRegistration) {
         executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
         return watcherRegistration;
+    }
+    <T> Registration<T> addSupplierListener(IdMatcher<T> idMatcher, SupplierListener supplierListener) {
+        checkKeyMatcher(idMatcher, "idMatcher");
+        requireNonNull(supplierListener, "supplierListener");
+        WatcherRegistration<T> watcherRegistration = newWatcherRegistration(idMatcher, supplierListener, referenceQueue, this);
+        return addWatcherRegistration(watcherRegistration);
     }
 
     private <T> IdMatcher<T> checkKeyMatcher(IdMatcher<T> matcher, String attribute) {
