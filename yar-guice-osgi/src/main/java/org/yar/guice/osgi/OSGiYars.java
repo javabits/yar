@@ -62,7 +62,7 @@ public final class OSGiYars {
     public static Injector start(BundleContext bundleContext, Injector injector) {
         registerInjector(bundleContext, injector);
         registerRegistrationHandler(bundleContext, getRegistrationHandler(injector));
-        registerListenerHandler(bundleContext, getListenerHandler(injector));
+        registerListenerHandler(bundleContext, getRegistryListenerHandler(injector));
         attachStoppingListener(bundleContext, injector);
         return injector;
     }
@@ -83,7 +83,7 @@ public final class OSGiYars {
         bundleContext.registerService(RegistryListenerHandler.class, registryListenerHandler, null);
     }
 
-    private static RegistryListenerHandler getListenerHandler(Injector injector) {
+    private static RegistryListenerHandler getRegistryListenerHandler(Injector injector) {
         return injector.getInstance(RegistryListenerHandler.class);
     }
 
@@ -152,7 +152,7 @@ public final class OSGiYars {
         }
 
         private void clearListenerRegistration() {
-            RegistryListenerHandler registryListenerHandler = getListenerHandler(injector);
+            RegistryListenerHandler registryListenerHandler = getRegistryListenerHandler(injector);
             registryListenerHandler.clear();
         }
     }

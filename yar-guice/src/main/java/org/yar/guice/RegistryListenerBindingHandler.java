@@ -42,7 +42,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     private final Registry registry;
     //we keep a strong reference on the watcher to avoid it to be garbage collected
     //therefore the lifecycle to this watcher is at least associated to the lifecycle of owning injector
-    private final List<Pair<Registration<?>, Watcher>> listenerRegistrations;
+    private final List<Pair<Registration, Watcher>> listenerRegistrations;
 
 
     @Inject
@@ -54,19 +54,20 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
 
     //enforce creation of all watcher before register it
     @SuppressWarnings("unchecked")
-    private List<Pair<Registration<?>, Watcher>> addListenerToRegistry() {
-        List<Pair<Registration<?>, Watcher>> registrationsBuilder = newArrayList();
+    private List<Pair<Registration, Watcher>> addListenerToRegistry() {
+        List<Pair<Registration, Watcher>> registrationsBuilder = newArrayList();
         for (Pair<IdMatcher, Watcher> guiceWatcherRegistration : getRegisteredWatchers()) {
             Watcher watcher = guiceWatcherRegistration.right();
-            Registration<?> registration = registry.addWatcher(guiceWatcherRegistration.left(), watcher);
-            registrationsBuilder.add(new StrongPair<Registration<?>, Watcher>(registration, watcher));
+            Registration registration = registry.addWatcher(guiceWatcherRegistration.left(), watcher);
+            registrationsBuilder.add(new StrongPair<>(registration, watcher));
         }
         return registrationsBuilder;
     }
 
     private List<Pair<IdMatcher, Watcher>> getRegisteredWatchers() {
         ImmutableList.Builder<Pair<IdMatcher, Watcher>> registrationsBuilder = ImmutableList.builder();
-        for (Binding<GuiceWatcherRegistration> watcherRegistrationBinding : injector.findBindingsByType(TypeLiteral.get(GuiceWatcherRegistration.class))) {
+        List<Binding<GuiceWatcherRegistration>> guiceWatcherRegistrationBindings = injector.findBindingsByType(TypeLiteral.get(GuiceWatcherRegistration.class));
+        for (Binding<GuiceWatcherRegistration> watcherRegistrationBinding : guiceWatcherRegistrationBindings) {
             GuiceWatcherRegistration guiceWatcherRegistration = watcherRegistrationBinding.getProvider().get();
             registrationsBuilder.add(new StrongPair<>(guiceWatcherRegistration.matcher(), guiceWatcherRegistration.watcher()));
         }
@@ -75,7 +76,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
 
     @Override
     public void clear() {
-        for (Pair<Registration<?>, Watcher> listenerRegistration : listenerRegistrations) {
+        for (Pair<Registration, Watcher> listenerRegistration : listenerRegistrations) {
             registry.removeWatcher(listenerRegistration.left());
         }
         listenerRegistrations.clear();

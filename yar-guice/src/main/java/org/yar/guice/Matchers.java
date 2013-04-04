@@ -49,6 +49,10 @@ public final class Matchers {
     }
 
     public static <T> TypeLiteral<T> getTargetTypeLiteral(Matcher<Key<T>> matcher) {
+        if (matcher instanceof KeyProvider) {
+            KeyProvider<T> keyProvider = (KeyProvider<T>) matcher;
+            return keyProvider.get().getTypeLiteral();
+        }
         Type keyTargetType = getTargetType(matcher);
         return getTypeLiteral(keyTargetType);
     }
@@ -83,7 +87,7 @@ public final class Matchers {
         return new KeyTypeMatcher<>(Key.get(type));
     }
 
-    private static class KeyMatcher<T> extends AbstractMatcher<Key<T>> {
+    static class KeyMatcher<T> extends AbstractMatcher<Key<T>> implements KeyProvider<T> {
 
         private final Key<T> key;
 
@@ -95,9 +99,14 @@ public final class Matchers {
         public boolean matches(Key<T> other) {
             return key.equals(other);
         }
+
+        @Override
+        public Key<T> get() {
+            return key;
+        }
     }
 
-    private static class KeyTypeMatcher<T> extends AbstractMatcher<Key<T>> {
+    static class KeyTypeMatcher<T> extends AbstractMatcher<Key<T>> implements KeyProvider<T> {
 
         private final Key<T> key;
 
@@ -109,6 +118,11 @@ public final class Matchers {
         public boolean matches(Key<T> other) {
             return key.getTypeLiteral().equals(other.getTypeLiteral());
 //            return true; //always true ;)
+        }
+
+        @Override
+        public Key<T> get() {
+            return key;
         }
     }
 }
