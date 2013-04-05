@@ -54,6 +54,7 @@
         <findbugs.annotations.version>2.0.1</findbugs.annotations.version>
         <logback-classic.version>0.9.20</logback-classic.version>
         <pax-url-aether.version>1.5.2</pax-url-aether.version>
+        <mockito-all.version>1.9.5</mockito-all.version>
     </properties>
 
 
@@ -74,6 +75,11 @@
                 <groupId>org.hamcrest</groupId>
                 <artifactId>hamcrest-all</artifactId>
                 <version>${hamcrest-all.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-all</artifactId>
+                <version>${mockito-all.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.inject</groupId>
