@@ -23,5 +23,6 @@ package org.yar.guice;
  * @author Romain Gilles
  */
 public interface RegistryListenerHandler {
+    void init();
     void clear();
 }

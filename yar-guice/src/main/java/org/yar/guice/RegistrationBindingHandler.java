@@ -43,12 +43,16 @@ import static com.google.common.collect.Lists.transform;
 public class RegistrationBindingHandler implements RegistrationHandler {
     private final Injector injector;
     private final Registry registry;
-    private final List<Registration<?>> registrations;
+    private List<Registration<?>> registrations;
 
     @Inject
     public RegistrationBindingHandler(Injector injector, Registry registry) {
         this.injector = injector;
         this.registry = registry;
+    }
+
+    @Override
+    public void init() {
         registrations = registerBindings();
     }
 

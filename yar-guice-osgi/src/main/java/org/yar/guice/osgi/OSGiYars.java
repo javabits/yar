@@ -61,34 +61,42 @@ public final class OSGiYars {
 
     public static Injector start(BundleContext bundleContext, Injector injector) {
         registerInjector(bundleContext, injector);
-        registerRegistrationHandler(bundleContext, getRegistrationHandler(injector));
-        registerListenerHandler(bundleContext, getRegistryListenerHandler(injector));
-        attachStoppingListener(bundleContext, injector);
+        RegistrationHandler registrationHandler = getRegistrationHandler(injector);
+        registerRegistrationHandler(bundleContext, registrationHandler);
+        RegistryListenerHandler registryListenerHandler = getRegistryListenerHandler(injector);
+        registerListenerHandler(bundleContext, registryListenerHandler);
+        attachStoppingListener(bundleContext, registrationHandler, registryListenerHandler);
+        initHandlers(registrationHandler, registryListenerHandler);
         return injector;
+    }
+
+    private static void initHandlers(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
+        registrationHandler.init();
+        registryListenerHandler.init();
     }
 
     private static void registerInjector(BundleContext bundleContext, Injector injector) {
         bundleContext.registerService(Injector.class, injector, null);
     }
 
-    private static void registerRegistrationHandler(BundleContext bundleContext, RegistrationHandler registrationHandler) {
-        bundleContext.registerService(RegistrationHandler.class, registrationHandler, null);
+    private static ServiceRegistration<RegistrationHandler> registerRegistrationHandler(BundleContext bundleContext, RegistrationHandler registrationHandler) {
+        return bundleContext.registerService(RegistrationHandler.class, registrationHandler, null);
     }
 
     private static RegistrationHandler getRegistrationHandler(Injector injector) {
         return injector.getInstance(RegistrationHandler.class);
     }
 
-    private static void registerListenerHandler(BundleContext bundleContext, RegistryListenerHandler registryListenerHandler) {
-        bundleContext.registerService(RegistryListenerHandler.class, registryListenerHandler, null);
+    private static ServiceRegistration<RegistryListenerHandler> registerListenerHandler(BundleContext bundleContext, RegistryListenerHandler registryListenerHandler) {
+        return bundleContext.registerService(RegistryListenerHandler.class, registryListenerHandler, null);
     }
 
     private static RegistryListenerHandler getRegistryListenerHandler(Injector injector) {
         return injector.getInstance(RegistryListenerHandler.class);
     }
 
-    private static void attachStoppingListener(BundleContext bundleContext, Injector injector) {
-        bundleContext.addBundleListener(new BundleStoppingListener(injector));
+    private static void attachStoppingListener(BundleContext bundleContext, RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
+        bundleContext.addBundleListener(new BundleStoppingListener(registrationHandler,registryListenerHandler, bundleContext.getBundle().getBundleId()));
     }
 
     private static Iterable<Module> getModules(BundleContext bundleContext, Iterable<Module> modules) {
@@ -127,10 +135,14 @@ public final class OSGiYars {
 
 
     private static class BundleStoppingListener implements SynchronousBundleListener {
-        private final Injector injector;
+        private final RegistrationHandler registrationHandler;
+        private final RegistryListenerHandler registryListenerHandler;
+        private final long bundleId;
 
-        private BundleStoppingListener(Injector injector) {
-            this.injector = injector;
+        private BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, long bundleId) {
+            this.registrationHandler = registrationHandler;
+            this.registryListenerHandler = registryListenerHandler;
+            this.bundleId = bundleId;
         }
 
         @Override
@@ -143,16 +155,14 @@ public final class OSGiYars {
         }
 
         private boolean isStopping(BundleEvent bundleEvent) {
-            return BundleEvent.STOPPING == bundleEvent.getType();
+            return BundleEvent.STOPPING == bundleEvent.getType() && bundleEvent.getBundle().getBundleId() == bundleId;
         }
 
         private void clearSupplierRegistration() {
-            RegistrationHandler registrationHandler = getRegistrationHandler(injector);
             registrationHandler.clear();
         }
 
         private void clearListenerRegistration() {
-            RegistryListenerHandler registryListenerHandler = getRegistryListenerHandler(injector);
             registryListenerHandler.clear();
         }
     }

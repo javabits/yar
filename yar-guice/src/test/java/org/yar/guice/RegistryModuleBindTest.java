@@ -160,7 +160,10 @@ public class RegistryModuleBindTest {
     }
 
     private Injector createInjector(Module module, RegistryModule registryModule) {
-        return Guice.createInjector(Stage.PRODUCTION, module, registryModule);
+        Injector injector = Guice.createInjector(Stage.PRODUCTION, module, registryModule);
+        injector.getInstance(RegistrationHandler.class).init();
+        injector.getInstance(RegistryListenerHandler.class).init();
+        return injector;
     }
 
     private RegistryModule createSupplierBindingRegistryModule() {
@@ -242,6 +245,7 @@ public class RegistryModuleBindTest {
                 );
             }
         });
+
         SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>)putMyInterfaceSupplierToRegistry(registry);
         registry.remove(myInterfaceRegistration);
         assertThat(((Integer) matches[0]), is(2));

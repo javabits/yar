@@ -58,12 +58,15 @@ public class RegistryModuleRegistrationTest {
     }
 
     private Injector createInjector(RegistryModule registryModule) {
-        return Guice.createInjector(Stage.PRODUCTION, new AbstractModule() {
+        Injector injector = Guice.createInjector(Stage.PRODUCTION, new AbstractModule() {
             @Override
             protected void configure() {
                 bind(Registry.class).to(SimpleRegistry.class).in(Singleton.class);
             }
         }, registryModule);
+        injector.getInstance(RegistrationHandler.class).init();
+        injector.getInstance(RegistryListenerHandler.class).init();
+        return injector;
     }
 
     private void checkRegisteredService(Injector injector, Key<MyServiceInterface> key) {

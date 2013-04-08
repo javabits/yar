@@ -42,13 +42,18 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     private final Registry registry;
     //we keep a strong reference on the watcher to avoid it to be garbage collected
     //therefore the lifecycle to this watcher is at least associated to the lifecycle of owning injector
-    private final List<Pair<Registration, Watcher>> listenerRegistrations;
+    private List<Pair<Registration, Watcher>> listenerRegistrations;
 
 
     @Inject
     public RegistryListenerBindingHandler(Injector injector, Registry registry) {
         this.injector = injector;
         this.registry = registry;
+
+    }
+
+    @Override
+    public void init() {
         this.listenerRegistrations = addListenerToRegistry();
     }
 

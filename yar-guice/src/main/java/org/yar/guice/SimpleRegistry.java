@@ -55,7 +55,7 @@ public class SimpleRegistry implements Registry {
         referenceQueue = new FinalizableReferenceQueue();
         this.registrationContainer = registrationContainer;
         registryActionQueue = new LinkedBlockingQueue<>();
-        Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registrationContainer));
+        Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registrationContainer), "yar-action-handler");
         registryActionThread.setDaemon(true);
         registryActionThread.start();
     }
@@ -80,7 +80,6 @@ public class SimpleRegistry implements Registry {
     @Override
     public <T> List<Supplier<T>> getAll(Id<T> id) {
         List<SupplierRegistration<T>> pairs = registrationContainer.getAll(id);
-
         return transformToSuppliers(pairs);
 
     }

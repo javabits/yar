@@ -31,5 +31,7 @@ public interface RegistrationHandler {
 
     List<Id<?>> registrations();
 
+    void init();
+
     void clear();
 }

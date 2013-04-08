@@ -128,15 +128,13 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
             fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, action);
         }
     }
-
+    //returns all the watchers associated to the type of the given id.
     @SuppressWarnings("unchecked")
     private <T> List<WatcherRegistration<T>> getWatcherRegistrations(Id<T> id) {
         ImmutableList.Builder<WatcherRegistration<T>> resultBuilder = ImmutableList.builder();
         List<WatcherRegistration<?>> watchers = watcherRegistry.getAll(id.type());
         for (WatcherRegistration<?> watcher : watchers) {
-            if (isKeyCompatibleToThisRegistration(id, watcher)) {
-                resultBuilder.add((WatcherRegistration<T>)watcher);
-            }
+            resultBuilder.add((WatcherRegistration<T>)watcher);
         }
 
         return resultBuilder.build();
