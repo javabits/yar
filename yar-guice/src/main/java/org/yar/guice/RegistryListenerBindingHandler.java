@@ -16,18 +16,20 @@
 
 package org.yar.guice;
 
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
-import org.yar.IdMatcher;
-import org.yar.Registration;
-import org.yar.Registry;
-import org.yar.Watcher;
+import org.yar.*;
 
+import javax.annotation.Nullable;
 import javax.inject.Inject;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 
 /**
@@ -77,6 +79,19 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
             registrationsBuilder.add(new StrongPair<>(guiceWatcherRegistration.matcher(), guiceWatcherRegistration.watcher()));
         }
         return registrationsBuilder.build();
+    }
+
+    @Override
+    public List<Id<?>> listenerIds() {
+        return Lists.transform(listenerRegistrations, new Function<Pair<Registration, Watcher>, Id<?>>() {
+            @Nullable
+            @Override
+            public Id<?> apply(@Nullable Pair<Registration, Watcher> pair) {
+                checkNotNull(pair, "pair");
+                Registration registration = checkNotNull(pair.left(), "pair.left");
+                return registration.id();
+            }
+        });
     }
 
     @Override

@@ -25,6 +25,7 @@ import org.yar.Id;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.yar.guice.Reflections.getUniqueParameterType;
 import static org.yar.guice.Reflections.isParameterizedType;
 
@@ -50,6 +51,7 @@ public final class Matchers {
 
     public static <T> TypeLiteral<T> getTargetTypeLiteral(Matcher<Key<T>> matcher) {
         if (matcher instanceof KeyProvider) {
+            @SuppressWarnings("unchecked")
             KeyProvider<T> keyProvider = (KeyProvider<T>) matcher;
             return keyProvider.get().getTypeLiteral();
         }
@@ -85,6 +87,10 @@ public final class Matchers {
 
     public static <T> Matcher<Key<T>> newKeyTypeMatcher(final Class<T> type) {
         return new KeyTypeMatcher<>(Key.get(type));
+    }
+
+    public static Matcher<? super TypeLiteral<?>> subclassesOf(final Class<?> superclass) {
+        return new SubClassesOf(superclass);
     }
 
     static class KeyMatcher<T> extends AbstractMatcher<Key<T>> implements KeyProvider<T> {
@@ -123,6 +129,20 @@ public final class Matchers {
         @Override
         public Key<T> get() {
             return key;
+        }
+    }
+
+    private static class SubClassesOf extends AbstractMatcher<TypeLiteral<?>> {
+
+        private final Class<?> superclass;
+
+        public SubClassesOf(Class<?> superclass) {
+            this.superclass = checkNotNull(superclass);
+        }
+
+        @Override
+        public boolean matches(TypeLiteral<?> o) {
+            return superclass.isAssignableFrom(o.getRawType());
         }
     }
 }

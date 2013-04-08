@@ -16,18 +16,13 @@
 
 package org.yar.guice;
 
-import org.yar.Id;
-
-import java.util.List;
-
 /**
  * TODO comment
- * Date: 3/17/13
+ * Date: 4/8/13
+ * Time: 6:42 PM
  *
  * @author Romain Gilles
  */
-public interface RegistryListenerHandler extends Initializable {
-    List<Id<?>> listenerIds();
-
-    void clear();
+public interface Initializable {
+    void init();
 }
