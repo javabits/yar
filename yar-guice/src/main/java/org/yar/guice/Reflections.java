@@ -31,7 +31,13 @@ public final class Reflections {
     private Reflections() {
         throw new AssertionError("not for you");
     }
-
+    @Nullable
+    public static String typeToString(@Nullable Type type) {
+        if (type == null) {
+            return null;
+        }
+        return type instanceof Class ? ((Class) type).getName() : type.toString();
+    }
 
     static Type getUniqueParameterType(ParameterizedType matcherType, String expectedForm) {
         return getUniqueParameterType(matcherType, null, expectedForm);

@@ -21,7 +21,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ListMultimap;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import static com.google.common.collect.Multimaps.synchronizedListMultimap;
 
@@ -69,6 +71,13 @@ class ListMultimapContainer<K, V> implements Container<K, V> {
         return delegate.remove(key, value);
     }
 
+    @Override
+    public Map<K, ? extends Collection<V>> asMap() {
+        synchronized (delegate) {
+            return delegate.asMap();
+        }
+    }
+
     static <K, V> ListMultimapContainer<K, V> newSynchronizedContainer() {
         return new ListMultimapContainer<>(synchronizedListMultimap(ArrayListMultimap.<K, V>create()));
     }
@@ -77,8 +86,4 @@ class ListMultimapContainer<K, V> implements Container<K, V> {
         return new ListMultimapContainer<>(ArrayListMultimap.<K, V>create());
     }
 
-    @Override
-    public List<Pair<K, V>> getEntries() {//TODO
-        throw new UnsupportedOperationException("TODO implement It !!!");
-    }
 }

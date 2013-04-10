@@ -18,7 +18,9 @@ package org.yar;
 
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 /**
  * TODO add type token or type literal
@@ -32,6 +34,8 @@ import java.util.List;
 public interface Registry {
 
     <T> List<Supplier<T>> getAll(Class<T> type);
+
+    Set<Id<?>> ids();
 
     @Nullable
     <T> Supplier<T> get(Class<T> type);

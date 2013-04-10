@@ -22,7 +22,9 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Iterables;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 
@@ -99,7 +101,7 @@ public class CacheContainer<K, V> implements Container<K, V> {
     }
 
     @Override
-    public List<Pair<K, V>> getEntries() {//TODO
-        throw new UnsupportedOperationException("TODO implement It !!!");
+    public Map<K, ? extends Collection<V>> asMap() {
+        return loadingCache.asMap();
     }
 }

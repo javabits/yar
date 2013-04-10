@@ -17,7 +17,9 @@
 package org.yar.guice;
 
 import javax.annotation.Nullable;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * TODO comment
@@ -37,5 +39,5 @@ public interface Container<K, V> {
 
     boolean remove(K key, V value);
 
-    List<Pair<K,V>> getEntries();
+    Map<K, ? extends Collection<V>> asMap();
 }

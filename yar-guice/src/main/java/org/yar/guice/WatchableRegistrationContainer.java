@@ -21,6 +21,7 @@ import org.yar.Id;
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 /**
  * TODO comment
@@ -30,6 +31,8 @@ import java.util.List;
  * @author Romain Gilles
  */
 public interface WatchableRegistrationContainer {
+
+    Set<Type> types();
 
     List<SupplierRegistration<?>> getAll(Type type);
     @Nullable

@@ -19,10 +19,15 @@ package org.yar.guice;
 import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
+import com.google.inject.Key;
 import org.yar.*;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 
 import static com.google.common.base.Throwables.propagate;
@@ -47,6 +52,7 @@ public class SimpleRegistry implements Registry {
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
     private final FinalizableReferenceQueue referenceQueue;
+
     public SimpleRegistry() {
         this(new GuiceWatchableRegistrationContainer());
     }
@@ -61,18 +67,29 @@ public class SimpleRegistry implements Registry {
     }
 
     @Override
+    public Set<Id<?>> ids() {
+        return ImmutableSet.copyOf(Iterables.transform(registrationContainer.types(), new Function<Type, Id<?>>() {
+            @Nullable
+            @Override
+            public Id<?> apply(@Nullable Type input) {
+                return GuiceId.of(Key.get(input));
+            }
+        }));
+    }
+
+    @Override
     public <T> List<Supplier<T>> getAll(Class<T> type) {
         return viewOfEntries(registrationContainer.getAll(type));
-
-
     }
+
     private static <T> List<Supplier<T>> viewOfEntries(List<SupplierRegistration<?>> pairs) {
         return transform(pairs, new Function<SupplierRegistration<?>, Supplier<T>>() {
 
             @Nullable
-            @Override @SuppressWarnings("unchecked")
+            @Override
+            @SuppressWarnings("unchecked")
             public Supplier<T> apply(@Nullable SupplierRegistration<?> registration) {
-                return (Supplier<T>)requireNonNull(registration, "registration").right();
+                return (Supplier<T>) requireNonNull(registration, "registration").right();
             }
         });
     }
@@ -96,7 +113,8 @@ public class SimpleRegistry implements Registry {
     }
 
     @Nullable
-    @Override @SuppressWarnings("unchecked")
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Class<T> type) {
         SupplierRegistration<?> registration = registrationContainer.getFirst(type);
         if (registration == null) {
@@ -106,7 +124,8 @@ public class SimpleRegistry implements Registry {
     }
 
     @Nullable
-    @Override @SuppressWarnings("unchecked")
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Id<T> id) {
         SupplierRegistration<T> registration = registrationContainer.getFirst(id);
         if (registration == null) {
@@ -192,6 +211,7 @@ public class SimpleRegistry implements Registry {
         executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
         return watcherRegistration;
     }
+
     <T> Registration<T> addSupplierListener(IdMatcher<T> idMatcher, SupplierListener supplierListener) {
         checkKeyMatcher(idMatcher, "idMatcher");
         requireNonNull(supplierListener, "supplierListener");
@@ -210,18 +230,22 @@ public class SimpleRegistry implements Registry {
         executeActionOnRegistry(action);
     }
 
-    static interface RegistryAction  {
+    static interface RegistryAction {
         Id<?> key();
+
         void execute(WatchableRegistrationContainer registrationContainer);
+
         Future<Boolean> asFuture();
 
     }
 
     static abstract class AbstractAction implements RegistryAction {
         private final Registration<?> registration;
+
         AbstractAction(Registration<?> registration) {
             this.registration = registration;
         }
+
         @Override
         public Id<?> key() {
             return registration.id();
@@ -257,6 +281,7 @@ public class SimpleRegistry implements Registry {
         private static class AddCall implements Callable<Boolean> {
             private WatchableRegistrationContainer registrationContainer;
             private SupplierRegistration<?> registration;
+
             @Override
             public Boolean call() throws Exception {
                 return registrationContainer.put(registration);
@@ -292,6 +317,7 @@ public class SimpleRegistry implements Registry {
         private static class RemoveCall implements Callable<Boolean> {
             private WatchableRegistrationContainer registrationContainer;
             private SupplierRegistration<?> registration;
+
             @Override
             public Boolean call() throws Exception {
                 return registrationContainer.remove(registration);
@@ -379,7 +405,7 @@ public class SimpleRegistry implements Registry {
 
         @Override
         public void run() {
-            for(;;) {
+            for (; ; ) {
                 try {
                     RegistryAction registryAction = registryActionQueue.take();
                     registryAction.execute(registrationContainer);
@@ -393,6 +419,7 @@ public class SimpleRegistry implements Registry {
     static SimpleRegistry newMultimapRegistry() {
         return new SimpleRegistry(newMultimapGuiceWatchableRegistrationContainer());
     }
+
     static SimpleRegistry newLoadingCacheRegistry() {
         return new SimpleRegistry(newLoadingCacheGuiceWatchableRegistrationContainer());
     }

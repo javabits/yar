@@ -23,6 +23,7 @@ import org.yar.Registration;
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 /**
  * TODO comment
@@ -63,6 +64,11 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
             , Container<Type, WatcherRegistration<?>> watcherRegistry) {
         this.supplierRegistry = supplierRegistry;
         this.watcherRegistry = watcherRegistry;
+    }
+
+    @Override
+    public Set<Type> types() {
+        return supplierRegistry.asMap().keySet();
     }
 
     @Override

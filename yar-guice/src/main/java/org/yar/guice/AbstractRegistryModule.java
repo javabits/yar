@@ -62,7 +62,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
      */
     protected abstract void configureRegistry();
 
-    protected <T> void bindYarListener(Matcher<Key<T>> matcher, Key<? extends RegistryListener<? super T>> key) {
+    protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, Key<? extends RegistryListener<? super T>> key) {
         if (isBlockingSupplier(matcher)) {
             throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
         } else if (isSupplier(matcher)) {
@@ -80,7 +80,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         return isSupplier(Matchers.getTargetTypeLiteral(matcher));
     }
 
-    protected <T> void bindYarListener(Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
+    protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
         if (isBlockingSupplier(matcher)) {
             throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
         } else if (isSupplier(matcher)) {

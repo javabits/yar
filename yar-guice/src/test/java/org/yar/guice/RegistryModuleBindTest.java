@@ -221,7 +221,7 @@ public class RegistryModuleBindTest {
         Injector injector = createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bindYarListener(
+                bindRegistryListener(
                         new AbstractMatcher<Key<MyInterface>>() {
                             @Override
                             public boolean matches(Key<MyInterface> item) {
@@ -263,7 +263,7 @@ public class RegistryModuleBindTest {
         Injector injector = createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bindYarListener(
+                bindRegistryListener(
                         new AbstractMatcher<Key<MyInterface>>() {
                             @Override
                             public boolean matches(Key<MyInterface> item) {
@@ -290,42 +290,42 @@ public class RegistryModuleBindTest {
         Injector injector = createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bindYarListener(new AbstractMatcher<Key<MyInterface>>() {
-                                    @Override
-                                    public boolean matches(Key<MyInterface> item) {
-                                        return false;  //To change body of implemented methods use File | Settings | File Templates.
-                                    }
-                                }, new RegistryListener<MyInterface>() {
-                                    @Nullable
-                                    @Override
-                                    public MyInterface add(MyInterface element) {
-                                        return null;  //To change body of implemented methods use File | Settings | File Templates.
-                                    }
+                bindRegistryListener(new AbstractMatcher<Key<MyInterface>>() {
+                                         @Override
+                                         public boolean matches(Key<MyInterface> item) {
+                                             return false;  //To change body of implemented methods use File | Settings | File Templates.
+                                         }
+                                     }, new RegistryListener<MyInterface>() {
+                                         @Nullable
+                                         @Override
+                                         public MyInterface add(MyInterface element) {
+                                             return null;  //To change body of implemented methods use File | Settings | File Templates.
+                                         }
 
-                                    @Override
-                                    public void remove(MyInterface element) {
-                                        //To change body of implemented methods use File | Settings | File Templates.
-                                    }
-                                }
+                                         @Override
+                                         public void remove(MyInterface element) {
+                                             //To change body of implemented methods use File | Settings | File Templates.
+                                         }
+                                     }
                 );
 
-                bindYarListener(new AbstractMatcher<Key<MyInterface>>() {
-                                    @Override
-                                    public boolean matches(Key<MyInterface> item) {
-                                        return false;  //To change body of implemented methods use File | Settings | File Templates.
-                                    }
-                                }, new RegistryListener<Object>() {
-                                    @Nullable
-                                    @Override
-                                    public MyInterface add(Object element) {
-                                        return null;  //To change body of implemented methods use File | Settings | File Templates.
-                                    }
+                bindRegistryListener(new AbstractMatcher<Key<MyInterface>>() {
+                                         @Override
+                                         public boolean matches(Key<MyInterface> item) {
+                                             return false;  //To change body of implemented methods use File | Settings | File Templates.
+                                         }
+                                     }, new RegistryListener<Object>() {
+                                         @Nullable
+                                         @Override
+                                         public MyInterface add(Object element) {
+                                             return null;  //To change body of implemented methods use File | Settings | File Templates.
+                                         }
 
-                                    @Override
-                                    public void remove(Object element) {
-                                        //To change body of implemented methods use File | Settings | File Templates.
-                                    }
-                                }
+                                         @Override
+                                         public void remove(Object element) {
+                                             //To change body of implemented methods use File | Settings | File Templates.
+                                         }
+                                     }
                 );
 
 //                bindListenerBounded(new org.yar.Matcher<Id<? extends MyInterface>>() {
