@@ -17,10 +17,12 @@
 package org.yar.guice;
 
 import com.google.inject.BindingAnnotation;
+
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * TODO temporary copy paste until I know who to used jarjar plugin correctly

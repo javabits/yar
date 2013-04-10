@@ -22,7 +22,6 @@ import org.yar.Supplier;
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.Objects.requireNonNull;
 import static org.yar.IdMatchers.newKeyMatcher;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;

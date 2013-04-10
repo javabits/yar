@@ -16,13 +16,13 @@
 
 package org.yar.guice;
 
-import org.yar.AbstractSingleElementWatcher;
-import org.yar.Registry;
 import org.yar.Supplier;
-import org.yar.Watcher;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.locks.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.Objects.requireNonNull;
 

@@ -17,7 +17,6 @@
 package org.yar.guice;
 
 import com.google.inject.*;
-import com.google.inject.Key;
 import com.google.inject.matcher.AbstractMatcher;
 import org.junit.Test;
 import org.yar.*;
@@ -28,9 +27,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.yar.guice.GuiceYars.newLoadingCacheBasedRegistry;
-import static org.yar.guice.GuiceYars.newLoadingCacheBlockingSupplierRegistry;
-import static org.yar.guice.GuiceYars.newRegistryDeclarationModule;
+import static org.yar.guice.GuiceYars.*;
 
 
 /**

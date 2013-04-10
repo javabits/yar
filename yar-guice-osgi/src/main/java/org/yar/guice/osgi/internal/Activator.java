@@ -18,8 +18,6 @@ package org.yar.guice.osgi.internal;
 
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.ServiceRegistration;
-import org.yar.BlockingRegistry;
 import org.yar.BlockingSupplierRegistry;
 import org.yar.Registry;
 import org.yar.guice.GuiceYars;

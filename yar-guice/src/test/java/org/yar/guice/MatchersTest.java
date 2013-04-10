@@ -20,17 +20,11 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Names;
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
-import org.yar.Matcher;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.yar.guice.Matchers.getTargetTypeLiteral;
-import static org.yar.guice.Matchers.newKeyMatcher;
-import static org.yar.guice.Matchers.newKeyTypeMatcher;
+import static org.hamcrest.Matchers.*;
+import static org.yar.guice.Matchers.*;
 
 /**
  * TODO comment

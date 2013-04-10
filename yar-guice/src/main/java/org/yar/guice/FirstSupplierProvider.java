@@ -16,7 +16,6 @@
 
 package org.yar.guice;
 
-import org.yar.Id;
 import org.yar.Supplier;
 
 /**
