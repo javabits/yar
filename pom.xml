@@ -6,6 +6,9 @@
     <groupId>org.yar</groupId>
     <artifactId>yar</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <properties>
+        <maven-release-plugin.version>2.4.1</maven-release-plugin.version>
+    </properties>
     <packaging>pom</packaging>
     <name>Yar</name>
     <description>YAR: stands for Yet Another Registry. It is dynamic registry implementation as OSGi service registry
@@ -79,6 +82,11 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>${maven-release-plugin.version}</version>
+            </plugin>
         </plugins>
     </build>
     <profiles>
@@ -109,5 +117,4 @@
             </build>
         </profile>
     </profiles>
-
 </project>
