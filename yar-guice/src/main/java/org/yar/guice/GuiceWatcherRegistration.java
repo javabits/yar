@@ -96,23 +96,22 @@ abstract class GuiceWatcherRegistration<T> {
             return newWatcherAdapter(listener);
         }
     }
-
+    @SuppressWarnings("unchecked")
     private static <T> Watcher<Supplier<T>> newWatcherAdapter(final RegistryListener listener) {
         if (Supplier.class.isAssignableFrom(Reflections.getRawType(getUniqueParameterType(listener.getClass()
                 , RegistryListener.class, "RegistryListener<T>")))) {
-            return new SupplierWatcher<>(listener);
+            return new SupplierWatcher(listener);
         } else if (listener instanceof AbstractSingleElementWatcher) {
-            return new SupplierSingleTargetWatcher<>(listener);
+            return new SupplierSingleTargetWatcher(listener);
         } else {
-            return new SupplierMultiTargetWatcher<>(listener);
+            return new SupplierMultiTargetWatcher(listener);
         }
     }
 
-    private static class SupplierWatcher<T> implements Watcher<Supplier<T>> {
-        private final Watcher<? super Supplier<T>> registryListener;
+    private static class SupplierWatcher<T> implements Watcher<T> {
+        private final Watcher<T> registryListener;
 
-        @SuppressWarnings("unchecked")
-        public SupplierWatcher(Watcher listener) {
+        public SupplierWatcher(Watcher<T> listener) {
             registryListener = listener;
         }
 
@@ -133,39 +132,42 @@ abstract class GuiceWatcherRegistration<T> {
     }
 
     private static class SupplierMultiTargetWatcher<T> extends AbstractSupplierTargetWatcher<T> {
-        private final Map<Supplier<T>, T> trackedElements = new IdentityHashMap<>();
+        private final Map<Supplier<T>, Boolean> trackedElements = new IdentityHashMap<>();
 
-        public SupplierMultiTargetWatcher(Watcher listener) {
+        public SupplierMultiTargetWatcher(Watcher<T> listener) {
             super(listener);
         }
 
         @Override
-        protected Supplier track(Supplier<T> element, T trackedElement) {
-            trackedElements.put(element, trackedElement);
+        protected Supplier<T> track(Supplier<T> element) {
+            trackedElements.put(element, Boolean.TRUE);
             return element;
         }
 
         @Override
-        protected T removeTracked(Supplier<T> element) {
-            return trackedElements.remove(element);
+        protected Supplier<T> removeTracked(Supplier<T> element) {
+            if(trackedElements.remove(element)) {
+                return element;
+            }
+            throw new IllegalArgumentException("Try to remove ");
         }
     }
 
     private static class SupplierSingleTargetWatcher<T> extends AbstractSupplierTargetWatcher<T> {
-        private T trackedElement;
+        private Supplier<T> trackedElement;
 
-        public SupplierSingleTargetWatcher(Watcher listener) {
+        public SupplierSingleTargetWatcher(Watcher<T> listener) {
             super(listener);
         }
 
         @Override
-        protected Supplier track(Supplier<T> element, T trackedElement) {
-            this.trackedElement = trackedElement;
+        protected Supplier<T> track(Supplier<T> element) {
+            this.trackedElement = element;
             return element;
         }
 
         @Override
-        protected T removeTracked(Supplier<T> element) {
+        protected Supplier<T> removeTracked(Supplier<T> element) {
             return trackedElement;
         }
     }

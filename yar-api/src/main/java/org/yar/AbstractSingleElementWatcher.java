@@ -24,15 +24,15 @@ package org.yar;
  * @author Romain Gilles
  */
 public abstract class AbstractSingleElementWatcher<T> extends AbstractWatcher<T> {
-    private T trackedElement;
+    private Supplier<T> trackedElement;
 
     @Override
-    final protected void track(T element) {
+    final protected void track(Supplier<T> element) {
         trackedElement = element;
     }
 
     @Override
-    final protected boolean isTracked(T element) {
+    final protected boolean isTracked(Supplier<T> element) {
         return trackedElement == element;
     }
 }

@@ -229,25 +229,25 @@ public class RegistryModuleBindTest {
                         }, new RegistryListener<MyInterface>() {
                             @Nullable
                             @Override
-                            public MyInterface add(MyInterface element) {
+                            public Supplier<MyInterface> add(Supplier<MyInterface>element) {
                                 matches[1] = element;
                                 return element;
                             }
 
                             @Override
-                            public void remove(MyInterface element) {
+                            public void remove(Supplier<MyInterface> element) {
                                 matches[2] = element;
                             }
                         }
                 );
             }
         });
-
+        assertThat(injector, is(not(nullValue())));
         SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>)putMyInterfaceSupplierToRegistry(registry);
         registry.remove(myInterfaceRegistration);
         assertThat(((Integer) matches[0]), is(2));
-        assertThat(((MyInterface)matches[1]), is(notNullValue()));
-        assertThat(((MyInterface)matches[2]), is((MyInterface) matches[1]));
+        assertThat((matches[1]), is(notNullValue()));
+        assertThat((matches[2]), is(matches[1]));
     }
 
 
@@ -274,9 +274,11 @@ public class RegistryModuleBindTest {
         });
         SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>)putMyInterfaceSupplierToRegistry(registry);
         registry.remove(myInterfaceRegistration);
+
+        assertThat(injector, is(not(nullValue())));
         assertThat(((Integer) matches[0]), is(2));
-        assertThat(((MyInterface)matches[1]), is(notNullValue()));
-        assertThat(((MyInterface)matches[2]), is((MyInterface) matches[1]));
+        assertThat(matches[1], is(notNullValue()));
+        assertThat((matches[2]), is(matches[1]));
     }
 
 
@@ -290,18 +292,18 @@ public class RegistryModuleBindTest {
                 bindRegistryListener(new AbstractMatcher<Key<MyInterface>>() {
                                          @Override
                                          public boolean matches(Key<MyInterface> item) {
-                                             return false;  //To change body of implemented methods use File | Settings | File Templates.
+                                             return false;
                                          }
                                      }, new RegistryListener<MyInterface>() {
                                          @Nullable
                                          @Override
-                                         public MyInterface add(MyInterface element) {
-                                             return null;  //To change body of implemented methods use File | Settings | File Templates.
+                                         public Supplier<MyInterface> add(Supplier<MyInterface> element) {
+                                             return element;
                                          }
 
                                          @Override
-                                         public void remove(MyInterface element) {
-                                             //To change body of implemented methods use File | Settings | File Templates.
+                                         public void remove(Supplier<MyInterface> element) {
+
                                          }
                                      }
                 );
@@ -309,18 +311,18 @@ public class RegistryModuleBindTest {
                 bindRegistryListener(new AbstractMatcher<Key<MyInterface>>() {
                                          @Override
                                          public boolean matches(Key<MyInterface> item) {
-                                             return false;  //To change body of implemented methods use File | Settings | File Templates.
+                                             return false;
                                          }
                                      }, new RegistryListener<Object>() {
                                          @Nullable
                                          @Override
-                                         public MyInterface add(Object element) {
-                                             return null;  //To change body of implemented methods use File | Settings | File Templates.
+                                         public Supplier<Object> add(Supplier<Object> element) {
+                                             return element;
                                          }
 
                                          @Override
-                                         public void remove(Object element) {
-                                             //To change body of implemented methods use File | Settings | File Templates.
+                                         public void remove(Supplier<Object> element) {
+
                                          }
                                      }
                 );
@@ -363,6 +365,7 @@ public class RegistryModuleBindTest {
 //                );
             }
         });
+        assertThat(injector, is(not(nullValue())));
         putMyInterfaceSupplierToRegistry(registry);
 
     }
@@ -381,7 +384,7 @@ public class RegistryModuleBindTest {
 
         @Nullable
         @Override
-        public MyInterface doAdd(MyInterface element) {
+        public Supplier<MyInterface> doAdd(Supplier<MyInterface> element) {
             if (matches[1] !=  null) {
                 return null;
             }
@@ -390,7 +393,7 @@ public class RegistryModuleBindTest {
         }
 
         @Override
-        public void doRemove(MyInterface element) {
+        public void doRemove(Supplier<MyInterface> element) {
             matches[2] = element;
         }
     }

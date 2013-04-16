@@ -100,6 +100,7 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, SupplierListe
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void supplierChanged(SupplierEvent supplierEvent) {
         SupplierEvent.Type type = supplierEvent.type();
         switch (type) {

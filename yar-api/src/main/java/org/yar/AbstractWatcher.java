@@ -27,13 +27,10 @@ import java.util.Map;
  * @author Romain Gilles
  */
 public abstract class AbstractWatcher<T> implements Watcher<T> {
-
-    private Map<T, Boolean> trackedElements = new IdentityHashMap<>();
-
     @Nullable
     @Override
-    final public T add(T element) {
-        T trackedElement = doAdd(element);
+    final public Supplier<T> add(Supplier<T> element) {
+        Supplier<T> trackedElement = doAdd(element);
         if (trackedElement != null) {
             track(trackedElement);
         }
@@ -41,18 +38,18 @@ public abstract class AbstractWatcher<T> implements Watcher<T> {
     }
 
     @Nullable
-    protected abstract T doAdd(T element);
+    protected abstract Supplier<T> doAdd(Supplier<T> element);
 
-    protected abstract void track(T element);
+    protected abstract void track(Supplier<T> element);
 
     @Override
-    final public void remove(T element) {
+    final public void remove(Supplier<T> element) {
         if (isTracked(element)) {
             doRemove(element);
         }
     }
 
-    protected abstract boolean isTracked(T element);
+    protected abstract boolean isTracked(Supplier<T> element);
 
-    protected abstract void doRemove(T element);
+    protected abstract void doRemove(Supplier<T> element);
 }

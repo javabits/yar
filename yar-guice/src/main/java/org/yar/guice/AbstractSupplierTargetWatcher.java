@@ -30,30 +30,30 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Romain Gilles
  */
-public abstract class AbstractSupplierTargetWatcher<T> implements Watcher<Supplier<T>> {
-    protected final Watcher<? super T> registryListener;
+public abstract class AbstractSupplierTargetWatcher<T> implements Watcher<T> {
+    protected final Watcher<T> registryListener;
 
-    public AbstractSupplierTargetWatcher(Watcher listener) {
+    public AbstractSupplierTargetWatcher(Watcher<T> listener) {
         registryListener = listener;
     }
 
     @Nullable
     @Override
-    public Supplier add(Supplier<T> element) {
-        T trackedElement = element.get();
-        if (registryListener.add(trackedElement) != null) {
-            return track(element, trackedElement);
+    public Supplier<T> add(Supplier<T> element) {
+
+        if (registryListener.add(element) != null) {
+            return track(element);
         } else {
             return null;
         }
     }
 
-    protected abstract Supplier track(Supplier<T> element, T trackedElement);
+    protected abstract Supplier<T> track(Supplier<T> element);
 
     @Override
     public void remove(Supplier<T> element) {
         registryListener.remove(requireNonNull(removeTracked(element), "trackedElement"));
     }
 
-    protected abstract T removeTracked(Supplier<T> element);
+    protected abstract Supplier<T> removeTracked(Supplier<T> element);
 }

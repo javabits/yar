@@ -34,21 +34,22 @@ import static org.yar.guice.SupplierEvent.Type.REMOVE;
 *
 * @author Romain Gilles
 */
-class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T>>> implements Pair<IdMatcher<T>, Watcher<Supplier<T>>>, org.yar.Registration<T> {
+class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implements Pair<IdMatcher<T>, Watcher<T>>, org.yar.Registration<T> {
 
     private final IdMatcher<T> left;
-    private final Watcher<Supplier<T>> right;
+    private final Watcher<T> right;
     private final Registry registry;
 
 
     static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, SupplierListener supplierListener, FinalizableReferenceQueue referenceQueue, Registry registry) {
         return new WatcherRegistration<>(leftValue, new SupplierWatcherToSupplierListenerAdapter<T>(supplierListener), referenceQueue, registry);
     }
+    @SuppressWarnings("unchecked")
     static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
         return new WatcherRegistration(leftValue, new WatcherDecorator<>(rightValue), referenceQueue, registry);
     }
 
-    WatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
+    WatcherRegistration(IdMatcher<T> leftValue, Watcher<T> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
         super(rightValue, referenceQueue);
         left = leftValue;
         right = rightValue;
@@ -66,7 +67,7 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T
     }
 
     @Override
-    public Watcher<Supplier<T>> right() {
+    public Watcher<T> right() {
         return right;
     }
 
@@ -75,17 +76,17 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T
         registry.removeWatcher(this);
     }
 
-    static class WatcherDecorator<T> implements Watcher<Supplier<T>> {
-        private final WeakReference<Watcher<Supplier<T>>> delegate;
+    static class WatcherDecorator<T> implements Watcher<T> {
+        private final WeakReference<Watcher<T>> delegate;
         private final IdentityHashMap<Supplier<T>, Supplier<T>> trackedElements = new IdentityHashMap<>();
-        WatcherDecorator(Watcher<Supplier<T>> delegate) {
+        WatcherDecorator(Watcher<T> delegate) {
             this.delegate = new WeakReference<>(delegate);
         }
 
         @Nullable
         @Override
         public Supplier<T> add(Supplier<T> element) {
-            Watcher<Supplier<T>> watcher = delegate.get();
+            Watcher<T> watcher = delegate.get();
             if (watcher != null) {
                 Supplier<T> trackedElement = watcher.add(element);
                 if (trackedElement != null) {
@@ -108,7 +109,7 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T
         public void remove(Supplier<T> element) {
             Supplier<T> trackedElement = trackedElements.remove(element);
             if (trackedElement != null) {
-                Watcher<Supplier<T>> watcher = delegate.get();
+                Watcher<T> watcher = delegate.get();
                 if (watcher != null) {
                     watcher.remove(trackedElement);
                 } else {
@@ -118,7 +119,7 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<Supplier<T
         }
     }
 
-    private static class SupplierWatcherToSupplierListenerAdapter<T> implements Watcher<Supplier<T>> {
+    private static class SupplierWatcherToSupplierListenerAdapter<T> implements Watcher<T> {
         private final SupplierListener supplierListener;
 
         public SupplierWatcherToSupplierListenerAdapter(SupplierListener supplierListener) {

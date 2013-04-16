@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 public interface Watcher<T> {
 
     @Nullable
-    T add(T element);
+    Supplier<T> add(Supplier<T> element);
 
-    void remove(T element);
+    void remove(Supplier<T> element);
 }
