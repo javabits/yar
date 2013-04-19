@@ -25,6 +25,8 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 
+import static org.yar.guice.ExecutionStrategy.SYNCHRONOUS;
+
 /**
  * TODO comment
  * Date: 2/20/13
@@ -51,19 +53,21 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
     private final Container<Type, SupplierRegistration<?>> supplierRegistry;
     private final Container<Type, WatcherRegistration<?>> watcherRegistry;
+    private final ExecutionStrategy executor;
 
 //    public GuiceWatchableRegistrationContainer() {
 //        this(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer());
 //    }
 
     public GuiceWatchableRegistrationContainer() {
-        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer());
+        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), SYNCHRONOUS);
     }
 
     public GuiceWatchableRegistrationContainer(Container<Type, SupplierRegistration<?>> supplierRegistry
-            , Container<Type, WatcherRegistration<?>> watcherRegistry) {
+            , Container<Type, WatcherRegistration<?>> watcherRegistry, ExecutionStrategy executionStrategy) {
         this.supplierRegistry = supplierRegistry;
         this.watcherRegistry = watcherRegistry;
+        this.executor = executionStrategy;
     }
 
     @Override
@@ -127,11 +131,17 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         return added;
     }
 
-    private <T> void updateWatcher(SupplierRegistration<T> supplierRegistration, Action action) {
+    private <T> void updateWatcher(final SupplierRegistration<T> supplierRegistration, final Action action) {
         Id<T> id = supplierRegistration.id();
-        List<WatcherRegistration<T>> watcherRegistrations = getWatcherRegistrations(id);
-        for (WatcherRegistration<T> watcherRegistration : watcherRegistrations) {
-            fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, action);
+        final List<WatcherRegistration<T>> watcherRegistrations = getWatcherRegistrations(id);
+
+        for (final WatcherRegistration<T> watcherRegistration : watcherRegistrations) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, action);
+                }
+            });
         }
     }
     //returns all the watchers associated to the type of the given id.
@@ -162,14 +172,19 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public <T> boolean add(WatcherRegistration<T> watcherRegistration) {
-        for (SupplierRegistration<T> supplierRegistration : getAll(watcherRegistration.id())) {
-            fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, Action.ADD);
+    public <T> boolean add(final WatcherRegistration<T> watcherRegistration) {
+        for (final SupplierRegistration<T> supplierRegistration : getAll(watcherRegistration.id())) {
+            executor.execute(new Runnable() {
+                @Override
+                public void run() {
+                    fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, Action.ADD);
+                }
+            });
         }
         return putToRegistry(watcherRegistry, watcherRegistration);
     }
 
-    private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
+    static private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
         if (watcherRegistration.left().matches(supplierRegistration.id())) {
             action.execute(watcherRegistration, supplierRegistration);
         }
@@ -185,10 +200,14 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     static GuiceWatchableRegistrationContainer newMultimapGuiceWatchableRegistrationContainer() {
-        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer());
+        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer(), SYNCHRONOUS);
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer() {
-        return new GuiceWatchableRegistrationContainer(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer());
+        return newLoadingCacheGuiceWatchableRegistrationContainer(SYNCHRONOUS);
+    }
+
+    static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer(ExecutionStrategy executionStrategy) {
+        return new GuiceWatchableRegistrationContainer(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), executionStrategy);
     }
 }

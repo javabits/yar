@@ -67,6 +67,10 @@ public final class GuiceYars {
         return BlockingSupplierRegistry.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis);
     }
 
+    public static org.yar.BlockingSupplierRegistry newLoadingCacheBasedBlockingSupplierRegistry(long defaultTimeoutInMillis, ExecutionStrategy executionStrategy) {
+        return BlockingSupplierRegistry.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis, executionStrategy);
+    }
+
     public static org.yar.BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry() {
         return BlockingSupplierRegistry.newLoadingCacheBlockingSupplierRegistry();
     }
@@ -94,6 +98,5 @@ public final class GuiceYars {
             }
         };
     }
-
 
 }

@@ -20,7 +20,12 @@ import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.yar.BlockingSupplierRegistry;
 import org.yar.Registry;
+import org.yar.guice.ExecutionStrategy;
 import org.yar.guice.GuiceYars;
+
+import static java.lang.Boolean.parseBoolean;
+import static org.yar.guice.ExecutionStrategy.ASYNCHRONOUS;
+import static org.yar.guice.ExecutionStrategy.SYNCHRONOUS;
 
 /**
  * This class is responsible to create the Yar registry and register it into the OSGi registry under
@@ -37,13 +42,22 @@ import org.yar.guice.GuiceYars;
  */
 public class Activator implements BundleActivator {
     /**
-     * property use to lockup the timeout that operator can provide through bundle context
+     * property use to lockup the timeout that operator can provide through bundle context.
      */
     public static final String YAR_DEFAULT_TIMEOUT = "yar.default.timeout";
     /**
+     * property use to lockup to activate synchronous execution strategy that operator can provide through bundle context.
+     */
+    public static final String YAR_SYNCHRONOUS_EXECUTION = "yar.synchronous.execution";
+    /**
      * Default timeout value of 5 min if no external property is provided by the framework.
      */
-    public static final int DEFAULT_TIMEOUT = 1000 * 60 * 5;
+    public static final long DEFAULT_TIMEOUT = 1000 * 60 * 5;
+    /**
+     * Default timeout value of execution strategy if no external property is provided by the framework.
+     */
+    public static final ExecutionStrategy DEFAULT_EXECUTION_STRATEGY = ASYNCHRONOUS;
+
     private static final String[] REGISTRY_INTERFACES = new String[]{Registry.class.getName()
             , BlockingSupplierRegistry.class.getName()};
 
@@ -53,7 +67,16 @@ public class Activator implements BundleActivator {
     }
 
     private BlockingSupplierRegistry newRegistry(BundleContext bundleContext) {
-        return GuiceYars.newLoadingCacheBasedBlockingSupplierRegistry(getDefaultTimeout(bundleContext));
+        return GuiceYars.newLoadingCacheBasedBlockingSupplierRegistry(getDefaultTimeout(bundleContext), getExecutionStrategy(bundleContext));
+    }
+
+    private ExecutionStrategy getExecutionStrategy(BundleContext bundleContext) {
+        String synchronously = bundleContext.getProperty(YAR_SYNCHRONOUS_EXECUTION);
+        if (synchronously != null && parseBoolean(synchronously)) {
+            return SYNCHRONOUS;
+        } else {
+            return DEFAULT_EXECUTION_STRATEGY;
+        }
     }
 
     private long getDefaultTimeout(BundleContext bundleContext) {

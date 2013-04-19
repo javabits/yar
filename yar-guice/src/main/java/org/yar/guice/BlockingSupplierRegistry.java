@@ -24,6 +24,7 @@ import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 import static org.yar.IdMatchers.newKeyMatcher;
+import static org.yar.guice.ExecutionStrategy.SYNCHRONOUS;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -153,11 +154,19 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
     }
 
     static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry() {
-        return newLoadingCacheBlockingSupplierRegistry(DEFAULT_TIMEOUT);
+        return newLoadingCacheBlockingSupplierRegistry(SYNCHRONOUS);
+    }
+
+    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
+        return newLoadingCacheBlockingSupplierRegistry(DEFAULT_TIMEOUT, executionStrategy);
     }
 
     static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(long defaultTimeout) {
-        return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
+        return newLoadingCacheBlockingSupplierRegistry(defaultTimeout, SYNCHRONOUS);
+    }
+
+    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(long defaultTimeout, ExecutionStrategy executionStrategy) {
+        return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), defaultTimeout);
     }
 
     private class FirstSupplierProvider<T> implements org.yar.guice.FirstSupplierProvider<T> {
