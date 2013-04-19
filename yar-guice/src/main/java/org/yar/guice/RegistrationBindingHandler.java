@@ -43,7 +43,7 @@ import static com.google.common.collect.Lists.transform;
 public class RegistrationBindingHandler implements RegistrationHandler {
     private final Injector injector;
     private final Registry registry;
-    private List<Registration<?>> registrations;
+    volatile private List<Registration<?>> registrations;
 
     @Inject
     public RegistrationBindingHandler(Injector injector, Registry registry) {
@@ -86,6 +86,7 @@ public class RegistrationBindingHandler implements RegistrationHandler {
 
     @Override
     public List<Id<?>> registrations() {
+        List<Registration<?>> registrations = this.registrations;
         return transform(registrations, new Function<Registration<?>, Id<?>>() {
             @Nullable
             @Override
@@ -100,6 +101,7 @@ public class RegistrationBindingHandler implements RegistrationHandler {
 
     @Override
     public void clear() {
+        List<Registration<?>> registrations = this.registrations;
         for (Registration<?> registration : registrations) {
             registry.remove(registration);
         }

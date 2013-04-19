@@ -43,7 +43,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     private final Registry registry;
     //we keep a strong reference on the watcher to avoid it to be garbage collected
     //therefore the lifecycle to this watcher is at least associated to the lifecycle of owning injector
-    private List<Pair<Registration, Watcher>> listenerRegistrations;
+    volatile private List<Pair<Registration, Watcher>> listenerRegistrations;
 
 
     @Inject
@@ -82,6 +82,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
 
     @Override
     public List<Id<?>> listenerIds() {
+        List<Pair<Registration, Watcher>> listenerRegistrations = this.listenerRegistrations;
         return Lists.transform(listenerRegistrations, new Function<Pair<Registration, Watcher>, Id<?>>() {
             @Nullable
             @Override
@@ -95,6 +96,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
 
     @Override
     public void clear() {
+        List<Pair<Registration, Watcher>> listenerRegistrations = this.listenerRegistrations;
         for (Pair<Registration, Watcher> listenerRegistration : listenerRegistrations) {
             registry.removeWatcher(listenerRegistration.left());
         }
