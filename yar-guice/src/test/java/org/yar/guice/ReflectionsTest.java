@@ -93,13 +93,18 @@ public class ReflectionsTest {
     private Class<AbstractMonoParameterizedImpl> givenStringAbstractImpl() {
         return AbstractMonoParameterizedImpl.class;
     }
+
     @SuppressWarnings("unused")
-    static interface MonoParameterized<T> {}
+    static interface MonoParameterized<T> {
+    }
 
-    static abstract class AbstractMonoParameterized<T> implements MonoParameterized<T> {}
+    static abstract class AbstractMonoParameterized<T> implements MonoParameterized<T> {
+    }
 
-    static class MonoParameterizedImpl implements MonoParameterized<String> {}
+    static class MonoParameterizedImpl implements MonoParameterized<String> {
+    }
 
-    static class AbstractMonoParameterizedImpl extends AbstractMonoParameterized<String>{}
+    static class AbstractMonoParameterizedImpl extends AbstractMonoParameterized<String> {
+    }
 
 }

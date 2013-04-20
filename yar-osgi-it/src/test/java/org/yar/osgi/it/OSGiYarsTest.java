@@ -43,6 +43,7 @@ import static org.yar.guice.osgi.OSGiYars.newInjector;
 public class OSGiYarsTest {
     @Inject
     BundleContext bundleContext;
+
     @Configuration
     public Option[] config() {
         return options(
@@ -72,5 +73,6 @@ public class OSGiYarsTest {
 
     }
 
-    static class OSGiYarsTestImpl implements IOSGiYarsTest {}
+    static class OSGiYarsTestImpl implements IOSGiYarsTest {
+    }
 }

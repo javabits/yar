@@ -133,7 +133,6 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
     }
 
 
-
     class InfiniteBlockingSupplier<T> extends AbstractBlockingSupplier<T> {
         InfiniteBlockingSupplier(Id<T> id, Supplier<T> delegate) {
             super(id, delegate);
@@ -166,6 +165,7 @@ public class BlockingRegistry extends SimpleRegistry implements org.yar.Blocking
     static BlockingRegistry newMultimapBlockingRegistry(long defaultTimeout) {
         return new BlockingRegistry(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
+
     static BlockingRegistry newLoadingCacheBlockingRegistry(long defaultTimeout) {
         return new BlockingRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(), defaultTimeout);
     }

@@ -51,6 +51,7 @@ public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder
 
     private static class CollectionsRegistryProvider<T> extends RegistryBindingBuilder.RegistryProvider<T> {
         private final boolean laxTypeBinding;
+
         private CollectionsRegistryProvider(Key<T> key, boolean laxTypeBinding) {
             super(key);
             this.laxTypeBinding = laxTypeBinding;

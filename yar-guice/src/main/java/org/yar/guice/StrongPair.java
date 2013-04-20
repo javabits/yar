@@ -17,13 +17,13 @@
 package org.yar.guice;
 
 /**
-* TODO comment
-* Date: 2/20/13
-* Time: 9:50 AM
-*
-* @author Romain Gilles
-*/
-class StrongPair<L, R> implements Pair<L,R> {
+ * TODO comment
+ * Date: 2/20/13
+ * Time: 9:50 AM
+ *
+ * @author Romain Gilles
+ */
+class StrongPair<L, R> implements Pair<L, R> {
     private final L left;
     private final R right;
 

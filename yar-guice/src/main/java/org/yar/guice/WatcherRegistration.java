@@ -28,12 +28,12 @@ import static org.yar.guice.SupplierEvent.Type.ADD;
 import static org.yar.guice.SupplierEvent.Type.REMOVE;
 
 /**
-* TODO comment
-* Date: 2/20/13
-* Time: 7:04 PM
-*
-* @author Romain Gilles
-*/
+ * TODO comment
+ * Date: 2/20/13
+ * Time: 7:04 PM
+ *
+ * @author Romain Gilles
+ */
 class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implements Pair<IdMatcher<T>, Watcher<T>>, org.yar.Registration<T> {
 
     private final IdMatcher<T> left;
@@ -44,6 +44,7 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implem
     static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, SupplierListener supplierListener, FinalizableReferenceQueue referenceQueue, Registry registry) {
         return new WatcherRegistration<>(leftValue, new SupplierWatcherToSupplierListenerAdapter<T>(supplierListener), referenceQueue, registry);
     }
+
     @SuppressWarnings("unchecked")
     static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
         return new WatcherRegistration(leftValue, new WatcherDecorator<>(rightValue), referenceQueue, registry);
@@ -79,6 +80,7 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implem
     static class WatcherDecorator<T> implements Watcher<T> {
         private final WeakReference<Watcher<T>> delegate;
         private final IdentityHashMap<Supplier<T>, Supplier<T>> trackedElements = new IdentityHashMap<>();
+
         WatcherDecorator(Watcher<T> delegate) {
             this.delegate = new WeakReference<>(delegate);
         }

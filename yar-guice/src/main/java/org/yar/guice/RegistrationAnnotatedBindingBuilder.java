@@ -23,6 +23,7 @@ import java.lang.annotation.Annotation;
 /**
  * Date: 2/9/13
  * Time: 2:17 PM
+ *
  * @author Romain Gilles
  */
 public interface RegistrationAnnotatedBindingBuilder<T> extends RegistrationLinkedBindingBuilder<T>, AnnotatedBindingBuilder<T> {

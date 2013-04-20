@@ -48,7 +48,8 @@
         <maven-javadoc-plugin.version>2.9</maven-javadoc-plugin.version>
         <maven-source-plugin.version>2.2.1</maven-source-plugin.version>
         <maven-install-plugin.version>2.4</maven-install-plugin.version>
-        <org.osgi.core.version>4.3.1</org.osgi.core.version> <!-- TODO move to 5.0 -->
+        <org.osgi.core.version>4.3.1</org.osgi.core.version>
+        <!-- TODO move to 5.0 -->
         <org.apache.felix.framework.version>4.2.1</org.apache.felix.framework.version>
         <pax-exam.version>3.0.1</pax-exam.version>
         <findbugs.annotations.version>2.0.1</findbugs.annotations.version>

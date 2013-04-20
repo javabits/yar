@@ -41,7 +41,8 @@ public class MatchersTest {
                 return false;
             }
         });
-        TypeLiteral<String> expectedTypeLiteral = new TypeLiteral<String>() {};
+        TypeLiteral<String> expectedTypeLiteral = new TypeLiteral<String>() {
+        };
 
         assertThat(stringTypeLiteral, is(not(nullValue())));
         assertThat(stringTypeLiteral, is(expectedTypeLiteral));
@@ -50,7 +51,8 @@ public class MatchersTest {
     @Test
     public void testGetTypeLiteralOfKeyMatcherOfString() throws Exception {
         TypeLiteral<String> stringTypeLiteral = getTargetTypeLiteral(newKeyMatcher(String.class));
-        TypeLiteral<String> expectedTypeLiteral = new TypeLiteral<String>() {};
+        TypeLiteral<String> expectedTypeLiteral = new TypeLiteral<String>() {
+        };
 
         assertThat(stringTypeLiteral, is(not(nullValue())));
         assertThat(stringTypeLiteral, is(expectedTypeLiteral));

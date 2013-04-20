@@ -229,7 +229,7 @@ public class RegistryModuleBindTest {
                         }, new RegistryListener<MyInterface>() {
                             @Nullable
                             @Override
-                            public Supplier<MyInterface> add(Supplier<MyInterface>element) {
+                            public Supplier<MyInterface> add(Supplier<MyInterface> element) {
                                 matches[1] = element;
                                 return element;
                             }
@@ -243,7 +243,7 @@ public class RegistryModuleBindTest {
             }
         });
         assertThat(injector, is(not(nullValue())));
-        SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>)putMyInterfaceSupplierToRegistry(registry);
+        SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>) putMyInterfaceSupplierToRegistry(registry);
         registry.remove(myInterfaceRegistration);
         assertThat(((Integer) matches[0]), is(2));
         assertThat((matches[1]), is(notNullValue()));
@@ -272,7 +272,7 @@ public class RegistryModuleBindTest {
                 );
             }
         });
-        SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>)putMyInterfaceSupplierToRegistry(registry);
+        SupplierRegistration<MyInterface> myInterfaceRegistration = (SupplierRegistration<MyInterface>) putMyInterfaceSupplierToRegistry(registry);
         registry.remove(myInterfaceRegistration);
 
         assertThat(injector, is(not(nullValue())));
@@ -385,7 +385,7 @@ public class RegistryModuleBindTest {
         @Nullable
         @Override
         public Supplier<MyInterface> doAdd(Supplier<MyInterface> element) {
-            if (matches[1] !=  null) {
+            if (matches[1] != null) {
                 return null;
             }
             matches[1] = element;

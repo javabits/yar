@@ -20,9 +20,10 @@ import javax.annotation.Nullable;
 
 /**
  * TODO use the guava class instead
+ *
  * @author Romain Gilles
- * Date: 2/9/13
- * Time: 2:41 PM
+ *         Date: 2/9/13
+ *         Time: 2:41 PM
  * @since 1.0
  */
 public interface Supplier<T> {

@@ -48,6 +48,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
                 watcherRegistration.right().remove(supplierRegistration.right());
             }
         };
+
         abstract <T> void execute(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration);
     }
 
@@ -144,13 +145,14 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
             });
         }
     }
+
     //returns all the watchers associated to the type of the given id.
     @SuppressWarnings("unchecked")
     private <T> List<WatcherRegistration<T>> getWatcherRegistrations(Id<T> id) {
         ImmutableList.Builder<WatcherRegistration<T>> resultBuilder = ImmutableList.builder();
         List<WatcherRegistration<?>> watchers = watcherRegistry.getAll(id.type());
         for (WatcherRegistration<?> watcher : watchers) {
-            resultBuilder.add((WatcherRegistration<T>)watcher);
+            resultBuilder.add((WatcherRegistration<T>) watcher);
         }
 
         return resultBuilder.build();

@@ -31,33 +31,33 @@
     <name>Yar :: API</name>
     <description>Yar API: provide the main interfaces to manipulate the registry</description>
 
-<!--
-    <dependencies>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-    </dependencies>
+    <!--
+        <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+            </dependency>
+        </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>jarjar-maven-plugin</artifactId>
-                <configuration>
-                    <includes>
-                        <include>com.google.guava:guava</include>
-                    </includes>
-                    <rules>
-                        <rule>
-                            <pattern>com.google.common.base.Supplier</pattern>
-                            <result>org.yar.@1</result>
-                        </rule>
-                    </rules>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
--->
+        <build>
+            <plugins>
+                <plugin>
+                    <groupId>org.sonatype.plugins</groupId>
+                    <artifactId>jarjar-maven-plugin</artifactId>
+                    <configuration>
+                        <includes>
+                            <include>com.google.guava:guava</include>
+                        </includes>
+                        <rules>
+                            <rule>
+                                <pattern>com.google.common.base.Supplier</pattern>
+                                <result>org.yar.@1</result>
+                            </rule>
+                        </rules>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </build>
+    -->
 
 </project>

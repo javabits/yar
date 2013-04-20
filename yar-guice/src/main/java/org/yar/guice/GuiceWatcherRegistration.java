@@ -96,6 +96,7 @@ abstract class GuiceWatcherRegistration<T> {
             return newWatcherAdapter(listener);
         }
     }
+
     @SuppressWarnings("unchecked")
     private static <T> Watcher<Supplier<T>> newWatcherAdapter(final RegistryListener listener) {
         if (Supplier.class.isAssignableFrom(Reflections.getRawType(getUniqueParameterType(listener.getClass()
@@ -146,7 +147,7 @@ abstract class GuiceWatcherRegistration<T> {
 
         @Override
         protected Supplier<T> removeTracked(Supplier<T> element) {
-            if(trackedElements.remove(element)) {
+            if (trackedElements.remove(element)) {
                 return element;
             }
             throw new IllegalArgumentException("Try to remove ");

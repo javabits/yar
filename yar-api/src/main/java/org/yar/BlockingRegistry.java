@@ -22,12 +22,14 @@ import java.util.concurrent.TimeUnit;
 /**
  * Date: 2/25/13
  * Time: 10:17 PM
+ *
  * @author Romain Gilles
  * @since 1.0
  */
 public interface BlockingRegistry extends Registry {
     @Nullable
     <T> Supplier<T> get(Class<T> type, long timeout, TimeUnit unit);
+
     @Nullable
     <T> Supplier<T> get(Id<T> id, long timeout, TimeUnit unit);
 }

@@ -54,7 +54,7 @@ public class SupplierRegistryBindingBuilder<T> extends RegistryBindingBuilder<T>
         @Override
         @SuppressWarnings("unchecked")
         public T get() {
-            return (T)registry().get(getSupplierTypeParameter());
+            return (T) registry().get(getSupplierTypeParameter());
         }
 
         @SuppressWarnings("unchecked")

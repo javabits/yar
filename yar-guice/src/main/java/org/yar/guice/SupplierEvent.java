@@ -36,7 +36,7 @@ public class SupplierEvent extends EventObject {
     private final Type type;
     private final Supplier<?> supplier;
 
-    public SupplierEvent(Type type,Supplier<?> supplier) {
+    public SupplierEvent(Type type, Supplier<?> supplier) {
         super(supplier);
         this.type = type;
         this.supplier = supplier;

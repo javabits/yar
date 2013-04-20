@@ -16,7 +16,6 @@
 
 package org.yar.guice;
 
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
@@ -38,11 +37,13 @@ public enum ExecutionStrategy {
     },
     ASYNCHRONOUS {
         private final ExecutorService executorService = Executors.newCachedThreadPool(new DaemonThreadFactory("registry"));
+
         @Override
         void execute(Runnable runnable) {
             executorService.submit(runnable);
         }
     };
+
     abstract void execute(Runnable runnable);
 
     private static class DaemonThreadFactory implements ThreadFactory {

@@ -70,11 +70,11 @@ public class GuiceId<T> implements Id<T> {
         return key.hashCode();
     }
 
-    public static <T> Id<T> of( com.google.inject.Key<T> key) {
+    public static <T> Id<T> of(com.google.inject.Key<T> key) {
         return new GuiceId<>(key);
     }
 
-    public static <T> Id<T> of( Class<T> type) {
+    public static <T> Id<T> of(Class<T> type) {
         return new GuiceId<>(com.google.inject.Key.get(type));
     }
 }

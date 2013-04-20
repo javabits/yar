@@ -24,10 +24,11 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * @author Romain Gilles
- * Date: 2/8/13
- * Time: 6:42 PM
+ *         Date: 2/8/13
+ *         Time: 6:42 PM
  * @since 1.0
  */
-@Target(METHOD) @Retention(RUNTIME)
+@Target(METHOD)
+@Retention(RUNTIME)
 public @interface Register {
 }

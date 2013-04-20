@@ -31,6 +31,7 @@ import com.google.inject.spi.TypeListener;
  */
 public class InitializableTypeListener implements TypeListener {
     static final Matcher<? super TypeLiteral<?>> MATCHER = Matchers.subclassesOf(Initializable.class);
+
     @Override
     public <I> void hear(TypeLiteral<I> type, TypeEncounter<I> encounter) {
         if (Initializable.class.isAssignableFrom(type.getRawType())) {

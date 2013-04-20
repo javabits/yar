@@ -35,9 +35,12 @@ public interface WatchableRegistrationContainer {
     Set<Type> types();
 
     List<SupplierRegistration<?>> getAll(Type type);
+
     @Nullable
     SupplierRegistration<?> getFirst(Type type);
+
     <T> List<SupplierRegistration<T>> getAll(Id<T> id);
+
     @Nullable
     <T> SupplierRegistration<T> getFirst(Id<T> id);
 

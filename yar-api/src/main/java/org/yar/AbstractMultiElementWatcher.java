@@ -29,6 +29,7 @@ import java.util.Map;
 public abstract class AbstractMultiElementWatcher<T> extends AbstractWatcher<T> {
 
     private Map<Supplier<T>, Boolean> trackedElements = new IdentityHashMap<>();
+
     @Override
     protected void track(Supplier<T> handle) {
         if (handle != null) {

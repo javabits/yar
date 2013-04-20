@@ -96,7 +96,7 @@ class RegistrationBindingBuilderImpl<T> implements RegistrationAnnotatedBindingB
     }
 
     @Override
-    public ScopedBindingBuilder  to(Key<? extends T> targetKey) {
+    public ScopedBindingBuilder to(Key<? extends T> targetKey) {
         bindRegistration();
         return linkedBindingBuilder.to(targetKey);
     }

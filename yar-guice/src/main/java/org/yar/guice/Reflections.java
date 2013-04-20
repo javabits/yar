@@ -31,6 +31,7 @@ public final class Reflections {
     private Reflections() {
         throw new AssertionError("not for you");
     }
+
     @Nullable
     public static String typeToString(@Nullable Type type) {
         if (type == null) {

@@ -20,12 +20,12 @@ import org.yar.Id;
 import org.yar.Supplier;
 
 /**
-* TODO comment
-* Date: 2/20/13
-* Time: 9:50 AM
-*
-* @author Romain Gilles
-*/
+ * TODO comment
+ * Date: 2/20/13
+ * Time: 9:50 AM
+ *
+ * @author Romain Gilles
+ */
 class SupplierRegistration<T> extends StrongPair<Id<T>, Supplier<T>> implements org.yar.Registration<T> {
     SupplierRegistration(Id<T> leftValue, Supplier<T> rightValue) {
         super(leftValue, rightValue);

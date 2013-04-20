@@ -96,7 +96,7 @@ public final class OSGiYars {
     }
 
     private static void attachStoppingListener(BundleContext bundleContext, RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
-        bundleContext.addBundleListener(new BundleStoppingListener(registrationHandler,registryListenerHandler, bundleContext.getBundle().getBundleId()));
+        bundleContext.addBundleListener(new BundleStoppingListener(registrationHandler, registryListenerHandler, bundleContext.getBundle().getBundleId()));
     }
 
     private static Iterable<Module> getModules(BundleContext bundleContext, Iterable<Module> modules) {

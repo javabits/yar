@@ -27,10 +27,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 /**
  * TODO temporary copy paste until I know who to used jarjar plugin correctly
  * The main issue is this class is not usable in osgi env because it's not exported.
+ *
  * @author jessewilson@google.com (Jesse Wilson)
  */
 public class UniqueAnnotations {
-    private UniqueAnnotations() {}
+    private UniqueAnnotations() {
+    }
+
     private static final AtomicInteger nextUniqueValue = new AtomicInteger(1);
 
     /**
@@ -51,22 +54,26 @@ public class UniqueAnnotations {
                 return Internal.class;
             }
 
-            @Override public String toString() {
+            @Override
+            public String toString() {
                 return "@" + Internal.class.getName() + "(value=" + value + ")";
             }
 
-            @Override public boolean equals(Object o) {
+            @Override
+            public boolean equals(Object o) {
                 return o instanceof Internal
                         && ((Internal) o).value() == value();
             }
 
-            @Override public int hashCode() {
+            @Override
+            public int hashCode() {
                 return (127 * "value".hashCode()) ^ value;
             }
         };
     }
 
-    @Retention(RUNTIME) @BindingAnnotation
+    @Retention(RUNTIME)
+    @BindingAnnotation
     @interface Internal {
         int value();
     }

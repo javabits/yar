@@ -143,7 +143,7 @@ public class RegistryModuleRegistrationTest {
         checkRegisteredService(injector, Key.get(MyServiceInterface.class));
     }
 
-//    @Test
+    //    @Test
     public void testConfigureBindFromRegistry() {
         Injector injector = createInjector(new RegistryModule() {
             @Override

@@ -61,7 +61,7 @@ public final class Matchers {
 
     @SuppressWarnings("unchecked")
     private static <T> TypeLiteral<T> getTypeLiteral(Type keyTargetType) {
-        return (TypeLiteral<T>)TypeLiteral.get(keyTargetType);
+        return (TypeLiteral<T>) TypeLiteral.get(keyTargetType);
     }
 
     private static <T> Type getTargetType(Matcher<Key<T>> matcher) {

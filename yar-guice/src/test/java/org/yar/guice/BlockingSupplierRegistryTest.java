@@ -66,7 +66,7 @@ public class BlockingSupplierRegistryTest {
         lock.lock();
         try {
             assertThat(myServiceSupplier[0], is(not(nullValue())));
-            assertThat((MyServiceImpl)myServiceSupplier[0], is(myService));
+            assertThat((MyServiceImpl) myServiceSupplier[0], is(myService));
         } finally {
             lock.unlock();
         }
@@ -75,6 +75,7 @@ public class BlockingSupplierRegistryTest {
     static interface MyService {
     }
 
-    static class MyServiceImpl implements MyService {}
+    static class MyServiceImpl implements MyService {
+    }
 
 }
