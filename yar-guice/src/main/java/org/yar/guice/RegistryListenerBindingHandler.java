@@ -95,6 +95,11 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     }
 
     @Override
+    public List<Id<?>> ids() {
+        return listenerIds();
+    }
+
+    @Override
     public void clear() {
         List<Pair<Registration, Watcher>> listenerRegistrations = this.listenerRegistrations;
         for (Pair<Registration, Watcher> listenerRegistration : listenerRegistrations) {

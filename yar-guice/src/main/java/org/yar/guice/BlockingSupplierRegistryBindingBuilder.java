@@ -44,8 +44,8 @@ public class BlockingSupplierRegistryBindingBuilder<T> extends RegistryBindingBu
     Provider<T> newRegistryProvider() {
         return new BlockingSupplierRegistryProvider<>(key());
     }
-
-    private static class BlockingSupplierRegistryProvider<T> implements Provider<T> {
+    //TODO refactor it to make merge with RegistryProvider class hierarchy!
+    static class BlockingSupplierRegistryProvider<T> implements Provider<T> {
 
         private final Key<T> key;
         private org.yar.BlockingSupplierRegistry registry;

@@ -35,8 +35,8 @@ import static com.google.common.collect.Lists.transform;
 
 /**
  * TODO comment
+ * This class handles the register the providing supplier into the registry.
  * Date: 2/10/13
- * Time: 10:53 PM
  *
  * @author Romain Gilles
  */
@@ -97,6 +97,11 @@ public class RegistrationBindingHandler implements RegistrationHandler {
                 return registration.id();
             }
         });
+    }
+
+    @Override
+    public List<Id<?>> ids() {
+        return registrations();
     }
 
     @Override

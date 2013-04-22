@@ -16,28 +16,17 @@
 
 package org.yar.guice;
 
-import com.google.inject.Key;
+import org.yar.Id;
+
+import java.util.List;
 
 /**
  * TODO comment
- * Date: 2/10/13
+ * Date: 4/22/13
+ * Time: 9:22 AM
  *
  * @author Romain Gilles
- * @since 1.0
  */
-class GuiceRegistration {
-
-    private final Key<?> key;
-
-    GuiceRegistration(Key<?> key) {
-        this.key = key;
-    }
-
-    static GuiceRegistration get(Key<?> key) {
-        return new GuiceRegistration(key);
-    }
-
-    public Key<?> key() {
-        return key;
-    }
+public interface Handler extends Initializable {
+    List<Id<?>> ids();
 }

@@ -26,7 +26,7 @@ import java.util.List;
  *
  * @author Romain Gilles
  */
-public interface RegistryListenerHandler extends Initializable {
+public interface RegistryListenerHandler extends Handler {
     List<Id<?>> listenerIds();
 
     void clear();

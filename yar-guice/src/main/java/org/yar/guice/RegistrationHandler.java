@@ -27,7 +27,7 @@ import java.util.List;
  *
  * @author Romain Gilles
  */
-public interface RegistrationHandler extends Initializable {
+public interface RegistrationHandler extends Handler {
 
     List<Id<?>> registrations();
 

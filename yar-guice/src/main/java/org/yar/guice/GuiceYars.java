@@ -16,10 +16,14 @@
 
 package org.yar.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.Module;
+import com.google.common.collect.ImmutableList;
+import com.google.inject.*;
+import org.yar.Id;
 import org.yar.Registry;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 /**
  * TODO comment
@@ -97,6 +101,38 @@ public final class GuiceYars {
                 bind(blockingSupplierRegistryKey).toInstance(registry);
             }
         };
+    }
+
+
+    public static List<Id<?>> requiredSuppliers(Injector injector) {
+        //RegistryProvider.class
+        ImmutableList.Builder<Id<?>> requiredSuppliers = ImmutableList.builder();
+        Map<Key<?>, Binding<?>> allBindings = injector.getAllBindings();
+        for (Map.Entry<Key<?>, Binding<?>> bindingEntry : allBindings.entrySet()) {
+            Provider<?> provider = bindingEntry.getValue().getProvider();
+            if (provider instanceof RegistryBindingBuilder.RegistryProvider
+                    || provider instanceof BlockingSupplierRegistryBindingBuilder.BlockingSupplierRegistryProvider) {
+                requiredSuppliers.add(GuiceId.of(bindingEntry.getKey()));
+            }
+        }
+        return requiredSuppliers.build();
+    }
+
+    public static List<Id<?>> providedSuppliers(Injector injector) {
+        return getIds(injector, RegistrationHandler.class);
+    }
+
+    public static List<Id<?>> registeredListener(Injector injector) {
+        return getIds(injector, RegistryListenerHandler.class);
+    }
+
+    private static List<Id<?>> getIds(Injector injector, Class<? extends Handler> type) {
+        Binding<? extends Handler> registryListenerHandlerBinding = injector.getExistingBinding(Key.get(type));
+        if (registryListenerHandlerBinding.getProvider() == null) {
+            return Collections.emptyList();
+        } else {
+            return registryListenerHandlerBinding.getProvider().get().ids();
+        }
     }
 
 }
