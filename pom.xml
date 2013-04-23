@@ -11,13 +11,14 @@
         <maven-release-plugin.version>2.4.1</maven-release-plugin.version>
         <maven-bundle-plugin.version>2.3.7</maven-bundle-plugin.version>
         <maven-compiler-plugin.version>3.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>2.12</maven-surefire-plugin.version>
-        <jarjar-maven-plugin.version>1.6</jarjar-maven-plugin.version>
+        <maven-surefire-plugin.version>2.14</maven-surefire-plugin.version>
+        <jarjar-maven-plugin.version>1.7</jarjar-maven-plugin.version>
         <maven-javadoc-plugin.version>2.9</maven-javadoc-plugin.version>
         <maven-source-plugin.version>2.2.1</maven-source-plugin.version>
         <maven-install-plugin.version>2.4</maven-install-plugin.version>
         <maven-gpg-plugin.version>1.4</maven-gpg-plugin.version>
         <maven-remote-resources-plugin.version>1.4</maven-remote-resources-plugin.version>
+        <maven-deploy-plugin.version>2.7</maven-deploy-plugin.version>
     </properties>
     <packaging>pom</packaging>
     <name>Yar</name>
@@ -87,7 +88,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-release-plugin</artifactId>
-                    <version>${maven-install-plugin.version}</version>
+                    <version>${maven-release-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-compiler-plugin</artifactId>
@@ -101,6 +102,10 @@
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>${maven-deploy-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.felix</groupId>
