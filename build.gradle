@@ -6,7 +6,7 @@ ext.libs = [
 subprojects {
     apply plugin: 'java'
 
-    group = "org.yar"
+    group = "org.yaor"
     version = '1.0-SNAPSHOT'
     repositories {
         mavenLocal()
