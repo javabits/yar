@@ -16,11 +16,17 @@
 
 package org.yar.guice;
 
+import com.google.common.util.concurrent.AbstractFuture;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import org.yar.BlockingSupplier;
 import org.yar.Id;
 import org.yar.Supplier;
 
 import javax.annotation.Nullable;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import static org.yar.IdMatchers.newKeyMatcher;
@@ -72,11 +78,12 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
     class TimeoutBlockingSupplier<T> extends AbstractBlockingSupplier<T> implements BlockingSupplier<T> {
         private final long timeout;
         private final TimeUnit unit;
-
+        private final Queue<SettableFuture<T>> abstractFutures;
         TimeoutBlockingSupplier(final Id<T> id, Supplier<T> delegate, long timeout, TimeUnit unit) {
             super(new FirstSupplierProvider<>(id), delegate);
             this.timeout = timeout;
             this.unit = unit;
+            this.abstractFutures = new ConcurrentLinkedQueue<>();
             addSupplierListener(newKeyMatcher(id), this);
         }
 
@@ -93,20 +100,51 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yar.
             try {
                 if (delegate != null) {
                     return delegate.get();
+                } else if (timeout == 0L) {
+                    return null;
                 }
             } finally {
                 readLock.unlock();
             }
             if (timeout < 0L) {
                 return infiniteBlockingGet();
-            } else if (timeout == 0L) {
-                if (delegate != null) {
-                    return delegate.get();
-                }
-                return null;
             } else {
                 return timeoutBlockingGet(timeout, unit);
             }
+        }
+
+        @Override
+        public ListenableFuture<T> getAsynch() {
+            readLock.lock();
+            try {
+                if (delegate != null) {
+                    return Futures.immediateFuture(delegate.get());
+                }
+            } finally {
+                readLock.unlock();
+            }
+            writeLock.lock();
+            try {
+                if (delegate != null) {
+                    return Futures.immediateFuture(delegate.get());
+                } else {
+                    SettableFuture<T> future = SettableFuture.create();
+                    abstractFutures.add(future);
+                    return future;
+                }
+            } finally {
+                writeLock.unlock();
+            }
+        }
+
+        @Nullable
+        @Override
+        Supplier<T> add(Supplier<T> element) {
+            Supplier<T> supplier = super.add(element);
+            for (SettableFuture<T> poll = abstractFutures.poll(); poll != null;) {
+                poll.set(element.get());
+            }
+            return supplier;
         }
 
         private T timeoutBlockingGet(long timeout, TimeUnit unit) {

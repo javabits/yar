@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
  *         Time: 2:41 PM
  * @since 1.0
  */
-public interface Supplier<T> {
+public interface Supplier<T> extends com.google.common.base.Supplier<T> {
     @Nullable
     T get();
 }

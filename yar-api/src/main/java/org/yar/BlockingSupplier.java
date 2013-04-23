@@ -1,5 +1,7 @@
 package org.yar;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
 import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
@@ -16,4 +18,6 @@ public interface BlockingSupplier<T> extends Supplier<T> {
 
     @Nullable
     T get(long timeout, TimeUnit unit);
+
+    ListenableFuture<T> getAsynch();
 }

@@ -54,7 +54,7 @@ abstract class AbstractBlockingSupplier<T> implements Supplier<T>, SupplierListe
 
 
     @Nullable
-    private Supplier<T> add(Supplier<T> element) {
+    Supplier<T> add(Supplier<T> element) {
         requireNonNull(element, "element");
         element = firstSupplierProvider.get();
         readLock.lock();

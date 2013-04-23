@@ -18,6 +18,7 @@ package org.yar;
 
 /**
  * Returns {@code true} or {@code false} for a given input.
+ * TODO see if we need to move to predicate because it will be part of the next JDK 8
  * Date: 3/15/13
  *
  * @param <T> the matching type
