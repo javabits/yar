@@ -20,7 +20,7 @@
 
     <parent>
         <groupId>org.yaor</groupId>
-        <artifactId>yar</artifactId>
+        <artifactId>yaor</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -28,8 +28,8 @@
     <artifactId>yaor-parent</artifactId>
     <packaging>pom</packaging>
     <name>Yaor :: Parent</name>
-    <description>Yaor Parent: provides yar sub-projects specific configuration and cannot be used as dependency import,
-        prefer yar root project for that
+    <description>Yaor Parent: provides yaor sub-projects specific configuration and cannot be used as dependency import,
+        prefer yaor root project for that
     </description>
 
     <properties>
