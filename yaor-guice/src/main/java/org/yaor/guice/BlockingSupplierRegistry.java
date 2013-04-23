@@ -140,7 +140,7 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.yaor
         @Override
         Supplier<T> add(Supplier<T> element) {
             Supplier<T> supplier = super.add(element);
-            for (SettableFuture<T> poll = abstractFutures.poll(); poll != null;) {
+            for (SettableFuture<T> poll = abstractFutures.poll(); poll != null;poll = abstractFutures.poll()) {
                 poll.set(element.get());
             }
             return supplier;

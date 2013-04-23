@@ -16,6 +16,7 @@
 
 package org.yaor.guice;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.junit.Test;
 import org.yaor.BlockingSupplier;
 
@@ -67,6 +68,41 @@ public class BlockingSupplierRegistryTest {
         try {
             assertThat(myServiceSupplier[0], is(not(nullValue())));
             assertThat((MyServiceImpl) myServiceSupplier[0], is(myService));
+        } finally {
+            lock.unlock();
+        }
+    }
+    @Test
+    public void testGetAsynch() throws Exception {
+        final BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
+        final MyServiceImpl myService = new MyServiceImpl();
+        final Lock lock = new ReentrantLock();
+        final ListenableFuture<MyService>[] listenableFuture = new ListenableFuture[1];
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                lock.lock();
+                try {
+                    BlockingSupplier<MyService> myServiceBlockingSupplier = registry.get(MyService.class);
+                    assertThat(myServiceBlockingSupplier, is(not(nullValue())));
+                    listenableFuture[0] = myServiceBlockingSupplier.getAsynch();
+                } finally {
+                    lock.unlock();
+                }
+            }
+        });
+        thread.start();
+        Thread.sleep(100);
+        registry.put(GuiceId.of(MyService.class), new GuiceSupplier<>(new Provider<MyService>() {
+            @Override
+            public MyService get() {
+                return myService;
+            }
+        }));
+        lock.lock();
+        try {
+            assertThat(listenableFuture[0], is(not(nullValue())));
+            assertThat( listenableFuture[0].get(1, TimeUnit.MILLISECONDS), is((MyService)myService));
         } finally {
             lock.unlock();
         }
