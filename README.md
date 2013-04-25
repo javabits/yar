@@ -1,7 +1,7 @@
-Yaor
+Yar
 ===========
 
-Yaor stands for: Yet Another Object Registry
+Yar stands for: Yet Another Registry
 
 This project is a registry implementation based on OSGi service registry.
 It aims to provide dynamic registry feature as OSGi does. The main difference is on the object / service lifecycle.
@@ -23,7 +23,7 @@ If you provide an ```Id<T>``` without annotation then all the ```Supplier<T>``` 
 associated key in the registry are qualifyed with an annotation.
 
 More formally imagine that you have tow ```DataSource``` registered in the registry one for the DB1 and the other one
-for the DB2 using ```yaor-guice``` capability:
+for the DB2 using ```yar-guice``` capability:
 
 ```java
 public class DataSourceRegistrationModule extends AbstractRegistryModule {

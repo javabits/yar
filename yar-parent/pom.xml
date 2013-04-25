@@ -19,17 +19,17 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.yaor</groupId>
-        <artifactId>yaor</artifactId>
+        <groupId>org.yar</groupId>
+        <artifactId>yar</artifactId>
         <version>1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>yaor-parent</artifactId>
+    <artifactId>yar-parent</artifactId>
     <packaging>pom</packaging>
-    <name>Yaor :: Parent</name>
-    <description>Yaor Parent: provides yaor sub-projects specific configuration and cannot be used as dependency import,
-        prefer yaor root project for that
+    <name>Yar :: Parent</name>
+    <description>Yar Parent: provides yar sub-projects specific configuration and cannot be used as dependency import,
+        prefer yar root project for that
     </description>
 
     <properties>

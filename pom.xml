@@ -3,8 +3,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.yaor</groupId>
-    <artifactId>yaor</artifactId>
+    <groupId>org.yar</groupId>
+    <artifactId>yar</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
         <java.compliance>1.7</java.compliance>
@@ -21,8 +21,8 @@
         <maven-deploy-plugin.version>2.7</maven-deploy-plugin.version>
     </properties>
     <packaging>pom</packaging>
-    <name>Yaor</name>
-    <description>YAOR: stands for Yet Another Object Registry. It is dynamic registry implementation as OSGi service registry
+    <name>Yar</name>
+    <description>YAR: stands for Yet Another Registry. It is dynamic registry implementation as OSGi service registry
         but with Supplier/Provider instead of Service instance of ServiceFactory. This will allow you more control over
         your object lifecycle.
     </description>
@@ -38,28 +38,28 @@
     </licenses>
 
     <modules>
-        <module>yaor-parent</module>
-        <module>yaor-api</module>
-        <module>yaor-guice</module>
-        <module>yaor-guice-osgi</module>
-        <module>yaor-osgi-it</module>
+        <module>yar-parent</module>
+        <module>yar-api</module>
+        <module>yar-guice</module>
+        <module>yar-guice-osgi</module>
+        <module>yar-osgi-it</module>
     </modules>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.yaor</groupId>
-                <artifactId>yaor-api</artifactId>
+                <groupId>org.yar</groupId>
+                <artifactId>yar-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.yaor</groupId>
-                <artifactId>yaor-guice</artifactId>
+                <groupId>org.yar</groupId>
+                <artifactId>yar-guice</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.yaor</groupId>
-                <artifactId>yaor-guice-osgi</artifactId>
+                <groupId>org.yar</groupId>
+                <artifactId>yar-guice-osgi</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
