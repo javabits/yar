@@ -16,6 +16,7 @@
 
 package org.yaor.guice;
 
+import com.google.common.annotations.Beta;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.Provides;
@@ -31,9 +32,19 @@ import java.util.List;
 import static org.yaor.guice.RegistrationBindingBuilderImpl.bindRegistration;
 
 /**
- * TODO comment
+ * Extension of the support class {@code AbstractModule} that adds to the Guice EDSL
+ * features to work with Yaor {@code Registry}.
+ * In Yaor {@code Registry} three concepts works together:
+ * <ul>
+ * <li>Registering {@code Supplier} under an {@code Id}</li>
+ * <li>Getting a or a list of {@code Supplier}(s) for a given {@code Id}</li>
+ * <li>And then listening mutating operation on the {@code Registry}</li>
+ * </ul>
+ * This class will help you to work with those concepts. You should subclass this module
+ * to work with the registry in the {@link #configureRegistry()} method.
+ * <p>
  * Date: 2/28/13
- * Time: 11:36 PM
+ * </p>
  *
  * @author Romain Gilles
  */
@@ -58,10 +69,95 @@ public abstract class AbstractRegistryModule extends AbstractModule {
     }
 
     /**
-     * TODO
+     * <h1>Registry Management EDSL</h1>
+     * Guice injector:
+     * <pre>
+     * Guice.createInjector(..., new AbstractRegistryModule() {
+     *     protected void configureRegistry() {
+     *         register(MyProvidedInterface.class).to(MyImplementation.class);
+     *         bind(MyRequiredInterface.class).toRegistry();
+     *         ...
+     *     }
+     * })
+     * </pre>
+     * <p><b>Note:</b> You must have one and only one {@link RegistryModule} in your
+     * {@code Injector} construction process. You may need to have a look to this class documentation
+     * to follow the initialization process.
+     * </p>
+     * <p><h2>Getting Supplier(s)</h2>
+     * Your component may need services that are located in the registry.
+     * <h3>Bind service from registry</h3>
+     * Imagine that you required a {@code DataSource} provided by a other component.
+     * <h4>Simplest</h4>
+     * {@code bind(DataSource.class).toRegistry();}
+     * <h4>Named binding</h4>
+     * {@code bind(DataSource.class).annotatedWith(Names.named("data-source-xyz")).toRegistry();}
+     * <h4>Annotated binding</h4>
+     * {@code bind(DataSource.class).annotatedWith(DataSourceXYZAnnotation.class).toRegistry();}
+     * <h4>TypeLiteral or Key binding</h4>
+     * <pre>{@literal
+     * // literal
+     * bind(new TypeLiteral<DataSource>(){}).toRegistry();
+     * // key
+     * bind(Key.get(DataSource.class, Names.named("data-source-xyz"))).toRegistry();
+     * }</pre>
+     * <h4>Bind a Iterable / Collection / List</h4>
+     * The {@code Registry} can return List of suppliers for a given Id.
+     * You have a translation of this feature in this EDSL.
+     * You can bind {@code Iterable} / {@code Collection} / {@code List} of both direct target
+     * type {@code T} or {@code Supplier<T>} as follow:
+     * <pre>{@literal
+     * //direct
+     * bind(new TypeLiteral<Iterable<DataSource>>(){}).toRegistry();
+     * bind(new TypeLiteral<Collection<DataSource>>(){}).toRegistry();
+     * bind(new TypeLiteral<List<DataSource>>(){}).toRegistry();
+     * //through supplier
+     * bind(new TypeLiteral<Iterable<Supplier<DataSource>>>(){}).toRegistry();
+     * bind(new TypeLiteral<Collection<Supplier<DataSource>>>(){}).toRegistry();
+     * bind(new TypeLiteral<List<Supplier<DataSource>>>(){}).toRegistry();
+     * }</pre>
+     * </p>
+     * <p><h2>Registering service</h2>
+     * <h3>Simplest</h3>
+     * {@code register(DataSource.class).to(MyDataSourcePool.class);}
+     * <h3>Named registration</h3>
+     * {@code register(DataSource.class).annotatedWith(Names.named("data-source-xyz")).to(MyDataSourcePool.class);}
+     * <h3>Annotated registration</h3>
+     * {@code register(DataSource.class).annotatedWith(DataSourceXYZAnnotation.class).to(MyDataSourcePool.class);}
+     * <h3>TypeLiteral or Key registration</h3>
+     * <pre>{@literal
+     * // literal
+     * register(new TypeLiteral<DataSource>(){}).to(MyDataSourcePool.class);
+     * // key
+     * register(Key.get(DataSource.class, Names.named("data-source-xyz"))).to(MyDataSourcePool.class);
+     * }</pre>
+     * <h3>Providers registration</h3>
+     * The EDSL extansion also fully support {@code Provider} and method {@code Provides} annotation.
+     * <pre>
+     * Guice.createInjector(..., new AbstractRegistryModule() {
+     *     protected void configureRegistry() {
+     *         register(MyProvidedInterface.class).to(MyImplementation.class);
+     *         ...
+     *     }
+     *    {@literal @Provides}
+     *    {@literal @Register}
+     *     public DataSource myDataSource() {
+     *         return new MyDataSourcePool();
+     *     }
+     * })
+     * </pre>
+     * <h3>Collections warning</h3>
+     * There is no corresponding feature with the opposite bind functionality.
+     * You cannot register more than one supplier at a time.
+     * </p>
+     * <p><h2>Listening registry events</h2>
+     * </p>
+     *
+     * @see RegistryModule
      */
     protected abstract void configureRegistry();
 
+    @Beta
     protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, Key<? extends RegistryListener<? super T>> key) {
         if (isBlockingSupplier(matcher)) {
             throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
@@ -80,6 +176,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         return isSupplier(Matchers.getTargetTypeLiteral(matcher));
     }
 
+    @Beta
     protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
         if (isBlockingSupplier(matcher)) {
             throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
@@ -88,6 +185,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         } else {
             bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, listener));
         }
+        requestInjection(listener);
     }
 
 

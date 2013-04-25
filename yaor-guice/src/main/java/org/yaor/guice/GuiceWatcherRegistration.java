@@ -190,7 +190,7 @@ abstract class GuiceWatcherRegistration<T> {
         @SuppressWarnings("unchecked")
         private Key<T> getKey(Id<T> otherId) {
             Key<T> otherGuiceKey;
-            if (otherId.annotationType() != null)
+            if (otherId.annotation() != null)
                 otherGuiceKey = (Key<T>) Key.get(otherId.type(), otherId.annotation());
             else if (otherId.annotationType() != null) {
                 otherGuiceKey = (Key<T>) Key.get(otherId.type(), otherId.annotationType());

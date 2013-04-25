@@ -16,6 +16,7 @@
 
 package org.yaor.guice;
 
+import com.google.common.annotations.Beta;
 import org.yaor.Watcher;
 
 /**
@@ -25,6 +26,7 @@ import org.yaor.Watcher;
  *
  * @author Romain Gilles
  */
+@Beta
 public interface RegistryListener<T> extends Watcher<T> {
 
 
