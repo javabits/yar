@@ -249,7 +249,8 @@ public abstract class AbstractRegistryModule extends AbstractModule {
     }
 
     private <T> boolean isSupplier(TypeLiteral<T> typeLiteral) {
-        return Supplier.class.isAssignableFrom(typeLiteral.getRawType());
+        return Supplier.class.isAssignableFrom(typeLiteral.getRawType())
+                || com.google.common.base.Supplier.class.isAssignableFrom(typeLiteral.getRawType());
     }
 
     private <T> boolean isSupportedCollectionsInterface(TypeLiteral<T> typeLiteral) {

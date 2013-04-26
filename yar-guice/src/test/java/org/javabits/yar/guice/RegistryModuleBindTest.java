@@ -16,8 +16,10 @@
 
 package org.javabits.yar.guice;
 
+import com.google.common.base.*;
 import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
+import org.javabits.yar.Supplier;
 import org.junit.Test;
 import org.javabits.yar.*;
 
@@ -122,6 +124,21 @@ public class RegistryModuleBindTest {
         Injector injector = createSupplierBindingInjector(module);
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
         })), is(not(nullValue())));
+    }
+
+    @Test
+    public void testBindGuavaSupplier() {
+        Module module = createRegistryDeclarationModuleWithSimpleRegistry();
+        final TypeLiteral<com.google.common.base.Supplier<MyInterface>> supplierTypeLiteral = new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
+        };
+        RegistryModule supplierBindingRegistryModule = new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(supplierTypeLiteral).toRegistry();
+            }
+        };
+        Injector injector = createInjector(module, supplierBindingRegistryModule);
+        assertThat(injector.getInstance(Key.get(supplierTypeLiteral)), is(not(nullValue())));
     }
 
     @Test(expected = CreationException.class)
