@@ -155,7 +155,7 @@
                 <configuration>
                     <mavenExecutorId>forked-path</mavenExecutorId>
                     <useReleaseProfile>false</useReleaseProfile>
-                    <arguments>-Psonatype-oss,release</arguments>
+                    <arguments>-Psonatype-oss</arguments>
                 </configuration>
             </plugin>
         </plugins>
