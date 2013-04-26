@@ -25,7 +25,7 @@
         but with Supplier/Provider instead of Service instance of ServiceFactory. This will allow you more control over
         your object lifecycle.
     </description>
-    <url>https://github.com/rgilles/yar</url>
+    <url>https://github.com/javabits/yar</url>
     <inceptionYear>2013</inceptionYear>
 
     <licenses>
@@ -65,9 +65,9 @@
     </dependencyManagement>
 
     <scm>
-        <connection>scm:git:https://github.com/rgilles/yar.git</connection>
-        <developerConnection>scm:git:https://github.com/rgilles/yar.git</developerConnection>
-        <url>https://github.com/rgilles/yar</url>
+        <connection>scm:git:https://github.com/javabits/yar.git</connection>
+        <developerConnection>scm:git:https://github.com/javabits/yar.git</developerConnection>
+        <url>https://github.com/javabits/yar</url>
     </scm>
 
     <build>
