@@ -154,6 +154,7 @@
                 <version>${maven-release-plugin.version}</version>
                 <configuration>
                     <mavenExecutorId>forked-path</mavenExecutorId>
+                    <preparationGoals>clean install</preparationGoals>
                     <useReleaseProfile>false</useReleaseProfile>
                     <arguments>-Psonatype-oss</arguments>
                 </configuration>
