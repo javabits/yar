@@ -1,37 +1,36 @@
 /*
  * Copyright 2013 Romain Gilles
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 package org.javabits.yar.guice;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.junit.Test;
-import org.javabits.yar.BlockingSupplier;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import javax.inject.Provider;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import javax.inject.Provider;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import org.javabits.yar.BlockingSupplier;
+import org.junit.Test;
+import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * TODO comment
- * Date: 2/28/13
- * Time: 11:43 AM
+ * TODO comment Date: 2/28/13 Time: 11:43 AM
  *
  * @author Romain Gilles
  */
@@ -48,9 +47,12 @@ public class BlockingSupplierRegistryTest {
             public void run() {
                 lock.lock();
                 try {
-                    BlockingSupplier<MyService> myServiceBlockingSupplier = registry.get(MyService.class);
+                    BlockingSupplier<MyService> myServiceBlockingSupplier = registry
+                            .get(MyService.class);
                     assertThat(myServiceBlockingSupplier, is(not(nullValue())));
-                    myServiceSupplier[0] = myServiceBlockingSupplier.get(200, TimeUnit.MILLISECONDS);
+                    myServiceSupplier[0] = myServiceBlockingSupplier.getSync(200, MILLISECONDS);
+                } catch (InterruptedException | TimeoutException e) {
+                    e.printStackTrace();
                 } finally {
                     lock.unlock();
                 }
@@ -72,6 +74,7 @@ public class BlockingSupplierRegistryTest {
             lock.unlock();
         }
     }
+
     @Test
     public void testGetAsynch() throws Exception {
         final BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
@@ -83,9 +86,10 @@ public class BlockingSupplierRegistryTest {
             public void run() {
                 lock.lock();
                 try {
-                    BlockingSupplier<MyService> myServiceBlockingSupplier = registry.get(MyService.class);
+                    BlockingSupplier<MyService> myServiceBlockingSupplier = registry
+                            .get(MyService.class);
                     assertThat(myServiceBlockingSupplier, is(not(nullValue())));
-                    listenableFuture[0] = myServiceBlockingSupplier.getAsynch();
+                    listenableFuture[0] = myServiceBlockingSupplier.getAsync();
                 } finally {
                     lock.unlock();
                 }
@@ -102,7 +106,7 @@ public class BlockingSupplierRegistryTest {
         lock.lock();
         try {
             assertThat(listenableFuture[0], is(not(nullValue())));
-            assertThat( listenableFuture[0].get(1, TimeUnit.MILLISECONDS), is((MyService)myService));
+            assertThat(listenableFuture[0].get(1, MILLISECONDS), is((MyService) myService));
         } finally {
             lock.unlock();
         }

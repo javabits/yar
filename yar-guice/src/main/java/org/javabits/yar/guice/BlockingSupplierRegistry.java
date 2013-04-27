@@ -16,22 +16,22 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import org.javabits.yar.BlockingSupplier;
-import org.javabits.yar.Id;
-import org.javabits.yar.Supplier;
-
-import javax.annotation.Nullable;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
-
 import static org.javabits.yar.IdMatchers.newKeyMatcher;
 import static org.javabits.yar.guice.ExecutionStrategy.SYNCHRONOUS;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
+
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
+
+import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.Id;
+import org.javabits.yar.Supplier;
+import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * TODO comment
@@ -69,9 +69,19 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
         return get(GuiceId.of(type));
     }
 
-    @Override
-    public <T> BlockingSupplier<T> get(final Id<T> id) {
+    //@Override
+    public <T> BlockingSupplier<T> getOriginal(final Id<T> id) {
         return new TimeoutBlockingSupplier<>(id, super.get(id), defaultTimeout, defaultTimeUnit);
+    }
+
+    @Override
+    public <T> BlockingSupplier<T> get(Id<T> id){
+        BlockingSupplierImpl<T> supplier=new BlockingSupplierImpl<>();
+        // If an instance of the requested service has been registered, this call will trigger the
+        // listener's supplierChanged event with the current value of the service.
+        // This is how the supplier instance obtains the initial value of the service.
+        addSupplierListener(newKeyMatcher(id), supplier);
+        return supplier;
     }
 
     class TimeoutBlockingSupplier<T> extends AbstractBlockingSupplier<T> implements BlockingSupplier<T> {
@@ -89,12 +99,17 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
         @Nullable
         @Override
         public T get() {
-            return get(timeout, unit);
+            return getSync(timeout, unit);
+        }
+
+        @Override
+        public T getSync() throws InterruptedException {
+            return getSync(-1,unit);
         }
 
         @Nullable
         @Override
-        public T get(long timeout, TimeUnit unit) {
+        public T getSync(long timeout, TimeUnit unit) {
             readLock.lock();
             try {
                 if (delegate != null) {
@@ -113,7 +128,7 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
         }
 
         @Override
-        public ListenableFuture<T> getAsynch() {
+        public ListenableFuture<T> getAsync() {
             readLock.lock();
             try {
                 if (delegate != null) {
