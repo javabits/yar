@@ -26,9 +26,10 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     @Nullable
     @Override
     public T get() {
-        Future<T> future = getAsync();
+        Future<Supplier<T>> future = supplierRef.get();
+        // Do not block on Future.get() here. Just check if the future is done.
         if (future.isDone())
-            return future.isCancelled() ? null : getUnchecked(future);
+            return future.isCancelled() ? null : getUnchecked(future).get();
         return null;
     }
 

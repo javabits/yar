@@ -18,6 +18,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import java.util.concurrent.TimeoutException;
@@ -35,8 +37,28 @@ import com.google.common.util.concurrent.ListenableFuture;
  * @author Romain Gilles
  */
 public class BlockingSupplierRegistryTest {
+
     @Test
-    public void testGet() throws InterruptedException {
+    public void testNonBlockingGet() {
+        BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
+        BlockingSupplier<MyService> supplier=registry.get(MyService.class);
+
+        assertNotNull(supplier);
+        assertNull(supplier.get());
+
+        final MyService myService = new MyServiceImpl();
+        registry.put(GuiceId.of(MyService.class), new GuiceSupplier<>(new Provider<MyService>() {
+            @Override
+            public MyService get() {
+                return myService;
+            }
+        }));
+
+        assertThat(supplier.get(),is(myService));
+    }
+
+    @Test
+    public void testGetSync() throws InterruptedException {
         final BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
         final MyServiceImpl myService = new MyServiceImpl();
         final Object[] myServiceSupplier = new Object[1];
@@ -76,7 +98,7 @@ public class BlockingSupplierRegistryTest {
     }
 
     @Test
-    public void testGetAsynch() throws Exception {
+    public void testGetAsync() throws Exception {
         final BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
         final MyServiceImpl myService = new MyServiceImpl();
         final Lock lock = new ReentrantLock();
