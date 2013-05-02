@@ -11,6 +11,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
 import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.Registration;
 import org.javabits.yar.Supplier;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -18,6 +19,8 @@ import com.google.common.util.concurrent.SettableFuture;
 
 class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
+    @SuppressWarnings("unused")
+    private Registration<T> selfRegistration;
 
     BlockingSupplierImpl() {
         this.supplierRef = new AtomicReference<>(SettableFuture.<Supplier<T>> create());
@@ -91,5 +94,9 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
         default:
             throw new IllegalStateException("Unknown supplier event: " + supplierEvent);
         }
+    }
+    //preserve a strong reference on the registration listener registration
+    void setSelfRegistration(Registration<T> selfRegistration) {
+        this.selfRegistration = selfRegistration;
     }
 }

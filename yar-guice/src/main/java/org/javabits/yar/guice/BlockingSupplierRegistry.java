@@ -16,22 +16,16 @@
 
 package org.javabits.yar.guice;
 
+import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.Id;
+import org.javabits.yar.Registration;
+
+import java.util.concurrent.TimeUnit;
+
 import static org.javabits.yar.IdMatchers.newKeyMatcher;
 import static org.javabits.yar.guice.ExecutionStrategy.SYNCHRONOUS;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
-
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.TimeUnit;
-import javax.annotation.Nullable;
-
-import org.javabits.yar.BlockingSupplier;
-import org.javabits.yar.Id;
-import org.javabits.yar.Supplier;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 
 /**
  * TODO comment
@@ -69,132 +63,16 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
         return get(GuiceId.of(type));
     }
 
-    //@Override
-    public <T> BlockingSupplier<T> getOriginal(final Id<T> id) {
-        return new TimeoutBlockingSupplier<>(id, super.get(id), defaultTimeout, defaultTimeUnit);
-    }
-
     @Override
-    public <T> BlockingSupplier<T> get(Id<T> id){
-        BlockingSupplierImpl<T> supplier=new BlockingSupplierImpl<>();
+    public <T> BlockingSupplier<T> get(Id<T> id) {
+        BlockingSupplierImpl<T> supplier = new BlockingSupplierImpl<>();
         // If an instance of the requested service has been registered, this call will trigger the
         // listener's supplierChanged event with the current value of the service.
         // This is how the supplier instance obtains the initial value of the service.
-        addSupplierListener(newKeyMatcher(id), supplier);
+        Registration<T> registration = addSupplierListener(newKeyMatcher(id), supplier);
+        // preserve a reference to the registration to avoid gc and let the caller decides when listener can be gc.
+        supplier.setSelfRegistration(registration);
         return supplier;
-    }
-
-    class TimeoutBlockingSupplier<T> extends AbstractBlockingSupplier<T> implements BlockingSupplier<T> {
-        private final long timeout;
-        private final TimeUnit unit;
-        private final Queue<SettableFuture<T>> abstractFutures;
-        TimeoutBlockingSupplier(final Id<T> id, Supplier<T> delegate, long timeout, TimeUnit unit) {
-            super(new FirstSupplierProvider<>(id), delegate);
-            this.timeout = timeout;
-            this.unit = unit;
-            this.abstractFutures = new ConcurrentLinkedQueue<>();
-            addSupplierListener(newKeyMatcher(id), this);
-        }
-
-        @Nullable
-        @Override
-        public T get() {
-            return getSync(timeout, unit);
-        }
-
-        @Override
-        public T getSync() throws InterruptedException {
-            return getSync(-1,unit);
-        }
-
-        @Nullable
-        @Override
-        public T getSync(long timeout, TimeUnit unit) {
-            readLock.lock();
-            try {
-                if (delegate != null) {
-                    return delegate.get();
-                } else if (timeout == 0L) {
-                    return null;
-                }
-            } finally {
-                readLock.unlock();
-            }
-            if (timeout < 0L) {
-                return infiniteBlockingGet();
-            } else {
-                return timeoutBlockingGet(timeout, unit);
-            }
-        }
-
-        @Override
-        public ListenableFuture<T> getAsync() {
-            readLock.lock();
-            try {
-                if (delegate != null) {
-                    return Futures.immediateFuture(delegate.get());
-                }
-            } finally {
-                readLock.unlock();
-            }
-            writeLock.lock();
-            try {
-                if (delegate != null) {
-                    return Futures.immediateFuture(delegate.get());
-                } else {
-                    SettableFuture<T> future = SettableFuture.create();
-                    abstractFutures.add(future);
-                    return future;
-                }
-            } finally {
-                writeLock.unlock();
-            }
-        }
-
-        @Nullable
-        @Override
-        Supplier<T> add(Supplier<T> element) {
-            Supplier<T> supplier = super.add(element);
-            for (SettableFuture<T> poll = abstractFutures.poll(); poll != null;poll = abstractFutures.poll()) {
-                poll.set(element.get());
-            }
-            return supplier;
-        }
-
-        private T timeoutBlockingGet(long timeout, TimeUnit unit) {
-            long nanos = unit.toNanos(timeout);
-            writeLock.lock();
-            try {
-                while (delegate == null) {
-                    if (nanos <= 0L) {
-                        return null; // TODO maybe throw an exception instead!!!
-                    }
-                    nanos = notEmpty.awaitNanos(nanos);
-                }
-                return delegate.get();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
-            } finally {
-                writeLock.unlock();
-            }
-        }
-
-
-        private T infiniteBlockingGet() {
-            writeLock.lock();
-            try {
-                while (delegate == null) {
-                    notEmpty.await();
-                }
-                return delegate.get();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
-            } finally {
-                writeLock.unlock();
-            }
-        }
-
-
     }
 
     static BlockingSupplierRegistry newMultimapBlockingSupplierRegistry() {
@@ -219,19 +97,5 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
 
     static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(long defaultTimeout, ExecutionStrategy executionStrategy) {
         return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), defaultTimeout);
-    }
-
-    private class FirstSupplierProvider<T> implements org.javabits.yar.guice.FirstSupplierProvider<T> {
-        private final Id<T> id;
-
-        public FirstSupplierProvider(Id<T> id) {
-            this.id = id;
-        }
-
-        @Nullable
-        @Override
-        public Supplier<T> get() {
-            return BlockingSupplierRegistry.super.get(id);
-        }
     }
 }

@@ -7,34 +7,34 @@ import javax.annotation.Nullable;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /**
- * Date: 2/28/13 Time: 10:51 AM
+ * Date: 2/28/13
  *
  * @author Romain Gilles
  */
 public interface BlockingSupplier<T> extends Supplier<T> {
     /**
-     * Retrieves the instance of the service from the registry.
+     * Retrieves the instance of {@code T} from the registry.
      * <p>
      * This is a non-blocking call.
      *
-     * @return the instance of the service, or <code>null</code> if the services is not registered.
+     * @return the instance of {@code T}, or <code>null</code> if no corresponding registration.
      */
     @Nullable
     @Override
     T get();
 
     /**
-     * Retrieves the instance of the service from the registry. If the service is not registered,
+     * Retrieves the instance of {@code T} from the registry. If no {@code T} registered,
      * the call will block until the service is registered or the thread is interrupted.
      *
-     * @return the instance of the service.
+     * @return the instance of {@code T}.
      * @throws InterruptedException
      *             if the thread was interrupted while waiting.
      */
     T getSync() throws InterruptedException;
 
     /**
-     * Retrieves the instance of the service from the registry. If the service is not registered,
+     * Retrieves the instance of {@code T} from the registry. If no {@code T} registered,
      * the call will block until the service is registered or the thread is interrupted, or the
      * timeout has expired.
      *
@@ -42,7 +42,7 @@ public interface BlockingSupplier<T> extends Supplier<T> {
      *            the maximum time to wait
      * @param unit
      *            the time unit of the timeout argument
-     * @return the instance of the service.
+     * @return the instance of {@code T}.
      * @throws InterruptedException
      *             if the thread was interrupted while waiting.
      * @throws TimeoutException
@@ -51,7 +51,7 @@ public interface BlockingSupplier<T> extends Supplier<T> {
     T getSync(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
 
     /**
-     * Retrieves the instance of the service from the registry asynchronously. The caller will use
+     * Retrieves the instance of {@code T} from the registry asynchronously. The caller will use
      * the returned future to obtain the instance of the service once it gets registered available.
      *
      * @return an instance of future result.
