@@ -16,8 +16,10 @@
 
 package org.javabits.yar.guice;
 
+import com.google.inject.Key;
 import org.javabits.yar.Id;
 
+import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -72,6 +74,16 @@ public class GuiceId<T> implements Id<T> {
 
     public static <T> Id<T> of(com.google.inject.Key<T> key) {
         return new GuiceId<>(key);
+    }
+
+    public static <T> Id<T> of(Type type, @Nullable Key<?> annotatedKey) {
+        if (annotatedKey.getAnnotation() != null) {
+            return of((Key<T>)Key.get(type, annotatedKey.getAnnotation()));
+        } else if (annotatedKey.getAnnotationType() != null) {
+            return of((Key<T>)Key.get(type, annotatedKey.getAnnotationType()));
+        } else {
+            return of((Key<T>)Key.get(type));
+        }
     }
 
     public static <T> Id<T> of(Class<T> type) {

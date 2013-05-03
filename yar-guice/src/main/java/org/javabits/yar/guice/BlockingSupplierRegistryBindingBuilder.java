@@ -70,7 +70,8 @@ public class BlockingSupplierRegistryBindingBuilder<T> extends RegistryBindingBu
                 throw new IllegalArgumentException("Supplier type must be mono parameterized: " + type);
             }
 
-            return (GuiceId<T>) GuiceId.of(Key.get(actualTypeArguments[0]));
+            Type actualTypeArgument = actualTypeArguments[0];
+            return (GuiceId<T>) GuiceId.of(actualTypeArgument, key);
         }
 
         @Inject

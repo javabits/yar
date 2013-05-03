@@ -16,9 +16,10 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.base.*;
 import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import org.javabits.yar.Supplier;
 import org.junit.Test;
 import org.javabits.yar.*;
@@ -53,6 +54,24 @@ public class RegistryModuleBindTest {
         });
         assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
         assertThat(injector.getInstance(MyInterface.class), is(not(injector.getInstance(MyInterface.class))));
+    }
+
+
+    @Test
+    public void testBindWithAnnotation() {
+        final Registry registry = new SimpleRegistry();
+        final Named test = Names.named("test");
+        final Key<MyInterface> key = Key.get(MyInterface.class, test);
+        Id<MyInterface> id = GuiceId.of(key);
+        getMyInterfaceRegistration(registry, id);
+        Module module = createModuleRegistryDeclaration(registry, Registry.class);
+        Injector injector = Guice.createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(key).toRegistry();
+            }
+        });
+        assertThat(injector.getInstance(key), is(not(nullValue())));
     }
 
 
@@ -125,6 +144,30 @@ public class RegistryModuleBindTest {
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
         })), is(not(nullValue())));
     }
+
+    @Test
+    public void testBindSupplierWithAnnotation() {
+        final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
+        final Named test = Names.named("test");
+        final Key<MyInterface> key = Key.get(MyInterface.class, test);
+        final Key<Supplier<MyInterface>> supplierKey = Key.get(new TypeLiteral<Supplier<MyInterface>>() {
+        }, test);
+        Id<MyInterface> id = GuiceId.of(key);
+        getMyInterfaceRegistration(registry, id);
+        Module module = GuiceYars.newRegistryDeclarationModule(registry);
+        RegistryModule supplierBindingRegistryModule = new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(supplierKey).toRegistry();
+            }
+        };
+        Injector injector = createInjector(module, supplierBindingRegistryModule);
+        Supplier<MyInterface> supplier = injector.getInstance(supplierKey);
+        assertThat(supplier, is(not(nullValue())));
+        assertThat(supplier.get(), is(not(nullValue())));
+
+    }
+
 
     @Test
     public void testBindGuavaSupplier() {
@@ -201,7 +244,12 @@ public class RegistryModuleBindTest {
     }
 
     private Registration<MyInterface> putMyInterfaceSupplierToRegistry(Registry registry) {
-        return registry.put(GuiceId.of(MyInterface.class), GuiceSupplier.of(new Provider<MyInterface>() {
+        Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        return getMyInterfaceRegistration(registry, id);
+    }
+
+    private Registration<MyInterface> getMyInterfaceRegistration(Registry registry, Id<MyInterface> id) {
+        return registry.put(id, GuiceSupplier.of(new Provider<MyInterface>() {
             @Override
             public MyInterface get() {
                 return new MyInterface() {
@@ -224,6 +272,29 @@ public class RegistryModuleBindTest {
 
     private Injector createBlockingSupplierBindingInjector(Module module) {
         return createInjector(module, createBlockingSupplierBindingRegistryModule());
+    }
+
+    @Test
+    public void testBindBlockingSupplierWithAnnotation() {
+        final org.javabits.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        final Named test = Names.named("test");
+        final Key<MyInterface> key = Key.get(MyInterface.class, test);
+        final Key<BlockingSupplier<MyInterface>> supplierKey = Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        }, test);
+        Id<MyInterface> id = GuiceId.of(key);
+        getMyInterfaceRegistration(registry, id);
+        Module module = newRegistryDeclarationModule(registry);
+        RegistryModule supplierBindingRegistryModule = new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(supplierKey).toRegistry();
+            }
+        };
+        Injector injector = createInjector(module, supplierBindingRegistryModule);
+        Supplier<MyInterface> supplier = injector.getInstance(supplierKey);
+        assertThat(supplier, is(not(nullValue())));
+        assertThat(supplier.get(), is(not(nullValue())));
+
     }
 
     @Test
