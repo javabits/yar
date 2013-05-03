@@ -32,7 +32,6 @@ import java.util.concurrent.*;
 
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
@@ -144,6 +143,11 @@ public class SimpleRegistry implements Registry {
         return registration;
     }
 
+    @Override
+    public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<T> supplier) {
+        return put(id, requireNonNull(new GuavaSupplierAdapter<>(supplier), "supplier"));
+    }
+
     private <T> GuiceId<T> checkKey(Id<T> watchedId, String attribute) {
         requireNonNull(watchedId, attribute);
         if (watchedId instanceof GuiceId) {
@@ -155,17 +159,6 @@ public class SimpleRegistry implements Registry {
 
     private <T> void checkSupplier(Supplier<? extends T> supplier) {
         requireNonNull(supplier, "supplier");
-        checkGuiceSupplier(supplier);
-    }
-
-    private <T> void checkGuiceSupplier(Supplier<? extends T> supplier) {
-        if (!isGuiceSupplier(supplier)) {
-            throw new IllegalArgumentException(format("Only guice supplier is supported and not: %s", supplier.getClass()));
-        }
-    }
-
-    private <T> boolean isGuiceSupplier(Supplier<? extends T> supplier) {
-        return supplier instanceof GuiceSupplier;
     }
 
     @Override

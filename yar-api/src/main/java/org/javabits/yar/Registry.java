@@ -46,6 +46,8 @@ public interface Registry {
 
     <T> Registration<T> put(Id<T> id, Supplier<T> supplier);
 
+    <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<T> supplier);
+
     void remove(Registration<?> registration);
 
     <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<Supplier<T>> watcher);
