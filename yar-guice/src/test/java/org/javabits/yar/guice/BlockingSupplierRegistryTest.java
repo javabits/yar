@@ -40,7 +40,7 @@ public class BlockingSupplierRegistryTest {
 
     @Test
     public void testNonBlockingGet() {
-        BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
+        BlockingSupplierRegistry registry = BlockingSupplierRegistry.newBlockingSupplierRegistry();
         BlockingSupplier<MyService> supplier=registry.get(MyService.class);
 
         assertNotNull(supplier);
@@ -59,7 +59,7 @@ public class BlockingSupplierRegistryTest {
 
     @Test
     public void testGetSync() throws InterruptedException {
-        final BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
+        final BlockingSupplierRegistry registry = BlockingSupplierRegistry.newBlockingSupplierRegistry();
         final MyServiceImpl myService = new MyServiceImpl();
         final Object[] myServiceSupplier = new Object[1];
         final Lock lock = new ReentrantLock();
@@ -99,7 +99,7 @@ public class BlockingSupplierRegistryTest {
 
     @Test
     public void testGetAsync() throws Exception {
-        final BlockingSupplierRegistry registry = new BlockingSupplierRegistry();
+        final BlockingSupplierRegistry registry = BlockingSupplierRegistry.newBlockingSupplierRegistry();
         final MyServiceImpl myService = new MyServiceImpl();
         final Lock lock = new ReentrantLock();
         final ListenableFuture<MyService>[] listenableFuture = new ListenableFuture[1];

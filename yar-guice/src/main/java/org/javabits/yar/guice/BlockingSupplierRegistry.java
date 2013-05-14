@@ -42,21 +42,22 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
     private final TimeUnit defaultTimeUnit;
 
 
-    public BlockingSupplierRegistry() {
-        this(DEFAULT_TIMEOUT);
-    }
-
-    public BlockingSupplierRegistry(long defaultTimeout) {
+    private BlockingSupplierRegistry(long defaultTimeout, TimeUnit defaultTimeUnit) {
         this.defaultTimeout = defaultTimeout;
-        defaultTimeUnit = DEFAULT_TIME_UNIT;
+        this.defaultTimeUnit = defaultTimeUnit;
     }
 
-    public BlockingSupplierRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
+    private BlockingSupplierRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
         super(registrationContainer);
         this.defaultTimeout = defaultTimeout;
         defaultTimeUnit = DEFAULT_TIME_UNIT;
     }
 
+    private BlockingSupplierRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout, TimeUnit defaultTimeUnit) {
+        super(registrationContainer);
+        this.defaultTimeout = defaultTimeout;
+        this.defaultTimeUnit = defaultTimeUnit;
+    }
 
     @Override
     public <T> BlockingSupplier<T> get(Class<T> type) {
@@ -97,5 +98,13 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
 
     static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(long defaultTimeout, ExecutionStrategy executionStrategy) {
         return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), defaultTimeout);
+    }
+
+    public static BlockingSupplierRegistry newBlockingSupplierRegistry() {
+        return newBlockingSupplierRegistry(DEFAULT_TIMEOUT, DEFAULT_TIME_UNIT);
+    }
+
+    public static BlockingSupplierRegistry newBlockingSupplierRegistry(long defaultTimeout, TimeUnit defaultTimeUnit) {
+        return new BlockingSupplierRegistry(defaultTimeout, defaultTimeUnit);
     }
 }

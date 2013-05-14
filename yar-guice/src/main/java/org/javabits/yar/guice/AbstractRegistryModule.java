@@ -224,7 +224,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
 
     @Override
     protected <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
-        return new RegistryBindingBuilder<>(binder(), clazz);
+        return new RegistryAnnotatedBindingBuilderImpl<>(binder(), clazz);
     }
 
     private <T> RegistryBindingBuilderFactory getRegistryBindingBuilderFactory(Key<T> key) {
@@ -232,16 +232,13 @@ public abstract class AbstractRegistryModule extends AbstractModule {
     }
 
     private <T> RegistryBindingBuilderFactory getRegistryBindingBuilderFactory(TypeLiteral<T> typeLiteral) {
-        if (isBlockingSupplier(typeLiteral)) {
+        if (isBlockingSupplier(typeLiteral) || isSupplier(typeLiteral)) {
             return new BlockingSupplierRegistryBindingBuilderFactory();
-        }
-        if (isSupplier(typeLiteral)) {
-            return new SupplierRegistryBindingBuilderFactory();
-        }
-        if (isSupportedCollectionsInterface(typeLiteral)) {
+        } else if (isSupportedCollectionsInterface(typeLiteral)) {
             return new CollectionsRegistryBindingBuilderFactory();
+        } else {
+            return new SimpleRegistryBindingBuilderFactory();
         }
-        return new SimpleRegistryBindingBuilderFactory();
     }
 
     private <T> boolean isBlockingSupplier(TypeLiteral<T> typeLiteral) {
@@ -272,48 +269,36 @@ public abstract class AbstractRegistryModule extends AbstractModule {
     private class SimpleRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
         @Override
         public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new RegistryBindingBuilder<>(binder(), typeLiteral);
+            return new RegistryAnnotatedBindingBuilderImpl<>(binder(), typeLiteral);
         }
 
         @Override
         public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new RegistryBindingBuilder<>(binder(), key);
-        }
-    }
-
-    private class SupplierRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
-        @Override
-        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new SupplierRegistryBindingBuilder<>(binder(), typeLiteral);
-        }
-
-        @Override
-        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new SupplierRegistryBindingBuilder<>(binder(), key);
+            return new RegistryAnnotatedBindingBuilderImpl<>(binder(), key);
         }
     }
 
     private class BlockingSupplierRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
         @Override
         public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new BlockingSupplierRegistryBindingBuilder<>(binder(), typeLiteral);
+            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder(), typeLiteral);
         }
 
         @Override
         public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new BlockingSupplierRegistryBindingBuilder<>(binder(), key);
+            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder(), key);
         }
     }
 
     private class CollectionsRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
         @Override
         public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new CollectionsRegistryBindingBuilder<>(binder(), typeLiteral);
+            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder(), typeLiteral);
         }
 
         @Override
         public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new CollectionsRegistryBindingBuilder<>(binder(), key);
+            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder(), key);
         }
     }
 }

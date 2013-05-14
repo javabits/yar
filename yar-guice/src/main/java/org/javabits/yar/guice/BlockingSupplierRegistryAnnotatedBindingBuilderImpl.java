@@ -16,12 +16,14 @@
 
 package org.javabits.yar.guice;
 
-import com.google.inject.*;
+import com.google.inject.Binder;
+import com.google.inject.Inject;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-
-import static org.javabits.yar.guice.SupplierRegistryBindingBuilder.checkParameterizedType;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO comment
@@ -30,22 +32,27 @@ import static org.javabits.yar.guice.SupplierRegistryBindingBuilder.checkParamet
  *
  * @author Romain Gilles
  */
-public class BlockingSupplierRegistryBindingBuilder<T> extends RegistryBindingBuilder<T> {
+public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBindingBuilderImpl<T> {
 
-    public BlockingSupplierRegistryBindingBuilder(Binder binder, Key<T> key) {
+    public BlockingSupplierRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key) {
         super(binder, key);
     }
 
-    public BlockingSupplierRegistryBindingBuilder(Binder binder, TypeLiteral<T> typeLiteral) {
+    public BlockingSupplierRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral) {
         super(binder, typeLiteral);
     }
 
     @Override
-    Provider<T> newRegistryProvider() {
+    RegistryProvider<T> newRegistryProvider() {
         return new BlockingSupplierRegistryProvider<>(key());
     }
-    //TODO refactor it to make merge with RegistryProvider class hierarchy!
-    static class BlockingSupplierRegistryProvider<T> implements Provider<T> {
+
+    @Override
+    RegistryProvider<? extends T> newRegistryProvider(long timeout, TimeUnit unit) {
+        return newRegistryProvider();
+    }
+
+    static class BlockingSupplierRegistryProvider<T> implements RegistryProvider<T> {
 
         private final Key<T> key;
         private org.javabits.yar.BlockingSupplierRegistry registry;
@@ -78,5 +85,21 @@ public class BlockingSupplierRegistryBindingBuilder<T> extends RegistryBindingBu
         public void setRegistry(org.javabits.yar.BlockingSupplierRegistry registry) {
             this.registry = registry;
         }
+
+        @Override
+        public void noWait() {
+            //has no sens here in this context => nothing to do
+        }
     }
+
+    static void checkParameterizedType(Type type) {
+        if (!isParameterizedType(type)) {
+            throw new IllegalArgumentException("Supplier type must be parameterized: " + type);
+        }
+    }
+
+    static boolean isParameterizedType(Type type) {
+        return type instanceof ParameterizedType;
+    }
+
 }

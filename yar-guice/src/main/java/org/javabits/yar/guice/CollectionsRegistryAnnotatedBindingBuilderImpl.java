@@ -19,14 +19,19 @@ package org.javabits.yar.guice;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.inject.Binder;
+import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import org.javabits.yar.Registry;
 import org.javabits.yar.Supplier;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * TODO comment
@@ -35,25 +40,31 @@ import java.util.List;
  *
  * @author Romain Gilles
  */
-public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder<T> {
-    public CollectionsRegistryBindingBuilder(Binder binder, Key<T> key) {
+public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBindingBuilderImpl<T> {
+    public CollectionsRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key) {
         super(binder, key);
     }
 
-    public CollectionsRegistryBindingBuilder(Binder binder, TypeLiteral<T> typeLiteral) {
+    public CollectionsRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral) {
         super(binder, typeLiteral);
     }
 
     @Override
-    RegistryBindingBuilder.RegistryProvider<T> newRegistryProvider() {
+    RegistryProvider<T> newRegistryProvider() {
         return new CollectionsRegistryProvider<>(key(), isLaxTypeBinding());
     }
 
-    private static class CollectionsRegistryProvider<T> extends RegistryBindingBuilder.RegistryProvider<T> {
-        private final boolean laxTypeBinding;
+    @Override
+    RegistryProvider<? extends T> newRegistryProvider(long timeout, TimeUnit unit) {
+        return newRegistryProvider();
+    }
 
+    private static class CollectionsRegistryProvider<T> implements RegistryProvider<T> {
+        private final boolean laxTypeBinding;
+        private final Key<T> key;
+        private Registry registry;
         private CollectionsRegistryProvider(Key<T> key, boolean laxTypeBinding) {
-            super(key);
+            this.key = key;
             this.laxTypeBinding = laxTypeBinding;
         }
 
@@ -73,16 +84,12 @@ public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder
         }
 
         private List getAll() {
-            if (laxTypeBinding) {
-                return registry().getAll(Reflections.getRawType(getCollectionsTypeParameter()));
-            } else {
-                return registry().getAll(GuiceId.of(Key.get(getCollectionsTypeParameter())));
-            }
+            return registry().getAll(GuiceId.of(Key.get(getCollectionsTypeParameter())));
         }
 
         @SuppressWarnings("unchecked")
         private Type getCollectionsTypeParameter() {
-            Type type = key().getTypeLiteral().getType();
+            Type type = key.getTypeLiteral().getType();
             checkParameterizedType(type);
             ParameterizedType parameterizedType = (ParameterizedType) type;
             Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
@@ -93,6 +100,20 @@ public class CollectionsRegistryBindingBuilder<T> extends RegistryBindingBuilder
             return actualTypeArguments[0];
         }
 
+        Registry registry() {
+            return requireNonNull(registry, "registry");
+        }
+
+        @Inject
+        public void setRegistry(Registry registry) {
+            this.registry = registry;
+        }
+
+
+        @Override
+        public void noWait() {
+            //nothing to do here not relevant in this case
+        }
     }
 
     static void checkParameterizedType(Type type) {

@@ -17,7 +17,8 @@
 package org.javabits.yar.guice;
 
 import com.google.inject.binder.LinkedBindingBuilder;
-import com.google.inject.binder.ScopedBindingBuilder;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO comment
@@ -27,6 +28,15 @@ import com.google.inject.binder.ScopedBindingBuilder;
  * @author Romain Gilles
  */
 public interface RegistryLinkedBindingBuilder<T> extends LinkedBindingBuilder<T> {
+    /**
+     * Bind the current key to the Yar registry.
+     * By default this binding produce a provider that will block in when you call
+     * the {@code Provider#get()) method until the default timeout is reach.
+     * You can skip this default blocking behavior by calling {@link org.javabits.yar.guice.RegistryBindingBuilder#noWait()
+     * noWait()} method on the return type.
+     * @return {@code RegistryBindingBuilder} instance to skip default blocking behavior if needed.
+     */
+    RegistryBindingBuilder toRegistry();
 
-    ScopedBindingBuilder toRegistry();
+    void toRegistry(long timeout, TimeUnit unit);
 }

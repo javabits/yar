@@ -110,8 +110,7 @@ public final class GuiceYars {
         Map<Key<?>, Binding<?>> allBindings = injector.getAllBindings();
         for (Map.Entry<Key<?>, Binding<?>> bindingEntry : allBindings.entrySet()) {
             Provider<?> provider = bindingEntry.getValue().getProvider();
-            if (provider instanceof RegistryBindingBuilder.RegistryProvider
-                    || provider instanceof BlockingSupplierRegistryBindingBuilder.BlockingSupplierRegistryProvider) {
+            if (provider instanceof RegistryProvider) {
                 requiredSuppliers.add(GuiceId.of(bindingEntry.getKey()));
             }
         }
