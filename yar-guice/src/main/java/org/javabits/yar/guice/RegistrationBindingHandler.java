@@ -107,6 +107,9 @@ public class RegistrationBindingHandler implements RegistrationHandler {
     @Override
     public void clear() {
         List<Registration<?>> registrations = this.registrations;
+        if (registrations == null) {
+            return;
+        }
         for (Registration<?> registration : registrations) {
             registry.remove(registration);
         }

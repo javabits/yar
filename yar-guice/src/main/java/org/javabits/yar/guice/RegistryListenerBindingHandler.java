@@ -102,6 +102,9 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     @Override
     public void clear() {
         List<Pair<Registration, Watcher>> listenerRegistrations = this.listenerRegistrations;
+        if (listenerRegistrations == null) {
+            return;
+        }
         for (Pair<Registration, Watcher> listenerRegistration : listenerRegistrations) {
             registry.removeWatcher(listenerRegistration.left());
         }
