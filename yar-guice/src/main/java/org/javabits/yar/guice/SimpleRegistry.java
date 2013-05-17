@@ -25,6 +25,7 @@ import com.google.inject.Key;
 import org.javabits.yar.*;
 
 import javax.annotation.Nullable;
+import java.lang.InterruptedException;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;

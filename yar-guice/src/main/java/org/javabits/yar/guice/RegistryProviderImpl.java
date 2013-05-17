@@ -10,10 +10,11 @@ import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.google.common.base.Throwables.propagate;
 import static java.util.Objects.requireNonNull;
-import static org.javabits.yar.guice.BlockingSupplierRegistry.DEFAULT_TIMEOUT;
-import static org.javabits.yar.guice.BlockingSupplierRegistry.DEFAULT_TIME_UNIT;
+import static org.javabits.yar.InterruptedException.newInterruptedException;
+import static org.javabits.yar.TimeoutException.newTimeoutException;
+import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.DEFAULT_TIMEOUT;
+import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.DEFAULT_TIME_UNIT;
 
 /**
  * TODO comment
@@ -85,10 +86,9 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
             try {
                 return supplier.getSync(timeout, timeUnit);
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw propagate(e);
+                throw newInterruptedException(e);
             } catch (TimeoutException e) {
-                throw propagate(e);
+                throw newTimeoutException(timeout, timeUnit, e);
             }
         }
     }

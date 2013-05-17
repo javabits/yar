@@ -25,7 +25,7 @@ import org.javabits.yar.guice.RegistryListenerHandler;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
-import static org.javabits.yar.guice.GuiceYars.newRegistryDeclarationModule;
+import static org.javabits.yar.guice.YarGuices.newRegistryDeclarationModule;
 
 /**
  * This class provides utility methods to help you to handle Guice Injector creation.
@@ -35,11 +35,11 @@ import static org.javabits.yar.guice.GuiceYars.newRegistryDeclarationModule;
  *
  * @author Romain Gilles
  */
-public final class OSGiYars {
+public final class YarOSGis {
 
     private static final String SERVICE_REGISTRY_ERROR_MESSAGE = "no BlockingSupplierRegistry service reference found in OSGi service registry";
 
-    private OSGiYars() {
+    private YarOSGis() {
         throw new AssertionError("not for you!");
     }
 

@@ -16,12 +16,12 @@
 
 package org.javabits.yar.guice.osgi.internal;
 
+import org.javabits.yar.guice.YarGuices;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Registry;
 import org.javabits.yar.guice.ExecutionStrategy;
-import org.javabits.yar.guice.GuiceYars;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.javabits.yar.guice.ExecutionStrategy.ASYNCHRONOUS;
@@ -67,7 +67,7 @@ public class Activator implements BundleActivator {
     }
 
     private BlockingSupplierRegistry newRegistry(BundleContext bundleContext) {
-        return GuiceYars.newLoadingCacheBasedBlockingSupplierRegistry(getDefaultTimeout(bundleContext), getExecutionStrategy(bundleContext));
+        return YarGuices.newLoadingCacheBasedBlockingSupplierRegistry(getDefaultTimeout(bundleContext), getExecutionStrategy(bundleContext));
     }
 
     private ExecutionStrategy getExecutionStrategy(BundleContext bundleContext) {

@@ -1,10 +1,11 @@
 package org.javabits.yar;
 
+import com.google.common.util.concurrent.ListenableFuture;
+
+import javax.annotation.Nullable;
+import java.lang.InterruptedException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javax.annotation.Nullable;
-
-import com.google.common.util.concurrent.ListenableFuture;
 
 /**
  * Date: 2/28/13
@@ -14,7 +15,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 public interface BlockingSupplier<T> extends Supplier<T> {
     /**
      * Retrieves the instance of {@code T} from the registry.
-     * <p>
+     * <p/>
      * This is a non-blocking call.
      *
      * @return the instance of {@code T}, or <code>null</code> if no corresponding registration.
@@ -28,8 +29,7 @@ public interface BlockingSupplier<T> extends Supplier<T> {
      * the call will block until the service is registered or the thread is interrupted.
      *
      * @return the instance of {@code T}.
-     * @throws InterruptedException
-     *             if the thread was interrupted while waiting.
+     * @throws InterruptedException if the thread was interrupted while waiting.
      */
     T getSync() throws InterruptedException;
 
@@ -38,15 +38,11 @@ public interface BlockingSupplier<T> extends Supplier<T> {
      * the call will block until the service is registered or the thread is interrupted, or the
      * timeout has expired.
      *
-     * @param timeout
-     *            the maximum time to wait
-     * @param unit
-     *            the time unit of the timeout argument
+     * @param timeout the maximum time to wait
+     * @param unit    the time unit of the timeout argument
      * @return the instance of {@code T}.
-     * @throws InterruptedException
-     *             if the thread was interrupted while waiting.
-     * @throws TimeoutException
-     *             if the wait timed out.
+     * @throws InterruptedException if the thread was interrupted while waiting.
+     * @throws TimeoutException     if the wait timed out.
      */
     T getSync(long timeout, TimeUnit unit) throws InterruptedException, TimeoutException;
 

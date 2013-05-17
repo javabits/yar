@@ -30,7 +30,7 @@ import javax.inject.Inject;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.ops4j.pax.exam.CoreOptions.*;
-import static org.javabits.yar.guice.osgi.OSGiYars.newInjector;
+import static org.javabits.yar.guice.osgi.YarOSGis.newInjector;
 
 /**
  * TODO comment

@@ -18,6 +18,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.nullValue;
+import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.newBlockingSupplierRegistry;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -28,6 +29,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import javax.inject.Provider;
 
 import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.BlockingSupplierRegistry;
 import org.junit.Test;
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -36,11 +38,11 @@ import com.google.common.util.concurrent.ListenableFuture;
  *
  * @author Romain Gilles
  */
-public class BlockingSupplierRegistryTest {
+public class BlockingSupplierRegistryImplTest {
 
     @Test
     public void testNonBlockingGet() {
-        BlockingSupplierRegistry registry = BlockingSupplierRegistry.newBlockingSupplierRegistry();
+        BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         BlockingSupplier<MyService> supplier=registry.get(MyService.class);
 
         assertNotNull(supplier);
@@ -59,7 +61,7 @@ public class BlockingSupplierRegistryTest {
 
     @Test
     public void testGetSync() throws InterruptedException {
-        final BlockingSupplierRegistry registry = BlockingSupplierRegistry.newBlockingSupplierRegistry();
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         final MyServiceImpl myService = new MyServiceImpl();
         final Object[] myServiceSupplier = new Object[1];
         final Lock lock = new ReentrantLock();
@@ -99,7 +101,7 @@ public class BlockingSupplierRegistryTest {
 
     @Test
     public void testGetAsync() throws Exception {
-        final BlockingSupplierRegistry registry = BlockingSupplierRegistry.newBlockingSupplierRegistry();
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         final MyServiceImpl myService = new MyServiceImpl();
         final Lock lock = new ReentrantLock();
         final ListenableFuture<MyService>[] listenableFuture = new ListenableFuture[1];

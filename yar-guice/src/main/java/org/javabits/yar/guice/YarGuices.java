@@ -32,8 +32,8 @@ import java.util.Map;
  *
  * @author Romain Gilles
  */
-public final class GuiceYars {
-    private GuiceYars() {
+public final class YarGuices {
+    private YarGuices() {
         throw new AssertionError("not for you");
     }
 
@@ -68,19 +68,19 @@ public final class GuiceYars {
     }
 
     public static org.javabits.yar.BlockingSupplierRegistry newLoadingCacheBasedBlockingSupplierRegistry(long defaultTimeoutInMillis) {
-        return BlockingSupplierRegistry.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis);
+        return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis);
     }
 
     public static org.javabits.yar.BlockingSupplierRegistry newLoadingCacheBasedBlockingSupplierRegistry(long defaultTimeoutInMillis, ExecutionStrategy executionStrategy) {
-        return BlockingSupplierRegistry.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis, executionStrategy);
+        return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis, executionStrategy);
     }
 
     public static org.javabits.yar.BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry() {
-        return BlockingSupplierRegistry.newLoadingCacheBlockingSupplierRegistry();
+        return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry();
     }
 
     public static org.javabits.yar.BlockingSupplierRegistry newMultimapBasedBlockingSupplierRegistry(long defaultTimeoutInMillis) {
-        return BlockingSupplierRegistry.newMultimapBlockingSupplierRegistry(defaultTimeoutInMillis);
+        return BlockingSupplierRegistryImpl.newMultimapBlockingSupplierRegistry(defaultTimeoutInMillis);
     }
 
     public static Module newRegistryDeclarationModule(final Registry registry) {

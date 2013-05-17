@@ -16,13 +16,14 @@
 
 package org.javabits.yar.guice;
 
-import org.javabits.yar.Id;
-import org.javabits.yar.Supplier;
+import org.javabits.yar.*;
 
 import javax.annotation.Nullable;
+import java.lang.InterruptedException;
 import java.util.concurrent.TimeUnit;
 
 import static org.javabits.yar.IdMatchers.newKeyMatcher;
+import static org.javabits.yar.InterruptedException.newInterruptedException;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -125,7 +126,7 @@ public class BlockingRegistry extends SimpleRegistry implements org.javabits.yar
                 }
                 return delegate.get();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
+                throw newInterruptedException(e);
             } finally {
                 writeLock.unlock();
             }
@@ -155,7 +156,8 @@ public class BlockingRegistry extends SimpleRegistry implements org.javabits.yar
                 }
                 return delegate.get();
             } catch (InterruptedException e) {
-                throw new RuntimeException(e); // TODO see what to do with the interrupted exception!!!
+                Thread.currentThread().interrupt();
+                throw newInterruptedException(e);
             } finally {
                 writeLock.unlock();
             }

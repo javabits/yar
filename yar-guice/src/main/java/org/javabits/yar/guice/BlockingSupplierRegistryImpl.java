@@ -34,29 +34,19 @@ import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMult
  *
  * @author Romain Gilles
  */
-public class BlockingSupplierRegistry extends SimpleRegistry implements org.javabits.yar.BlockingSupplierRegistry {
+class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabits.yar.BlockingSupplierRegistry {
     public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
     public static final long DEFAULT_TIMEOUT = 0L;
 
-    private final long defaultTimeout;
-    private final TimeUnit defaultTimeUnit;
-
-
-    private BlockingSupplierRegistry(long defaultTimeout, TimeUnit defaultTimeUnit) {
-        this.defaultTimeout = defaultTimeout;
-        this.defaultTimeUnit = defaultTimeUnit;
+    private BlockingSupplierRegistryImpl(long defaultTimeout, TimeUnit defaultTimeUnit) {
     }
 
-    private BlockingSupplierRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
+    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
         super(registrationContainer);
-        this.defaultTimeout = defaultTimeout;
-        defaultTimeUnit = DEFAULT_TIME_UNIT;
     }
 
-    private BlockingSupplierRegistry(WatchableRegistrationContainer registrationContainer, long defaultTimeout, TimeUnit defaultTimeUnit) {
+    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long defaultTimeout, TimeUnit defaultTimeUnit) {
         super(registrationContainer);
-        this.defaultTimeout = defaultTimeout;
-        this.defaultTimeUnit = defaultTimeUnit;
     }
 
     @Override
@@ -76,35 +66,35 @@ public class BlockingSupplierRegistry extends SimpleRegistry implements org.java
         return supplier;
     }
 
-    static BlockingSupplierRegistry newMultimapBlockingSupplierRegistry() {
+    static BlockingSupplierRegistryImpl newMultimapBlockingSupplierRegistry() {
         return newMultimapBlockingSupplierRegistry(DEFAULT_TIMEOUT);
     }
 
-    static BlockingSupplierRegistry newMultimapBlockingSupplierRegistry(long defaultTimeout) {
-        return new BlockingSupplierRegistry(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
+    static BlockingSupplierRegistryImpl newMultimapBlockingSupplierRegistry(long defaultTimeout) {
+        return new BlockingSupplierRegistryImpl(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
     }
 
-    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry() {
+    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry() {
         return newLoadingCacheBlockingSupplierRegistry(SYNCHRONOUS);
     }
 
-    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
+    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
         return newLoadingCacheBlockingSupplierRegistry(DEFAULT_TIMEOUT, executionStrategy);
     }
 
-    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(long defaultTimeout) {
+    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(long defaultTimeout) {
         return newLoadingCacheBlockingSupplierRegistry(defaultTimeout, SYNCHRONOUS);
     }
 
-    static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(long defaultTimeout, ExecutionStrategy executionStrategy) {
-        return new BlockingSupplierRegistry(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), defaultTimeout);
+    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(long defaultTimeout, ExecutionStrategy executionStrategy) {
+        return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), defaultTimeout);
     }
 
-    public static BlockingSupplierRegistry newBlockingSupplierRegistry() {
+    public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry() {
         return newBlockingSupplierRegistry(DEFAULT_TIMEOUT, DEFAULT_TIME_UNIT);
     }
 
-    public static BlockingSupplierRegistry newBlockingSupplierRegistry(long defaultTimeout, TimeUnit defaultTimeUnit) {
-        return new BlockingSupplierRegistry(defaultTimeout, defaultTimeUnit);
+    public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry(long defaultTimeout, TimeUnit defaultTimeUnit) {
+        return new BlockingSupplierRegistryImpl(defaultTimeout, defaultTimeUnit);
     }
 }

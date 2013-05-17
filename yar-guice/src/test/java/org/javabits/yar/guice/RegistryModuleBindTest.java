@@ -22,7 +22,6 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import org.javabits.yar.*;
 import org.javabits.yar.BlockingSupplierRegistry;
-import org.junit.Assert;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -31,7 +30,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.javabits.yar.guice.GuiceYars.*;
+import static org.javabits.yar.guice.YarGuices.*;
 
 
 /**
@@ -121,7 +120,7 @@ public class RegistryModuleBindTest {
 
     private Module createRegistryDeclarationModuleWithSimpleRegistry() {
         final Registry registry = createLoadingCacheRegistryWithMyInterfaceSupplier();
-        return GuiceYars.newRegistryDeclarationModule(registry);
+        return YarGuices.newRegistryDeclarationModule(registry);
     }
 
     private Registry createLoadingCacheRegistryWithMyInterfaceSupplier() {
