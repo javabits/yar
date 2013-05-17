@@ -17,6 +17,7 @@
 package org.javabits.yar;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Date: 3/5/13
@@ -26,6 +27,8 @@ import javax.annotation.Nullable;
  * @since 1.0
  */
 public interface BlockingSupplierRegistry extends Registry {
+    TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MINUTES;
+    long DEFAULT_TIMEOUT = 5L;
 
     @Nullable
     @Override

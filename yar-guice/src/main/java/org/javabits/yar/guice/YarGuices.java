@@ -18,6 +18,7 @@ package org.javabits.yar.guice;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.*;
+import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registry;
 
@@ -49,38 +50,16 @@ public final class YarGuices {
         return SimpleRegistry.newMultimapRegistry();
     }
 
-
-    public static org.javabits.yar.BlockingRegistry newBlockingRegistry(long defaultTimeoutInMillis) {
-        return newLoadingCacheBasedBlockingRegistry(defaultTimeoutInMillis);
+    public static BlockingSupplierRegistry newMultimapBlockingSupplierRegistry() {
+        return BlockingSupplierRegistryImpl.newMultimapBlockingSupplierRegistry();
     }
 
-    public static org.javabits.yar.BlockingRegistry newLoadingCacheBasedBlockingRegistry(long defaultTimeoutInMillis) {
-        return BlockingRegistry.newLoadingCacheBlockingRegistry(defaultTimeoutInMillis);
-    }
-
-    public static org.javabits.yar.BlockingRegistry newMultimapBasedBlockingRegistry(long defaultTimeoutInMillis) {
-        return BlockingRegistry.newMultimapBlockingRegistry(defaultTimeoutInMillis);
-    }
-
-
-    public static org.javabits.yar.BlockingSupplierRegistry newBlockingSupplierRegistry(long defaultTimeoutInMillis) {
-        return newLoadingCacheBasedBlockingSupplierRegistry(defaultTimeoutInMillis);
-    }
-
-    public static org.javabits.yar.BlockingSupplierRegistry newLoadingCacheBasedBlockingSupplierRegistry(long defaultTimeoutInMillis) {
-        return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis);
-    }
-
-    public static org.javabits.yar.BlockingSupplierRegistry newLoadingCacheBasedBlockingSupplierRegistry(long defaultTimeoutInMillis, ExecutionStrategy executionStrategy) {
-        return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(defaultTimeoutInMillis, executionStrategy);
-    }
-
-    public static org.javabits.yar.BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry() {
+    public static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry() {
         return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry();
     }
 
-    public static org.javabits.yar.BlockingSupplierRegistry newMultimapBasedBlockingSupplierRegistry(long defaultTimeoutInMillis) {
-        return BlockingSupplierRegistryImpl.newMultimapBlockingSupplierRegistry(defaultTimeoutInMillis);
+    public static BlockingSupplierRegistry newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
+        return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(executionStrategy);
     }
 
     public static Module newRegistryDeclarationModule(final Registry registry) {
@@ -92,11 +71,11 @@ public final class YarGuices {
         };
     }
 
-    public static Module newRegistryDeclarationModule(final org.javabits.yar.BlockingSupplierRegistry registry) {
+    public static Module newRegistryDeclarationModule(final BlockingSupplierRegistry registry) {
         return new AbstractModule() {
             @Override
             protected void configure() {
-                Key<org.javabits.yar.BlockingSupplierRegistry> blockingSupplierRegistryKey = Key.get(org.javabits.yar.BlockingSupplierRegistry.class);
+                Key<BlockingSupplierRegistry> blockingSupplierRegistryKey = Key.get(BlockingSupplierRegistry.class);
                 bind(Registry.class).to(blockingSupplierRegistryKey);
                 bind(blockingSupplierRegistryKey).toInstance(registry);
             }

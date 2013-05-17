@@ -67,7 +67,7 @@ public class Activator implements BundleActivator {
     }
 
     private BlockingSupplierRegistry newRegistry(BundleContext bundleContext) {
-        return YarGuices.newLoadingCacheBasedBlockingSupplierRegistry(getDefaultTimeout(bundleContext), getExecutionStrategy(bundleContext));
+        return YarGuices.newLoadingCacheBlockingSupplierRegistry(getExecutionStrategy(bundleContext));
     }
 
     private ExecutionStrategy getExecutionStrategy(BundleContext bundleContext) {
@@ -76,15 +76,6 @@ public class Activator implements BundleActivator {
             return SYNCHRONOUS;
         } else {
             return DEFAULT_EXECUTION_STRATEGY;
-        }
-    }
-
-    private long getDefaultTimeout(BundleContext bundleContext) {
-        String timeout = bundleContext.getProperty(YAR_DEFAULT_TIMEOUT);
-        if (timeout != null) {
-            return Long.parseLong(timeout);
-        } else {
-            return DEFAULT_TIMEOUT;
         }
     }
 

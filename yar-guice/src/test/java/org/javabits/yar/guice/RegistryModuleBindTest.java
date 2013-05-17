@@ -27,9 +27,11 @@ import org.junit.Test;
 import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.newBlockingSupplierRegistry;
 import static org.javabits.yar.guice.YarGuices.*;
 
 
@@ -43,13 +45,13 @@ import static org.javabits.yar.guice.YarGuices.*;
 public class RegistryModuleBindTest {
     @Test
     public void testBind() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(100);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         putMyInterfaceSupplierToRegistry(registry);
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(MyInterface.class).toRegistry();
+                bind(MyInterface.class).toRegistry(100, TimeUnit.MICROSECONDS);
             }
         });
         assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
@@ -59,7 +61,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindNoWait() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(100);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
@@ -72,7 +74,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindWaitWithException() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(1);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
@@ -85,7 +87,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindWithAnnotation() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(100);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         final Named test = Names.named("test");
         final Key<MyInterface> key = Key.get(MyInterface.class, test);
@@ -94,7 +96,7 @@ public class RegistryModuleBindTest {
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(key).toRegistry();
+                bind(key).toRegistry(100, TimeUnit.MICROSECONDS);
             }
         });
         assertThat(injector.getInstance(key), is(not(nullValue())));
@@ -165,7 +167,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindSupplier() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(100);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         Injector injector = createSupplierBindingInjector(module);
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
@@ -174,7 +176,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindSupplierWithAnnotation() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(100);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         final Named test = Names.named("test");
         final Key<MyInterface> key = Key.get(MyInterface.class, test);
@@ -185,7 +187,7 @@ public class RegistryModuleBindTest {
         RegistryModule supplierBindingRegistryModule = new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(supplierKey).toRegistry();
+                bind(supplierKey).toRegistry(100, TimeUnit.MICROSECONDS);
             }
         };
         Injector injector = createInjector(module, supplierBindingRegistryModule);
@@ -198,14 +200,14 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindGuavaSupplier() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(100);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         final TypeLiteral<com.google.common.base.Supplier<MyInterface>> supplierTypeLiteral = new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
         };
         RegistryModule supplierBindingRegistryModule = new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(supplierTypeLiteral).toRegistry();
+                bind(supplierTypeLiteral).toRegistry(100, TimeUnit.MICROSECONDS);
             }
         };
         Injector injector = createInjector(module, supplierBindingRegistryModule);
@@ -220,18 +222,9 @@ public class RegistryModuleBindTest {
         })), is(not(nullValue())));
     }
 
-    private <T extends Registry> Module createModuleRegistryDeclaration(final T registry, final Class<T> clazz) {
-        return new AbstractModule() {
-            @Override
-            protected void configure() {
-                bind(clazz).toInstance(registry);
-            }
-        };
-    }
-
     @Test
     public void testBindBlockingSupplier() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry(100);
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         putMyInterfaceSupplierToRegistry(registry);
         Injector injector = createSupplierBindingInjector(module);

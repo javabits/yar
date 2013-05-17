@@ -35,17 +35,8 @@ import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMult
  * @author Romain Gilles
  */
 class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabits.yar.BlockingSupplierRegistry {
-    public static final TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
-    public static final long DEFAULT_TIMEOUT = 0L;
 
-    private BlockingSupplierRegistryImpl(long defaultTimeout, TimeUnit defaultTimeUnit) {
-    }
-
-    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long defaultTimeout) {
-        super(registrationContainer);
-    }
-
-    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long defaultTimeout, TimeUnit defaultTimeUnit) {
+    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer) {
         super(registrationContainer);
     }
 
@@ -66,12 +57,9 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
         return supplier;
     }
 
-    static BlockingSupplierRegistryImpl newMultimapBlockingSupplierRegistry() {
-        return newMultimapBlockingSupplierRegistry(DEFAULT_TIMEOUT);
-    }
 
-    static BlockingSupplierRegistryImpl newMultimapBlockingSupplierRegistry(long defaultTimeout) {
-        return new BlockingSupplierRegistryImpl(newMultimapGuiceWatchableRegistrationContainer(), defaultTimeout);
+    static BlockingSupplierRegistryImpl newMultimapBlockingSupplierRegistry() {
+        return new BlockingSupplierRegistryImpl(newMultimapGuiceWatchableRegistrationContainer());
     }
 
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry() {
@@ -79,22 +67,10 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
     }
 
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
-        return newLoadingCacheBlockingSupplierRegistry(DEFAULT_TIMEOUT, executionStrategy);
-    }
-
-    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(long defaultTimeout) {
-        return newLoadingCacheBlockingSupplierRegistry(defaultTimeout, SYNCHRONOUS);
-    }
-
-    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(long defaultTimeout, ExecutionStrategy executionStrategy) {
-        return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), defaultTimeout);
+        return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy));
     }
 
     public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry() {
-        return newBlockingSupplierRegistry(DEFAULT_TIMEOUT, DEFAULT_TIME_UNIT);
-    }
-
-    public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry(long defaultTimeout, TimeUnit defaultTimeUnit) {
-        return new BlockingSupplierRegistryImpl(defaultTimeout, defaultTimeUnit);
+        return newLoadingCacheBlockingSupplierRegistry();
     }
 }
