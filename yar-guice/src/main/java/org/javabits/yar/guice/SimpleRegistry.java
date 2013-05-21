@@ -21,6 +21,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
+import com.google.common.reflect.TypeToken;
 import com.google.inject.Key;
 import org.javabits.yar.*;
 
@@ -100,6 +101,12 @@ public class SimpleRegistry implements Registry {
         return transformToSuppliers(pairs);
 
     }
+
+    @Override
+    public <T> List<Supplier<T>> getAll(TypeToken<T> typeToken) {
+        return viewOfEntries(registrationContainer.getAll(typeToken.getType()));
+    }
+
 
     private static <T> ImmutableList<Supplier<T>> transformToSuppliers(List<SupplierRegistration<T>> pairs) {
         return ImmutableList.copyOf(transform(pairs, new Function<SupplierRegistration<T>, Supplier<T>>() {
