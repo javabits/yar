@@ -56,9 +56,6 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     private final Container<Type, WatcherRegistration<?>> watcherRegistry;
     private final ExecutionStrategy executor;
 
-//    public GuiceWatchableRegistrationContainer() {
-//        this(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer());
-//    }
 
     public GuiceWatchableRegistrationContainer() {
         this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), SYNCHRONOUS);
@@ -195,6 +192,17 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     @Override
     public boolean remove(WatcherRegistration<?> watcherRegistration) {
         return watcherRegistry.remove(getRegistryKey(watcherRegistration), watcherRegistration);
+    }
+
+    @Override
+    public boolean removeAll(Type type) {
+        List<SupplierRegistration<?>> all = getAll(type);
+        for (SupplierRegistration<?> supplierRegistration: all) {
+            remove(supplierRegistration);
+        }
+        watcherRegistry.invalidate(type);
+        supplierRegistry.invalidate(type);
+        return true;
     }
 
     private Type getRegistryKey(Registration<?> watcherRegistration) {

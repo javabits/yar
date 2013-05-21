@@ -50,7 +50,7 @@ public interface Registry {
 
     void remove(Registration<?> registration);
 
-    <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<Supplier<T>> watcher);
+    <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<T> watcher);
 
     void removeWatcher(Registration<?> watcherRegistration);
 }

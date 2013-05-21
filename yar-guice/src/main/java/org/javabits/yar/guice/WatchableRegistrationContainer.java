@@ -51,4 +51,6 @@ public interface WatchableRegistrationContainer {
     <T> boolean add(WatcherRegistration<T> watcherRegistration);
 
     boolean remove(WatcherRegistration<?> watcherRegistration);
+
+    boolean removeAll(Type type);
 }

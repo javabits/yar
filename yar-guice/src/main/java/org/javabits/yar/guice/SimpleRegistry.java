@@ -47,7 +47,7 @@ import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
  *
  * @author Romain Gilles
  */
-public class SimpleRegistry implements Registry {
+public class SimpleRegistry implements Registry, RegistryHook {
 
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
@@ -173,7 +173,7 @@ public class SimpleRegistry implements Registry {
         try {
             registryActionQueue.put(action);
             if (!action.asFuture().get()) {
-                throw new RuntimeException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.key()));
+                throw new RuntimeException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()));
             }
         } catch (InterruptedException | ExecutionException e) {
             //TODO try again??? on interrupted?
@@ -195,7 +195,7 @@ public class SimpleRegistry implements Registry {
     }
 
     @Override
-    public <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<Supplier<T>> watcher) {
+    public <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<T> watcher) {
         checkKeyMatcher(idMatcher, "idMatcher");
         WatcherRegistration<T> watcherRegistration = newWatcherRegistration(idMatcher, watcher, referenceQueue, this);
         return addWatcherRegistration(watcherRegistration);
@@ -224,8 +224,14 @@ public class SimpleRegistry implements Registry {
         executeActionOnRegistry(action);
     }
 
+    @Override
+    public void removeAll(Type type) {
+        RegistryAction removeAllAction = new RemoveAll(type);
+        executeActionOnRegistry(removeAllAction);
+    }
+
     static interface RegistryAction {
-        Id<?> key();
+        Id<?> id();
 
         void execute(WatchableRegistrationContainer registrationContainer);
 
@@ -241,7 +247,7 @@ public class SimpleRegistry implements Registry {
         }
 
         @Override
-        public Id<?> key() {
+        public Id<?> id() {
             return registration.id();
         }
     }
@@ -315,6 +321,46 @@ public class SimpleRegistry implements Registry {
             @Override
             public Boolean call() throws Exception {
                 return registrationContainer.remove(registration);
+            }
+        }
+
+    }
+
+    static class RemoveAll implements RegistryAction {
+        private final FutureTask<Boolean> futureTask;
+        private final RemoveAllCall removeCall;
+        private final Type type;
+
+        RemoveAll(Type type) {
+            this.type = type;
+            removeCall = new RemoveAllCall();
+            this.futureTask = new FutureTask<>(removeCall);
+        }
+
+        @Override
+        public Id<?> id() {
+            return GuiceId.of(type, null);
+        }
+
+        @Override
+        public void execute(WatchableRegistrationContainer registrationContainer) {
+            removeCall.registrationContainer = registrationContainer;
+            removeCall.type = type;
+            futureTask.run();
+        }
+
+        @Override
+        public Future<Boolean> asFuture() {
+            return futureTask;
+        }
+
+        private static class RemoveAllCall implements Callable<Boolean> {
+            private WatchableRegistrationContainer registrationContainer;
+            private Type type;
+
+            @Override
+            public Boolean call() throws Exception {
+                return registrationContainer.removeAll(type);
             }
         }
 
@@ -399,13 +445,13 @@ public class SimpleRegistry implements Registry {
 
         @Override
         public void run() {
-            for (; ; ) {
-                try {
+            try {
+                for (; !Thread.currentThread().isInterrupted() ; ) {
                     RegistryAction registryAction = registryActionQueue.take();
                     registryAction.execute(registrationContainer);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
                 }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }

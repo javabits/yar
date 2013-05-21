@@ -101,6 +101,11 @@ public class CacheContainer<K, V> implements Container<K, V> {
     }
 
     @Override
+    public void invalidate(K key) {
+        loadingCache.invalidate(key);
+    }
+
+    @Override
     public Map<K, ? extends Collection<V>> asMap() {
         return loadingCache.asMap();
     }

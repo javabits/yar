@@ -40,4 +40,7 @@ public interface Container<K, V> {
     boolean remove(K key, V value);
 
     Map<K, ? extends Collection<V>> asMap();
+
+    public void invalidate(K key);
+
 }
