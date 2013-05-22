@@ -44,11 +44,11 @@ public interface WatchableRegistrationContainer {
     @Nullable
     <T> SupplierRegistration<T> getFirst(Id<T> id);
 
-    boolean put(SupplierRegistration<?> registration);
+    boolean put(SupplierRegistration<?> registration) throws InterruptedException;
 
-    boolean remove(SupplierRegistration<?> registration);
+    boolean remove(SupplierRegistration<?> registration) throws InterruptedException;
 
-    <T> boolean add(WatcherRegistration<T> watcherRegistration);
+    <T> boolean add(WatcherRegistration<T> watcherRegistration) throws InterruptedException;
 
     boolean remove(WatcherRegistration<?> watcherRegistration);
 }
