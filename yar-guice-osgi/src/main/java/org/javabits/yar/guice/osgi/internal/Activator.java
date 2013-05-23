@@ -24,8 +24,10 @@ import org.javabits.yar.Registry;
 import org.javabits.yar.guice.ExecutionStrategy;
 
 import static java.lang.Boolean.parseBoolean;
-import static org.javabits.yar.guice.ExecutionStrategy.ASYNCHRONOUS;
-import static org.javabits.yar.guice.ExecutionStrategy.SYNCHRONOUS;
+import static org.javabits.yar.guice.ExecutionStrategy.PARALLEL;
+import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
+import static org.javabits.yar.guice.YarGuices.Builder;
+import static org.javabits.yar.guice.YarGuices.builder;
 
 /**
  * This class is responsible to create the Yar registry and register it into the OSGi registry under
@@ -46,17 +48,18 @@ public class Activator implements BundleActivator {
      */
     public static final String YAR_DEFAULT_TIMEOUT = "yar.default.timeout";
     /**
-     * property use to lockup to activate synchronous execution strategy that operator can provide through bundle context.
+     * property use to lockup to activate serialized execution strategy that operator can provide through bundle context.
      */
-    public static final String YAR_SYNCHRONOUS_EXECUTION = "yar.synchronous.execution";
+    public static final String YAR_SERIALIZED_EXECUTION = "yar.serialized.execution";
     /**
      * Default timeout value of 5 min if no external property is provided by the framework.
+     * As specified in OSGi Blueprint container part.
      */
-    public static final long DEFAULT_TIMEOUT = 1000 * 60 * 5;
+    public static final long DEFAULT_TIMEOUT = Registry.DEFAULT_TIMEOUT;
     /**
      * Default timeout value of execution strategy if no external property is provided by the framework.
      */
-    public static final ExecutionStrategy DEFAULT_EXECUTION_STRATEGY = ASYNCHRONOUS;
+    public static final ExecutionStrategy DEFAULT_EXECUTION_STRATEGY = PARALLEL;
 
     private static final String[] REGISTRY_INTERFACES = new String[]{Registry.class.getName()
             , BlockingSupplierRegistry.class.getName()};
@@ -67,17 +70,31 @@ public class Activator implements BundleActivator {
     }
 
     private BlockingSupplierRegistry newRegistry(BundleContext bundleContext) {
-        return YarGuices.newLoadingCacheBlockingSupplierRegistry(getExecutionStrategy(bundleContext));
+        Builder builder = builder();
+        return builder.timeout(DEFAULT_TIMEOUT)
+                .timeUnit(Registry.DEFAULT_TIME_UNIT)
+                .listenerUpdateExecutionStrategy(getExecutionStrategy(bundleContext))
+                .build();
     }
 
     private ExecutionStrategy getExecutionStrategy(BundleContext bundleContext) {
-        String synchronously = bundleContext.getProperty(YAR_SYNCHRONOUS_EXECUTION);
+        String synchronously = bundleContext.getProperty(YAR_SERIALIZED_EXECUTION);
         if (synchronously != null && parseBoolean(synchronously)) {
-            return SYNCHRONOUS;
+            return SERIALIZED;
         } else {
             return DEFAULT_EXECUTION_STRATEGY;
         }
     }
+
+    private long getExecutionTimeout(BundleContext bundleContext) {
+        String synchronously = bundleContext.getProperty(YAR_DEFAULT_TIMEOUT);
+        if (synchronously != null) {
+            return Long.parseLong(synchronously);
+        } else {
+            return DEFAULT_TIMEOUT;
+        }
+    }
+
 
     @Override
     public void stop(BundleContext bundleContext) throws Exception {

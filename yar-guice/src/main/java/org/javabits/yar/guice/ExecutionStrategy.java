@@ -14,6 +14,8 @@
 
 package org.javabits.yar.guice;
 
+import com.google.common.util.concurrent.MoreExecutors;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
@@ -23,61 +25,26 @@ import java.util.logging.Logger;
 
 /**
  * TODO comment Date: 4/19/13 Time: 9:00 PM
- * 
+ *
  * @author Romain Gilles
  */
 public enum ExecutionStrategy {
 
-    SYNCHRONOUS {
-        @Override
-        void execute(Callable<Void> runnable) {
-            try {
-                runnable.call();
-            } catch (Exception e) {
-                logTaskExecutionException(runnable, e);
-            }
-        }
+    SERIALIZED {
+        private final ExecutorService executorService = MoreExecutors.sameThreadExecutor();
 
         @Override
-        void execute(Collection<Callable<Void>> runnables) {
-            for (Callable<Void> runnable : runnables) {
-                execute(runnable);
-            }
+        ExecutorService executorService() {
+            return executorService;
         }
     },
-    ASYNCHRONOUS {
-
+    PARALLEL {
         private final ExecutorService executorService = Executors
                 .newCachedThreadPool(new DaemonThreadFactory("registry"));
 
         @Override
-        void execute(Callable<Void> runnable) throws InterruptedException {
-            Future<?> submit = executorService.submit(runnable);
-            try {
-                submit.get(1, TimeUnit.SECONDS);
-            } catch (ExecutionException | TimeoutException  e) {
-                logTaskExecutionException(runnable, e);
-            }
-        }
-
-        @Override
-        void execute(Collection<Callable<Void>> tasks) throws InterruptedException {
-            try {
-                List<Future<Void>> futures = executorService.invokeAll(tasks, 1, TimeUnit.SECONDS);
-                for (Future<Void> future : futures) {
-                    try {
-                        if (future.isDone())
-                            future.get();
-                        else
-                            LOG.finest("task not done");
-                    } catch (ExecutionException e) {
-                        logTaskExecutionException(future, e);
-                    }
-                }
-            } catch (RuntimeException e) {
-                LOG.log(Level.SEVERE, "Error when execute tasks", e);
-            }
-
+        ExecutorService executorService() {
+            return executorService;
         }
     };
 
@@ -87,9 +54,21 @@ public enum ExecutionStrategy {
 
     private static final Logger LOG = Logger.getLogger(ExecutionStrategy.class.getName());
 
-    abstract void execute(Callable<Void> runnable) throws InterruptedException;
+    abstract ExecutorService executorService();
 
-    abstract void execute(Collection<Callable<Void>> runnables) throws InterruptedException;
+    void execute(Collection<Callable<Void>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+        List<Future<Void>> futures = executorService().invokeAll(tasks, timeout, unit);
+        for (Future<Void> future : futures) {
+            try {
+                if (future.isDone())
+                    future.get();
+                else
+                    LOG.finest("task not done");
+            } catch (ExecutionException | RuntimeException e) {
+                logTaskExecutionException(future, e);
+            }
+        }
+    }
 
     private static class DaemonThreadFactory implements ThreadFactory {
         final ThreadGroup group;

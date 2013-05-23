@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.javabits.yar.guice;
+package org.javabits.yar;
 
 import java.util.EventListener;
 

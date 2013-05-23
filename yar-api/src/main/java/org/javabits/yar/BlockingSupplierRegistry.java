@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
  * @since 1.0
  */
 public interface BlockingSupplierRegistry extends Registry {
-    TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MINUTES;
-    long DEFAULT_TIMEOUT = 5L;
 
     @Nullable
     @Override

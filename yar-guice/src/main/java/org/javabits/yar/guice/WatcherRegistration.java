@@ -24,8 +24,8 @@ import javax.annotation.Nullable;
 import java.lang.ref.WeakReference;
 import java.util.IdentityHashMap;
 
-import static org.javabits.yar.guice.SupplierEvent.Type.ADD;
-import static org.javabits.yar.guice.SupplierEvent.Type.REMOVE;
+import static org.javabits.yar.SupplierEvent.Type.ADD;
+import static org.javabits.yar.SupplierEvent.Type.REMOVE;
 
 /**
  * TODO comment

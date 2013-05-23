@@ -28,8 +28,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-import static org.javabits.yar.guice.ExecutionStrategy.SYNCHRONOUS;
+import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
 
 /**
  * TODO comment
@@ -65,7 +66,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 //    }
 
     public GuiceWatchableRegistrationContainer() {
-        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), SYNCHRONOUS);
+        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), SERIALIZED);
     }
 
     public GuiceWatchableRegistrationContainer(Container<Type, SupplierRegistration<?>> supplierRegistry
@@ -130,16 +131,16 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public boolean put(SupplierRegistration<?> registration) throws InterruptedException {
+    public boolean put(SupplierRegistration<?> registration, long timeout, TimeUnit unit) throws InterruptedException {
         boolean added = putToRegistry(supplierRegistry, registration);
-        updateWatcher(registration, Action.ADD);
+        updateWatcher(registration, Action.ADD, timeout, unit);
         return added;
     }
 
-    private <T> void updateWatcher(final SupplierRegistration<T> supplierRegistration, final Action action) throws InterruptedException {
+    private <T> void updateWatcher(final SupplierRegistration<T> supplierRegistration, final Action action, long timeout, TimeUnit unit) throws InterruptedException {
         Id<T> id = supplierRegistration.id();
         final List<WatcherRegistration<T>> watcherRegistrations = getWatcherRegistrations(id);
-        executor.execute(getUpdateActionsToExistingWatcherOnSupplierEvent(supplierRegistration, action, watcherRegistrations));
+        executor.execute(getUpdateActionsToExistingWatcherOnSupplierEvent(supplierRegistration, action, watcherRegistrations),timeout, unit);
     }
 
     private <T> Collection<Callable<Void>> getUpdateActionsToExistingWatcherOnSupplierEvent(final SupplierRegistration<T> supplierRegistration, final Action action, List<WatcherRegistration<T>> watcherRegistrations) {
@@ -169,9 +170,9 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public boolean remove(SupplierRegistration<?> registration) throws InterruptedException {
+    public boolean remove(SupplierRegistration<?> registration, long timeout, TimeUnit unit) throws InterruptedException {
         boolean removed = removeFromRegistry(supplierRegistry, registration);
-        updateWatcher(registration, Action.REMOVE);
+        updateWatcher(registration, Action.REMOVE, timeout, unit);
         return removed;
     }
 
@@ -180,8 +181,8 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public <T> boolean add(final WatcherRegistration<T> watcherRegistration) throws InterruptedException {
-        executor.execute(getAddSupplierActionsToNewWatcher(watcherRegistration));
+    public <T> boolean add(final WatcherRegistration<T> watcherRegistration, long timeout, TimeUnit unit) throws InterruptedException {
+        executor.execute(getAddSupplierActionsToNewWatcher(watcherRegistration), timeout, unit);
         return putToRegistry(watcherRegistry, watcherRegistration);
     }
 
@@ -229,11 +230,11 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     static GuiceWatchableRegistrationContainer newMultimapGuiceWatchableRegistrationContainer() {
-        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer(), SYNCHRONOUS);
+        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer(), SERIALIZED);
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer() {
-        return newLoadingCacheGuiceWatchableRegistrationContainer(SYNCHRONOUS);
+        return newLoadingCacheGuiceWatchableRegistrationContainer(SERIALIZED);
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer(ExecutionStrategy executionStrategy) {

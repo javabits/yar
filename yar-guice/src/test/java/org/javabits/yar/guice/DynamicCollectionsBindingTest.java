@@ -41,7 +41,7 @@ public class DynamicCollectionsBindingTest {
         assertThat(myInterfaceList, is(emptyIterable()));
         assertThat(myInterfaceList2, is(emptyIterable()));
         //when
-        final MyImpl myImpl = new MyImpl();
+        final MyInterfaceImpl myImpl = new MyInterfaceImpl();
         blockingSupplierRegistry.put(GuiceId.of(MyInterface.class), new Supplier<MyInterface>() {
             @Nullable
             @Override
@@ -49,7 +49,7 @@ public class DynamicCollectionsBindingTest {
                 return myImpl;
             }
         });
-        final MyImpl myImpl2 = new MyImpl();
+        final MyInterfaceImpl myImpl2 = new MyInterfaceImpl();
         blockingSupplierRegistry.put(GuiceId.of(MyInterface.class), new Supplier<MyInterface>() {
             @Nullable
             @Override
@@ -66,9 +66,5 @@ public class DynamicCollectionsBindingTest {
         assertThat(myInterfaceList2, hasItem(myImpl2));
     }
 
-
-    static interface MyInterface {}
-
-    static class MyImpl implements MyInterface {}
 
 }
