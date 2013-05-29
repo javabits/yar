@@ -17,6 +17,7 @@
 package org.javabits.yar.guice;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
 

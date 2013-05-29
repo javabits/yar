@@ -17,7 +17,10 @@
 package org.javabits.yar;
 
 
+import com.google.common.reflect.TypeToken;
+
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 
@@ -41,6 +44,8 @@ public interface Registry {
 
     <T> List<Supplier<T>> getAll(Id<T> id);
 
+    <T> List<Supplier<T>> getAll(TypeToken<T> type);
+
     @Nullable
     <T> Supplier<T> get(Id<T> id);
 
@@ -53,4 +58,5 @@ public interface Registry {
     <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<T> watcher);
 
     void removeWatcher(Registration<?> watcherRegistration);
+
 }
