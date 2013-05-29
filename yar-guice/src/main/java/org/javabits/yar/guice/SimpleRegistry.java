@@ -31,6 +31,7 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
@@ -49,7 +50,7 @@ import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
  * @author Romain Gilles
  */
 public class SimpleRegistry implements Registry, RegistryHook {
-
+    private static final Logger LOG = Logger.getLogger(SimpleRegistry.class.getName());
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
     private final FinalizableReferenceQueue referenceQueue;
@@ -180,7 +181,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         try {
             registryActionQueue.put(action);
             if (!action.asFuture().get()) {
-                throw new RuntimeException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()));
+                LOG.warning(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()));
             }
         } catch (InterruptedException | ExecutionException e) {
             //TODO try again??? on interrupted?
