@@ -156,7 +156,6 @@ public class BlockingRegistry extends SimpleRegistry implements org.javabits.yar
                 }
                 return delegate.get();
             } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
                 throw newInterruptedException(e);
             } finally {
                 writeLock.unlock();

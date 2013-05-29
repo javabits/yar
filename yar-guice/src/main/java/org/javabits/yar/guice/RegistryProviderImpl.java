@@ -10,14 +10,19 @@ import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static java.util.Objects.requireNonNull;
 import static org.javabits.yar.InterruptedException.newInterruptedException;
 import static org.javabits.yar.TimeoutException.newTimeoutException;
 import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.DEFAULT_TIMEOUT;
 import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.DEFAULT_TIME_UNIT;
 
 /**
- * TODO comment
+ * This class is an adapter between the {@link BlockingSupplier} interface and
+ * the guice {@code Provider} interface.
+ * It adapts to {@link BlockingSupplier} to a guice {@code Provider}.
+ * The {@link #get()} can block or not depending the underlying strategy.
+ * By default a blocking ({@code SynchronousStrategy} is used but you can
+ * override it by calling the {@link #noWait()} method to get a non-blocking
+ * strategy ({@code NoWaitStrategy}).
  * Date: 5/14/13
  * Time: 10:21 AM
  *
@@ -26,7 +31,7 @@ import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.DEFAULT_TIME_U
 class RegistryProviderImpl<T> implements RegistryProvider<T> {
 
     private final Key<T> key;
-    private BlockingSupplierRegistry registry;
+    private BlockingSupplier<T> blockingSupplier;
     private Function<BlockingSupplier<T>, T> supplierGetStrategy;
     private final long timeout;
     private final TimeUnit timeUnit;
@@ -48,22 +53,13 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
 
     @Override
     public T get() {
-        BlockingSupplier<T> supplier = getSupplier();
-        return supplierGetStrategy.apply(supplier);
-    }
-
-    private BlockingSupplier<T> getSupplier() {
-        BlockingSupplier<T> supplier = registry().get(GuiceId.of(key));
-        return supplier;
-    }
-
-    BlockingSupplierRegistry registry() {
-        return requireNonNull(registry, "registry");
+        return supplierGetStrategy.apply(blockingSupplier);
     }
 
     @Inject
     public void setRegistry(BlockingSupplierRegistry registry) {
-        this.registry = registry;
+        //directly provision the targeted blocking supplier
+        blockingSupplier = registry.get(GuiceId.of(key));
     }
 
     @Override

@@ -23,6 +23,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO add type token or type literal
@@ -34,6 +35,10 @@ import java.util.Set;
  * @since 1.0
  */
 public interface Registry {
+
+    TimeUnit DEFAULT_TIME_UNIT = TimeUnit.MILLISECONDS;
+    //5 minutes
+    long DEFAULT_TIMEOUT = 1000 * 60 * 5L;
 
     <T> List<Supplier<T>> getAll(Class<T> type);
 

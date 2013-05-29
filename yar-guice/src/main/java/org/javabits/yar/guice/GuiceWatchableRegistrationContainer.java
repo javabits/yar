@@ -16,17 +16,21 @@
 
 package org.javabits.yar.guice;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
-import static org.javabits.yar.guice.ExecutionStrategy.SYNCHRONOUS;
+import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
 
 /**
  * TODO comment
@@ -59,7 +63,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
 
     public GuiceWatchableRegistrationContainer() {
-        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), SYNCHRONOUS);
+        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), SERIALIZED);
     }
 
     public GuiceWatchableRegistrationContainer(Container<Type, SupplierRegistration<?>> supplierRegistry
@@ -124,24 +128,26 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public boolean put(SupplierRegistration<?> registration) {
+    public boolean put(SupplierRegistration<?> registration, long timeout, TimeUnit unit) throws InterruptedException {
         boolean added = putToRegistry(supplierRegistry, registration);
-        updateWatcher(registration, Action.ADD);
+        updateWatcher(registration, Action.ADD, timeout, unit);
         return added;
     }
 
-    private <T> void updateWatcher(final SupplierRegistration<T> supplierRegistration, final Action action) {
+    private <T> void updateWatcher(final SupplierRegistration<T> supplierRegistration, final Action action, long timeout, TimeUnit unit) throws InterruptedException {
         Id<T> id = supplierRegistration.id();
         final List<WatcherRegistration<T>> watcherRegistrations = getWatcherRegistrations(id);
+        executor.execute(getUpdateActionsToExistingWatcherOnSupplierEvent(supplierRegistration, action, watcherRegistrations),timeout, unit);
+    }
 
-        for (final WatcherRegistration<T> watcherRegistration : watcherRegistrations) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, action);
-                }
-            });
-        }
+    private <T> Collection<Callable<Void>> getUpdateActionsToExistingWatcherOnSupplierEvent(final SupplierRegistration<T> supplierRegistration, final Action action, List<WatcherRegistration<T>> watcherRegistrations) {
+        return Collections2.transform(watcherRegistrations, new Function<WatcherRegistration<T>, Callable<Void>>() {
+            @Nullable
+            @Override
+            public Callable<Void> apply(@Nullable WatcherRegistration<T> watcherRegistration) {
+                return new ActionAdapter<>(watcherRegistration, supplierRegistration, action);
+            }
+        });
     }
 
     //returns all the watchers associated to the type of the given id.
@@ -161,9 +167,9 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public boolean remove(SupplierRegistration<?> registration) {
+    public boolean remove(SupplierRegistration<?> registration, long timeout, TimeUnit unit) throws InterruptedException {
         boolean removed = removeFromRegistry(supplierRegistry, registration);
-        updateWatcher(registration, Action.REMOVE);
+        updateWatcher(registration, Action.REMOVE, timeout, unit);
         return removed;
     }
 
@@ -172,18 +178,39 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public <T> boolean add(final WatcherRegistration<T> watcherRegistration) {
-        for (final SupplierRegistration<T> supplierRegistration : getAll(watcherRegistration.id())) {
-            executor.execute(new Runnable() {
-                @Override
-                public void run() {
-                    fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, Action.ADD);
-                }
-            });
-        }
+    public <T> boolean add(final WatcherRegistration<T> watcherRegistration, long timeout, TimeUnit unit) throws InterruptedException {
+        executor.execute(getAddSupplierActionsToNewWatcher(watcherRegistration), timeout, unit);
         return putToRegistry(watcherRegistry, watcherRegistration);
     }
 
+    private <T> Collection<Callable<Void>> getAddSupplierActionsToNewWatcher(final WatcherRegistration<T> watcherRegistration) {
+        List<SupplierRegistration<T>> supplierRegistrations = getAll(watcherRegistration.id());
+        return Collections2.transform(supplierRegistrations, new Function<SupplierRegistration<T>, Callable<Void>>() {
+            @Nullable
+            @Override
+            public Callable<Void> apply(@Nullable SupplierRegistration<T> supplierRegistration) {
+                return new ActionAdapter<>(watcherRegistration, supplierRegistration, Action.ADD);
+            }
+        });
+    }
+
+    static class ActionAdapter<T> implements Callable<Void> {
+        private final WatcherRegistration<T> watcherRegistration;
+        private final SupplierRegistration<T> supplierRegistration;
+        private final Action action;
+
+        ActionAdapter(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
+            this.watcherRegistration = watcherRegistration;
+            this.supplierRegistration = supplierRegistration;
+            this.action = action;
+        }
+
+        @Override
+        public Void call() throws Exception {
+            fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, action);
+            return null;
+        }
+    }
     static private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
         if (watcherRegistration.left().matches(supplierRegistration.id())) {
             action.execute(watcherRegistration, supplierRegistration);
@@ -211,11 +238,11 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     static GuiceWatchableRegistrationContainer newMultimapGuiceWatchableRegistrationContainer() {
-        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer(), SYNCHRONOUS);
+        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer(), SERIALIZED);
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer() {
-        return newLoadingCacheGuiceWatchableRegistrationContainer(SYNCHRONOUS);
+        return newLoadingCacheGuiceWatchableRegistrationContainer(SERIALIZED);
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer(ExecutionStrategy executionStrategy) {

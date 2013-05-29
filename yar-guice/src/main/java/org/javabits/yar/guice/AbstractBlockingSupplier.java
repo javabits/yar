@@ -17,6 +17,8 @@
 package org.javabits.yar.guice;
 
 import org.javabits.yar.Supplier;
+import org.javabits.yar.SupplierEvent;
+import org.javabits.yar.SupplierListener;
 
 import javax.annotation.Nullable;
 import java.util.concurrent.locks.Condition;

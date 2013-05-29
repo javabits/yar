@@ -14,7 +14,7 @@
  *    limitations under the License.
  */
 
-package org.javabits.yar.guice;
+package org.javabits.yar;
 
 import org.javabits.yar.Supplier;
 
@@ -29,7 +29,7 @@ import java.util.EventObject;
  */
 public class SupplierEvent extends EventObject {
 
-    enum Type {
+    public enum Type {
         ADD, REMOVE;
     }
 

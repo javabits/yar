@@ -25,6 +25,12 @@ import org.javabits.yar.Registry;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static org.javabits.yar.Registry.DEFAULT_TIMEOUT;
+import static org.javabits.yar.Registry.DEFAULT_TIME_UNIT;
+import static org.javabits.yar.guice.ExecutionStrategy.PARALLEL;
+import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
 
 /**
  * TODO comment
@@ -113,4 +119,85 @@ public final class YarGuices {
         }
     }
 
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+        private ExecutionStrategy executionStrategy = SERIALIZED;
+        private long timeout = DEFAULT_TIMEOUT;
+        private TimeUnit unit = DEFAULT_TIME_UNIT;
+
+        /**
+         * Set the timeout value to use when executing concurrent methods
+         * (e.g. {@code Future}, {@code BlockingQueue} {@code ExecutorService} ...
+         *
+         * @param timeout set the timeout value t
+         * @return this {@code Builder}
+         * @see #timeUnit(java.util.concurrent.TimeUnit)
+         */
+        public Builder timeout(long timeout) {
+            this.timeout = timeout;
+            return this;
+        }
+
+        /**
+         * Set the unit to associate to the timeout.
+         * Default value {@link Registry#DEFAULT_TIME_UNIT}
+         *
+         * @param unit of the timeout
+         * @return this {@code Builder}
+         * @see #timeout(long)
+         */
+        public Builder timeUnit(TimeUnit unit) {
+            this.unit = unit;
+            return this;
+        }
+
+        /**
+         * Enable the parallel update of the {@link org.javabits.yar.Watcher}
+         * and {@link org.javabits.yar.SupplierListener} on {@link Registry}
+         * state change. Therefore updates are executed within the same
+         * thread than the reactor thread in serial mode the next listener
+         * is called after the completion of the previous one is reached or cancellation occured.
+         *
+         * @return this {@code Builder}
+         */
+        public Builder serializedListenerUpdate() {
+            executionStrategy = SERIALIZED;
+            return this;
+        }
+
+        /**
+         * Enable the parallel update of the {@link org.javabits.yar.Watcher}
+         * and {@link org.javabits.yar.SupplierListener} on {@link Registry}
+         * state change. Therefore this execution is executed within the
+         * same thread than the reactor thread in parallel mode where all listener
+         * are updated in parallel but the next registry state is execute only when
+         * all the previous listener updates are completed or cancelled by
+         *
+         * @return this {@code Builder}
+         */
+        public Builder parallelListenerUpdate() {
+            executionStrategy = PARALLEL;
+            return this;
+        }
+
+        /**
+         * Set the execution strategy to apply when
+         *
+         * @param executionStrategy to apply on {@link Registry} state change.
+         * @return this {@code Builder}
+         * @see #parallelListenerUpdate()
+         * @see #serializedListenerUpdate()
+         */
+        public Builder listenerUpdateExecutionStrategy(ExecutionStrategy executionStrategy) {
+            this.executionStrategy = executionStrategy;
+            return this;
+        }
+
+        public BlockingSupplierRegistry build() {
+            return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(executionStrategy, timeout, unit);
+        }
+    }
 }

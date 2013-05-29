@@ -23,7 +23,7 @@ import org.javabits.yar.Registration;
 import java.util.concurrent.TimeUnit;
 
 import static org.javabits.yar.IdMatchers.newKeyMatcher;
-import static org.javabits.yar.guice.ExecutionStrategy.SYNCHRONOUS;
+import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -40,6 +40,10 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
         super(registrationContainer);
     }
 
+    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long timeout, TimeUnit unit) {
+        super(registrationContainer, timeout, unit);
+    }
+
     @Override
     public <T> BlockingSupplier<T> get(Class<T> type) {
         return get(GuiceId.of(type));
@@ -47,7 +51,7 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
 
     @Override
     public <T> BlockingSupplier<T> get(Id<T> id) {
-        BlockingSupplierImpl<T> supplier = new BlockingSupplierImpl<>();
+        BlockingSupplierImpl<T> supplier = new BlockingSupplierImpl<>(super.get(id));
         // If an instance of the requested service has been registered, this call will trigger the
         // listener's supplierChanged event with the current value of the service.
         // This is how the supplier instance obtains the initial value of the service.
@@ -63,9 +67,15 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
     }
 
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry() {
-        return newLoadingCacheBlockingSupplierRegistry(SYNCHRONOUS);
+        return newLoadingCacheBlockingSupplierRegistry(SERIALIZED);
     }
 
+    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(long timeout, TimeUnit unit) {
+        return newLoadingCacheBlockingSupplierRegistry(SERIALIZED, timeout, unit);
+    }
+    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy, long timeout, TimeUnit unit) {
+        return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), timeout, unit);
+    }
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
         return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy));
     }
@@ -73,4 +83,9 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
     public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry() {
         return newLoadingCacheBlockingSupplierRegistry();
     }
+
+    public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry(long timeout, TimeUnit unit) {
+        return newLoadingCacheBlockingSupplierRegistry(timeout, unit);
+    }
+
 }

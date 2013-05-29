@@ -31,11 +31,13 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
 import static java.util.Objects.requireNonNull;
+import static org.javabits.yar.InterruptedException.newInterruptedException;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
@@ -49,23 +51,31 @@ import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
  *
  * @author Romain Gilles
  */
-public class SimpleRegistry implements Registry, RegistryHook {
-    private static final Logger LOG = Logger.getLogger(SimpleRegistry.class.getName());
+public class SimpleRegistry implements Registry {
+    private Logger LOG = Logger.getLogger(SimpleRegistry.class.getName());
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
     private final FinalizableReferenceQueue referenceQueue;
+    private final long defaultTimeOut;
+    private final TimeUnit defaultTimeoutUnit;
 
     public SimpleRegistry() {
         this(new GuiceWatchableRegistrationContainer());
     }
 
     SimpleRegistry(WatchableRegistrationContainer registrationContainer) {
+        this(registrationContainer, Registry.DEFAULT_TIMEOUT, Registry.DEFAULT_TIME_UNIT);
+    }
+
+    SimpleRegistry(WatchableRegistrationContainer registrationContainer, long timeout, TimeUnit unit) {
         referenceQueue = new FinalizableReferenceQueue();
         this.registrationContainer = registrationContainer;
         registryActionQueue = new LinkedBlockingQueue<>();
-        Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue, registrationContainer), "yar-action-handler");
+        Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue), "yar-action-handler");
         registryActionThread.setDaemon(true);
         registryActionThread.start();
+        this.defaultTimeOut = timeout;
+        this.defaultTimeoutUnit = unit;
     }
 
     @Override
@@ -183,8 +193,9 @@ public class SimpleRegistry implements Registry, RegistryHook {
             if (!action.asFuture().get()) {
                 LOG.warning(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()));
             }
-        } catch (InterruptedException | ExecutionException e) {
-            //TODO try again??? on interrupted?
+        } catch (InterruptedException e) {
+            throw newInterruptedException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.key()), e);
+        } catch (ExecutionException e) {
             throw propagate(e);
         }
     }
@@ -241,13 +252,13 @@ public class SimpleRegistry implements Registry, RegistryHook {
     static interface RegistryAction {
         Id<?> id();
 
-        void execute(WatchableRegistrationContainer registrationContainer);
+        void execute();
 
         Future<Boolean> asFuture();
 
     }
 
-    static abstract class AbstractAction implements RegistryAction {
+    abstract class AbstractAction implements RegistryAction {
         private final Registration<?> registration;
 
         AbstractAction(Registration<?> registration) {
@@ -260,7 +271,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
     }
 
-    static class Add extends AbstractAction implements RegistryAction {
+    private class Add extends AbstractAction implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final AddCall addCall;
         private final SupplierRegistration<?> registration;
@@ -275,9 +286,8 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
 
         @Override
-        public void execute(WatchableRegistrationContainer registrationContainer) {
+        public void execute() {
             addCall.registration = registration;
-            addCall.registrationContainer = registrationContainer;
             futureTask.run();
         }
 
@@ -286,19 +296,18 @@ public class SimpleRegistry implements Registry, RegistryHook {
             return futureTask;
         }
 
-        private static class AddCall implements Callable<Boolean> {
-            private WatchableRegistrationContainer registrationContainer;
+        private class AddCall implements Callable<Boolean> {
             private SupplierRegistration<?> registration;
 
             @Override
             public Boolean call() throws Exception {
-                return registrationContainer.put(registration);
+                return registrationContainer.put(registration, defaultTimeOut, defaultTimeoutUnit);
             }
         }
 
     }
 
-    static class Remove extends AbstractAction implements RegistryAction {
+    private class Remove extends AbstractAction implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final RemoveCall removeCall;
         private final SupplierRegistration<?> registration;
@@ -311,9 +320,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
 
         @Override
-        public void execute(WatchableRegistrationContainer registrationContainer) {
-            removeCall.registration = registration;
-            removeCall.registrationContainer = registrationContainer;
+        public void execute() {
             futureTask.run();
         }
 
@@ -322,19 +329,16 @@ public class SimpleRegistry implements Registry, RegistryHook {
             return futureTask;
         }
 
-        private static class RemoveCall implements Callable<Boolean> {
-            private WatchableRegistrationContainer registrationContainer;
-            private SupplierRegistration<?> registration;
-
+        private class RemoveCall implements Callable<Boolean> {
             @Override
             public Boolean call() throws Exception {
-                return registrationContainer.remove(registration);
+                return registrationContainer.remove(registration, defaultTimeOut, defaultTimeoutUnit);
             }
         }
 
     }
 
-    static class RemoveAll implements RegistryAction {
+    class RemoveAll implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final RemoveAllCall removeCall;
         private final Type type;
@@ -374,7 +378,8 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     }
 
-    private static class AddWatcher<T> extends AbstractAction implements RegistryAction {
+
+    private class AddWatcher<T> extends AbstractAction implements RegistryAction {
 
         private final WatcherRegistration<T> watcherRegistration;
         private final AddWatcherCall addWatcherCall;
@@ -388,7 +393,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
 
         @Override
-        public void execute(WatchableRegistrationContainer registrationContainer) {
+        public void execute() {
             addWatcherCall.registrationContainer = registrationContainer;
             futureTask.run();
         }
@@ -403,13 +408,12 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
             @Override
             public Boolean call() throws Exception {
-                return registrationContainer.add(watcherRegistration);
+                return registrationContainer.add(watcherRegistration, defaultTimeOut, defaultTimeoutUnit);
             }
         }
     }
 
-    private static class RemoveWatcher<T> extends AbstractAction implements RegistryAction {
-
+    private class RemoveWatcher<T> extends AbstractAction implements RegistryAction {
         private final WatcherRegistration<T> watcherRegistration;
         private final RemoveWatcherCall removeWatcherCall;
         private final FutureTask<Boolean> futureTask;
@@ -422,8 +426,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
 
         @Override
-        public void execute(WatchableRegistrationContainer registrationContainer) {
-            removeWatcherCall.registrationContainer = registrationContainer;
+        public void execute() {
             futureTask.run();
         }
 
@@ -433,8 +436,6 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
 
         private class RemoveWatcherCall implements Callable<Boolean> {
-            private WatchableRegistrationContainer registrationContainer;
-
             @Override
             public Boolean call() throws Exception {
                 return registrationContainer.remove(watcherRegistration);
@@ -442,25 +443,33 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
     }
 
-    static class RegistryActionHandler implements Runnable {
+    private static class RegistryActionHandler implements Runnable {
+        private Logger LOG = Logger.getLogger(RegistryActionHandler.class.getName());
         private final BlockingQueue<RegistryAction> registryActionQueue;
-        private final WatchableRegistrationContainer registrationContainer;
 
-        RegistryActionHandler(BlockingQueue<RegistryAction> registryActionQueue, WatchableRegistrationContainer registrationContainer) {
+        RegistryActionHandler(BlockingQueue<RegistryAction> registryActionQueue) {
             this.registryActionQueue = registryActionQueue;
-            this.registrationContainer = registrationContainer;
         }
 
         @Override
         public void run() {
             try {
-                for (; !Thread.currentThread().isInterrupted() ; ) {
+                for (; !Thread.currentThread().isInterrupted(); ) {
                     RegistryAction registryAction = registryActionQueue.take();
-                    registryAction.execute(registrationContainer);
+                    registryAction.execute();
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                LOG.fine("Exit on interruption");
             }
+            for (RegistryAction registryAction = registryActionQueue.poll(); registryAction != null; ) {
+                try {
+                    registryAction.asFuture().cancel(true);
+                } catch (Exception ex) {
+                    LOG.log(Level.SEVERE, "Error on cancel to exit on interruption", ex);
+                }
+            }
+
+
         }
     }
 

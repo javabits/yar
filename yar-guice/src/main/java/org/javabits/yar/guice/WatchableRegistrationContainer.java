@@ -22,6 +22,7 @@ import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TODO comment
@@ -44,11 +45,11 @@ public interface WatchableRegistrationContainer {
     @Nullable
     <T> SupplierRegistration<T> getFirst(Id<T> id);
 
-    boolean put(SupplierRegistration<?> registration);
+    boolean put(SupplierRegistration<?> registration, long timeout, TimeUnit unit) throws InterruptedException;
 
-    boolean remove(SupplierRegistration<?> registration);
+    boolean remove(SupplierRegistration<?> registration, long timeout, TimeUnit unit) throws InterruptedException;
 
-    <T> boolean add(WatcherRegistration<T> watcherRegistration);
+    <T> boolean add(WatcherRegistration<T> watcherRegistration, long timeout, TimeUnit unit) throws InterruptedException;
 
     boolean remove(WatcherRegistration<?> watcherRegistration);
 
