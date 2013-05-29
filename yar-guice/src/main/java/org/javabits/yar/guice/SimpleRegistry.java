@@ -51,7 +51,7 @@ import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
  *
  * @author Romain Gilles
  */
-public class SimpleRegistry implements Registry {
+public class SimpleRegistry implements Registry, RegistryHook {
     private Logger LOG = Logger.getLogger(SimpleRegistry.class.getName());
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
@@ -194,7 +194,7 @@ public class SimpleRegistry implements Registry {
                 LOG.warning(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()));
             }
         } catch (InterruptedException e) {
-            throw newInterruptedException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.key()), e);
+            throw newInterruptedException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()), e);
         } catch (ExecutionException e) {
             throw propagate(e);
         }
@@ -345,7 +345,7 @@ public class SimpleRegistry implements Registry {
 
         RemoveAll(Type type) {
             this.type = type;
-            removeCall = new RemoveAllCall();
+            this.removeCall = new RemoveAllCall();
             this.futureTask = new FutureTask<>(removeCall);
         }
 
@@ -355,9 +355,7 @@ public class SimpleRegistry implements Registry {
         }
 
         @Override
-        public void execute(WatchableRegistrationContainer registrationContainer) {
-            removeCall.registrationContainer = registrationContainer;
-            removeCall.type = type;
+        public void execute() {
             futureTask.run();
         }
 
@@ -366,13 +364,11 @@ public class SimpleRegistry implements Registry {
             return futureTask;
         }
 
-        private static class RemoveAllCall implements Callable<Boolean> {
-            private WatchableRegistrationContainer registrationContainer;
-            private Type type;
+        private class RemoveAllCall implements Callable<Boolean> {
 
             @Override
             public Boolean call() throws Exception {
-                return registrationContainer.removeAll(type);
+                return registrationContainer.removeAll(type, defaultTimeOut, defaultTimeoutUnit);
             }
         }
 

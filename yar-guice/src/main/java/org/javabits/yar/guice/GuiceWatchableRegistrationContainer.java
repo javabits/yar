@@ -223,10 +223,10 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public boolean removeAll(Type type) {
+    public boolean removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException {
         List<SupplierRegistration<?>> all = getAll(type);
         for (SupplierRegistration<?> supplierRegistration: all) {
-            remove(supplierRegistration);
+            remove(supplierRegistration,timeout, unit);
         }
         watcherRegistry.invalidate(type);
         supplierRegistry.invalidate(type);

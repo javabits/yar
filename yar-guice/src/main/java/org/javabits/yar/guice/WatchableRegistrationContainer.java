@@ -53,5 +53,5 @@ public interface WatchableRegistrationContainer {
 
     boolean remove(WatcherRegistration<?> watcherRegistration);
 
-    boolean removeAll(Type type);
+    boolean removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException;
 }
