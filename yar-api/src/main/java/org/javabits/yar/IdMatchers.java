@@ -47,6 +47,12 @@ public final class IdMatchers {
             public Id<T> id() {
                 return id;
             }
+
+            @Override
+            public String toString() {
+                return getClass().getSimpleName() + '{' +
+                        "id=" + id + '}';
+            }
         };
     }
 }

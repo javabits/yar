@@ -72,6 +72,11 @@ public class GuiceId<T> implements Id<T> {
         return key.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return key.toString();
+    }
+
     public static <T> Id<T> of(com.google.inject.Key<T> key) {
         return new GuiceId<>(key);
     }

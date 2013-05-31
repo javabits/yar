@@ -407,22 +407,24 @@ public class SimpleRegistry implements Registry {
         @Override
         public void run() {
             try {
-                for (; !Thread.currentThread().isInterrupted(); ) {
-                    RegistryAction registryAction = registryActionQueue.take();
-                    registryAction.execute();
-                }
-            } catch (InterruptedException e) {
-                LOG.fine("Exit on interruption");
-            }
-            for (RegistryAction registryAction = registryActionQueue.poll(); registryAction != null; ) {
                 try {
-                    registryAction.asFuture().cancel(true);
-                } catch (Exception ex) {
-                    LOG.log(Level.SEVERE, "Error on cancel to exit on interruption", ex);
+                    for (; !Thread.currentThread().isInterrupted(); ) {
+                        RegistryAction registryAction = registryActionQueue.take();
+                        registryAction.execute();
+                    }
+                } catch (InterruptedException e) {
+                    LOG.fine("Exit on interruption");
                 }
+                for (RegistryAction registryAction = registryActionQueue.poll(); registryAction != null; ) {
+                    try {
+                        registryAction.asFuture().cancel(true);
+                    } catch (Exception ex) {
+                        LOG.log(Level.SEVERE, "Error on cancel to exit on interruption", ex);
+                    }
+                }
+            } catch (Exception e) {
+                LOG.log(Level.SEVERE, "Exit on exception", e);
             }
-
-
         }
     }
 

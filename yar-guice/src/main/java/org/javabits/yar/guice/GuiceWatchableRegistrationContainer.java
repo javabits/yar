@@ -17,8 +17,10 @@
 package org.javabits.yar.guice;
 
 import com.google.common.base.Function;
+import com.google.common.base.Objects;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
 
@@ -143,8 +145,8 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         executor.execute(getUpdateActionsToExistingWatcherOnSupplierEvent(supplierRegistration, action, watcherRegistrations),timeout, unit);
     }
 
-    private <T> Collection<Callable<Void>> getUpdateActionsToExistingWatcherOnSupplierEvent(final SupplierRegistration<T> supplierRegistration, final Action action, List<WatcherRegistration<T>> watcherRegistrations) {
-        return Collections2.transform(watcherRegistrations, new Function<WatcherRegistration<T>, Callable<Void>>() {
+    private <T> List<Callable<Void>> getUpdateActionsToExistingWatcherOnSupplierEvent(final SupplierRegistration<T> supplierRegistration, final Action action, List<WatcherRegistration<T>> watcherRegistrations) {
+        return Lists.transform(watcherRegistrations, new Function<WatcherRegistration<T>, Callable<Void>>() {
             @Nullable
             @Override
             public Callable<Void> apply(@Nullable WatcherRegistration<T> watcherRegistration) {
@@ -186,9 +188,9 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         return putToRegistry(watcherRegistry, watcherRegistration);
     }
 
-    private <T> Collection<Callable<Void>> getAddSupplierActionsToNewWatcher(final WatcherRegistration<T> watcherRegistration) {
+    private <T> List<Callable<Void>> getAddSupplierActionsToNewWatcher(final WatcherRegistration<T> watcherRegistration) {
         List<SupplierRegistration<T>> supplierRegistrations = getAll(watcherRegistration.id());
-        return Collections2.transform(supplierRegistrations, new Function<SupplierRegistration<T>, Callable<Void>>() {
+        return Lists.transform(supplierRegistrations, new Function<SupplierRegistration<T>, Callable<Void>>() {
             @Nullable
             @Override
             public Callable<Void> apply(@Nullable SupplierRegistration<T> supplierRegistration) {
@@ -212,6 +214,15 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         public Void call() throws Exception {
             fireAddToWatcherIfMatches(watcherRegistration, supplierRegistration, action);
             return null;
+        }
+
+        @Override
+        public String toString() {
+            return "ActionAdapter{" +
+                    "watcherRegistration=" + watcherRegistration +
+                    ", supplierRegistration=" + supplierRegistration +
+                    ", action=" + action +
+                    '}';
         }
     }
     static private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {

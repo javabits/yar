@@ -77,6 +77,14 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implem
         registry.removeWatcher(this);
     }
 
+    @Override
+    public String toString() {
+        return "WatcherRegistration{" +
+                "left=" + left +
+                ", right=" + right +
+                '}';
+    }
+
     static class WatcherDecorator<T> implements Watcher<T> {
         private final WeakReference<Watcher<T>> delegate;
         private final IdentityHashMap<Supplier<T>, Supplier<T>> trackedElements = new IdentityHashMap<>();
@@ -119,6 +127,13 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implem
                 }
             }
         }
+
+        @Override
+        public String toString() {
+            return "WatcherDecorator{" +
+                    "delegate=" + delegate.get() +
+                    '}';
+        }
     }
 
     private static class SupplierWatcherToSupplierListenerAdapter<T> implements Watcher<T> {
@@ -138,6 +153,13 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implem
         @Override
         public void remove(Supplier<T> supplier) {
             supplierListener.supplierChanged(new SupplierEvent(REMOVE, supplier));
+        }
+
+        @Override
+        public String toString() {
+            return "SupplierWatcherToSupplierListenerAdapter{" +
+                    "supplierListener=" + supplierListener +
+                    '}';
         }
     }
 }

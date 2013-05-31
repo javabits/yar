@@ -204,5 +204,12 @@ abstract class GuiceWatcherRegistration<T> {
         public Id<T> id() {
             return id;
         }
+
+        @Override
+        public String toString() {
+            return "IdMatcherWrapper{" +
+                    "id=" + id +
+                    '}';
+        }
     }
 }

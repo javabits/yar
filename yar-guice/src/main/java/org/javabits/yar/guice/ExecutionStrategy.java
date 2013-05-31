@@ -56,16 +56,20 @@ public enum ExecutionStrategy {
 
     abstract ExecutorService executorService();
 
-    void execute(Collection<Callable<Void>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+    void execute(List<Callable<Void>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
         List<Future<Void>> futures = executorService().invokeAll(tasks, timeout, unit);
-        for (Future<Void> future : futures) {
+        for (int i = 0; i < futures.size(); i++) {
+            Future<Void> future = futures.get(i);
             try {
-                if (future.isDone())
+                if (future.isCancelled()) {
+                    LOG.severe(String.format("task not canceled (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)));
+                } else if (future.isDone())
                     future.get();
-                else
-                    LOG.finest("task not done");
+                else {
+                    LOG.severe("task not done: " + tasks.get(i));
+                }
             } catch (ExecutionException | RuntimeException e) {
-                logTaskExecutionException(future, e);
+                logTaskExecutionException(tasks.get(i), e);
             }
         }
     }
