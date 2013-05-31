@@ -16,7 +16,6 @@
 
 package org.javabits.yar.guice.osgi.internal;
 
-import org.javabits.yar.guice.YarGuices;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.javabits.yar.BlockingSupplierRegistry;
@@ -71,7 +70,7 @@ public class Activator implements BundleActivator {
 
     private BlockingSupplierRegistry newRegistry(BundleContext bundleContext) {
         Builder builder = builder();
-        return builder.timeout(DEFAULT_TIMEOUT)
+        return builder.timeout(getExecutionTimeout(bundleContext))
                 .timeUnit(Registry.DEFAULT_TIME_UNIT)
                 .listenerUpdateExecutionStrategy(getExecutionStrategy(bundleContext))
                 .build();
