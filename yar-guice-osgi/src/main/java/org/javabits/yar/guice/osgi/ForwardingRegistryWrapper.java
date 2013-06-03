@@ -49,7 +49,7 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry {
     private static final Object NULL_VALUE = Boolean.TRUE;
     private ConcurrentMap<Registration<?>, Object> supplierRegistrations = new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
     private ConcurrentMap<Registration<?>, Object> watcherRegistrations = new MapMaker().weakKeys().initialCapacity(DEFAULT_INITIAL_CAPACITY).concurrencyLevel(DEFAULT_CONCURRENCY_LEVEL).makeMap();
-    private List<Type> ownedTypes = new CopyOnWriteArrayList<>();
+
     ForwardingRegistryWrapper(BlockingSupplierRegistry delegate) {
         this.delegate = delegate;
     }
@@ -138,7 +138,5 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry {
         delegate.removeAll(supplierRegistrations.keySet());
         //then remove the watcher
         delegate.removeAllWatchers(watcherRegistrations.keySet());
-        //then remove the type that comes from this bundle
-        ((RegistryHook)delegate).invalidateAll(ownedTypes);
     }
 }

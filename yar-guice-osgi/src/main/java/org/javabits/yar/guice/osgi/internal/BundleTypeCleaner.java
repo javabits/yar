@@ -46,8 +46,12 @@ class BundleTypeCleaner implements SynchronousBundleListener, TypeListener {
         switch (event.getType()) {
             case BundleEvent.STOPPING:
                 try {
-                    Set<Type> types = loadingCache.get(event.getBundle().getBundleId());
-                    registryHook.invalidateAll(types);
+                    long bundleId = event.getBundle().getBundleId();
+                    Set<Type> types = loadingCache.get(bundleId);
+                    if (!types.isEmpty()) {
+                        registryHook.invalidateAll(types);
+                    }
+                    loadingCache.invalidate(bundleId);
                 } catch (ExecutionException e) {
                     LOG.log(SEVERE, "Cannot clean up types on event: " + event, e);
                 }
