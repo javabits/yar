@@ -116,9 +116,10 @@ public final class YarOSGis {
         return new AbstractModule() {
             @Override
             protected void configure() {
-                install(newRegistryDeclarationModule(blockingSupplierRegistry));
+                Key<ForwardingRegistryWrapper> registryKey = Key.get(ForwardingRegistryWrapper.class);
+                bind(registryKey).toInstance(blockingSupplierRegistry);
+                install(newRegistryDeclarationModule(registryKey));
                 install(newOSGiModule(bundleContext));
-                bind(ForwardingRegistryWrapper.class).toInstance(blockingSupplierRegistry);
             }
         };
     }

@@ -88,6 +88,16 @@ public final class YarGuices {
         };
     }
 
+    public static Module newRegistryDeclarationModule(final Key<? extends BlockingSupplierRegistry> key) {
+        return new AbstractModule() {
+            @Override
+            protected void configure() {
+                Key<BlockingSupplierRegistry> blockingSupplierRegistryKey = Key.get(BlockingSupplierRegistry.class);
+                bind(Registry.class).to(blockingSupplierRegistryKey);
+                bind(blockingSupplierRegistryKey).to(key);
+            }
+        };
+    }
 
     public static List<Id<?>> requiredSuppliers(Injector injector) {
         //RegistryProvider.class
