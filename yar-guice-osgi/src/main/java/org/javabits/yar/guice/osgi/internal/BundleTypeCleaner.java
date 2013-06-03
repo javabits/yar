@@ -39,6 +39,7 @@ class BundleTypeCleaner implements SynchronousBundleListener, TypeListener {
 
     BundleTypeCleaner(RegistryHook registryHook) {
         this.registryHook = registryHook;
+        registryHook.addTypeListener(this);
     }
 
     @Override
