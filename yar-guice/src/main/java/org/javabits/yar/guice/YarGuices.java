@@ -127,7 +127,7 @@ public final class YarGuices {
         private ExecutionStrategy executionStrategy = SERIALIZED;
         private long timeout = DEFAULT_TIMEOUT;
         private TimeUnit unit = DEFAULT_TIME_UNIT;
-
+        private BlockingSupplierFactory blockingSupplierFactory = new DefaultBlockingSupplierFactory();
         /**
          * Set the timeout value to use when executing concurrent methods
          * (e.g. {@code Future}, {@code BlockingQueue} {@code ExecutorService} ...
@@ -184,7 +184,9 @@ public final class YarGuices {
         }
 
         /**
-         * Set the execution strategy to apply when
+         * Set the execution strategy to apply on registry watcher / listener
+         * when un mutation action is executed on the registry.
+         * The default strategy is a parallel execution.
          *
          * @param executionStrategy to apply on {@link Registry} state change.
          * @return this {@code Builder}
@@ -196,8 +198,32 @@ public final class YarGuices {
             return this;
         }
 
+        /**
+         * Make the returned supplier no wait on any methods.
+         * and there for return directly a {@code null} value \
+         * if no suppliers are available.
+         *
+         * @return this {@code Builder}
+         * @see #blockingSupplierStrategy(BlockingSupplierFactory)
+         */
+        public Builder noWaitSupplier() {
+            blockingSupplierFactory = new NoWaitBlockingSupplierFactory();
+            return this;
+        }
+
+        /**
+         *
+         * @param blockingSupplierFactory
+         * @return this {@code Builder}
+         * @see #noWaitSupplier()
+         */
+        public Builder blockingSupplierStrategy(BlockingSupplierFactory blockingSupplierFactory) {
+            this.blockingSupplierFactory = blockingSupplierFactory;
+            return this;
+        }
+
         public BlockingSupplierRegistry build() {
-            return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(executionStrategy, timeout, unit);
+            return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(executionStrategy, timeout, unit, blockingSupplierFactory);
         }
     }
 }

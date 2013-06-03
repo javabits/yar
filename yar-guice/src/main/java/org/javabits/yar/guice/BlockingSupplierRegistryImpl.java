@@ -36,12 +36,20 @@ import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMult
  */
 class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabits.yar.BlockingSupplierRegistry {
 
+    private final BlockingSupplierFactory blockingSupplierFactory;
+
     private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer) {
         super(registrationContainer);
+        this.blockingSupplierFactory = new DefaultBlockingSupplierFactory();
     }
 
     private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long timeout, TimeUnit unit) {
+        this(registrationContainer, timeout, unit, new DefaultBlockingSupplierFactory());
+    }
+
+    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long timeout, TimeUnit unit, BlockingSupplierFactory blockingSupplierFactory) {
         super(registrationContainer, timeout, unit);
+        this.blockingSupplierFactory = blockingSupplierFactory;
     }
 
     @Override
@@ -51,14 +59,7 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
 
     @Override
     public <T> BlockingSupplier<T> get(Id<T> id) {
-        BlockingSupplierImpl<T> supplier = new BlockingSupplierImpl<>(super.get(id));
-        // If an instance of the requested service has been registered, this call will trigger the
-        // listener's supplierChanged event with the current value of the service.
-        // This is how the supplier instance obtains the initial value of the service.
-        Registration<T> registration = addSupplierListener(newKeyMatcher(id), supplier);
-        // preserve a reference to the registration to avoid gc and let the caller decides when listener can be gc.
-        supplier.setSelfRegistration(registration);
-        return supplier;
+        return blockingSupplierFactory.create(this, id);
     }
 
 
@@ -74,7 +75,11 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
         return newLoadingCacheBlockingSupplierRegistry(SERIALIZED, timeout, unit);
     }
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy, long timeout, TimeUnit unit) {
-        return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), timeout, unit);
+        return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), timeout, unit, new DefaultBlockingSupplierFactory());
+    }
+
+    static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy, long timeout, TimeUnit unit, BlockingSupplierFactory blockingSupplierFactory) {
+        return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), timeout, unit, blockingSupplierFactory);
     }
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
         return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy));

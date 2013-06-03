@@ -102,4 +102,12 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     void setSelfRegistration(Registration<T> selfRegistration) {
         this.selfRegistration = selfRegistration;
     }
+
+    @Override
+    public String toString() {
+        return "BlockingSupplierImpl{" +
+                "supplierRef=" + supplierRef +
+                ", selfRegistration=" + selfRegistration +
+                '}';
+    }
 }

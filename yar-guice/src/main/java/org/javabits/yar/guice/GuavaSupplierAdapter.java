@@ -25,4 +25,11 @@ class GuavaSupplierAdapter<T> implements Supplier<T> {
     public T get() {
         return delegate.get();
     }
+
+    @Override
+    public String toString() {
+        return "GuavaSupplierAdapter{" +
+                "delegate=" + delegate +
+                '}';
+    }
 }

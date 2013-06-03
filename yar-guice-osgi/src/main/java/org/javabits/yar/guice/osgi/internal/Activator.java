@@ -16,13 +16,16 @@
 
 package org.javabits.yar.guice.osgi.internal;
 
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Registry;
+import org.javabits.yar.guice.BlockingSupplierFactory;
 import org.javabits.yar.guice.ExecutionStrategy;
+import org.javabits.yar.guice.NoWaitBlockingSupplierFactory;
+import org.osgi.framework.BundleActivator;
+import org.osgi.framework.BundleContext;
 
 import static java.lang.Boolean.parseBoolean;
+import static org.javabits.yar.guice.BlockingSupplierFactory.DEFAULT_BLOCKING_SUPPLIER;
 import static org.javabits.yar.guice.ExecutionStrategy.PARALLEL;
 import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
 import static org.javabits.yar.guice.YarGuices.Builder;
@@ -60,6 +63,12 @@ public class Activator implements BundleActivator {
      */
     public static final ExecutionStrategy DEFAULT_EXECUTION_STRATEGY = PARALLEL;
 
+    /**
+     * property use to define if the blocking strategy used for the suppliers. It can go to an no wait style.
+     * This is not the standard behaviours but It can help in debug mode or if you want to go to a non blocking approach.
+     */
+    public static final String YAR_NO_WAIT = "yar.no.wait";
+
     private static final String[] REGISTRY_INTERFACES = new String[]{Registry.class.getName()
             , BlockingSupplierRegistry.class.getName()};
 
@@ -73,7 +82,16 @@ public class Activator implements BundleActivator {
         return builder.timeout(getExecutionTimeout(bundleContext))
                 .timeUnit(Registry.DEFAULT_TIME_UNIT)
                 .listenerUpdateExecutionStrategy(getExecutionStrategy(bundleContext))
+                .blockingSupplierStrategy(getBlockingSupplierStrategy(bundleContext))
                 .build();
+    }
+
+    private BlockingSupplierFactory getBlockingSupplierStrategy(BundleContext bundleContext) {
+        String noWait = bundleContext.getProperty(YAR_NO_WAIT);
+        if (noWait != null && parseBoolean(noWait)) {
+            return new NoWaitBlockingSupplierFactory();
+        }
+        return DEFAULT_BLOCKING_SUPPLIER;
     }
 
     private ExecutionStrategy getExecutionStrategy(BundleContext bundleContext) {

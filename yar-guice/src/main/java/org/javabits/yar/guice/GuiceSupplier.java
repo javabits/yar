@@ -43,4 +43,11 @@ class GuiceSupplier<T> implements Supplier<T> {
     public T get() {
         return provider.get();
     }
+
+    @Override
+    public String toString() {
+        return "GuiceSupplier{" +
+                "provider=" + provider +
+                '}';
+    }
 }

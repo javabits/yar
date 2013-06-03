@@ -44,7 +44,7 @@ class StrongPair<L, R> implements Pair<L, R> {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName() + '{' +
+        return  "StrongPair{" +
                 "left=" + left +
                 ", right=" + right +
                 '}';

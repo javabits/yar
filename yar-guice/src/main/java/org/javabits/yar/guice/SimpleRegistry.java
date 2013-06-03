@@ -145,6 +145,10 @@ public class SimpleRegistry implements Registry {
     @Override
     @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Id<T> id) {
+        return getDirectly(id);
+    }
+
+    final <T> Supplier<T> getDirectly(Id<T> id) {
         SupplierRegistration<T> registration = registrationContainer.getFirst(id);
         if (registration == null) {
             return null;

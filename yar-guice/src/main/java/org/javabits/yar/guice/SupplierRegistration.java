@@ -35,4 +35,11 @@ class SupplierRegistration<T> extends StrongPair<Id<T>, Supplier<T>> implements 
     public Id<T> id() {
         return left();
     }
+
+    @Override
+    public String toString() {
+        return "SupplierRegistration{" +
+                "super=" + super.toString() +
+                '}';
+    }
 }
