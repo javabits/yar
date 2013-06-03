@@ -46,7 +46,7 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implem
     }
 
     @SuppressWarnings("unchecked")
-    static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, Watcher<Supplier<T>> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
+    static <T> WatcherRegistration<T> newWatcherRegistration(IdMatcher<T> leftValue, Watcher<T> rightValue, FinalizableReferenceQueue referenceQueue, Registry registry) {
         return new WatcherRegistration(leftValue, new WatcherDecorator<>(rightValue), referenceQueue, registry);
     }
 

@@ -19,7 +19,10 @@ package org.javabits.yar.guice;
 import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
+import org.javabits.yar.TypeListener;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
 import static org.javabits.yar.IdMatchers.newKeyMatcher;
@@ -74,6 +77,7 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(long timeout, TimeUnit unit) {
         return newLoadingCacheBlockingSupplierRegistry(SERIALIZED, timeout, unit);
     }
+
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy, long timeout, TimeUnit unit) {
         return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), timeout, unit, new DefaultBlockingSupplierFactory());
     }
@@ -81,6 +85,7 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy, long timeout, TimeUnit unit, BlockingSupplierFactory blockingSupplierFactory) {
         return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy), timeout, unit, blockingSupplierFactory);
     }
+
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy) {
         return new BlockingSupplierRegistryImpl(newLoadingCacheGuiceWatchableRegistrationContainer(executionStrategy));
     }
@@ -92,5 +97,4 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
     public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry(long timeout, TimeUnit unit) {
         return newLoadingCacheBlockingSupplierRegistry(timeout, unit);
     }
-
 }

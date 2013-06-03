@@ -17,6 +17,7 @@
 package org.javabits.yar.guice;
 
 import org.javabits.yar.Id;
+import org.javabits.yar.TypeListener;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Romain Gilles
  */
-public interface WatchableRegistrationContainer {
+interface WatchableRegistrationContainer {
 
     Set<Type> types();
 
@@ -52,4 +53,10 @@ public interface WatchableRegistrationContainer {
     <T> boolean add(WatcherRegistration<T> watcherRegistration, long timeout, TimeUnit unit) throws InterruptedException;
 
     boolean remove(WatcherRegistration<?> watcherRegistration);
+
+    boolean removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException;
+
+    void addTypeListener(TypeListener typeListener);
+
+    void removeTypeListener(TypeListener typeListener);
 }

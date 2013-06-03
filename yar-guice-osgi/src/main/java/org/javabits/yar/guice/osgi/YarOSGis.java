@@ -65,9 +65,14 @@ public final class YarOSGis {
         registerRegistrationHandler(bundleContext, registrationHandler);
         RegistryListenerHandler registryListenerHandler = getRegistryListenerHandler(injector);
         registerListenerHandler(bundleContext, registryListenerHandler);
-        attachStoppingListener(bundleContext, registrationHandler, registryListenerHandler);
+        ForwardingRegistryWrapper forwardingRegistryWrapper = getForwardingRegistryWrapper(injector);
+        attachStoppingListener(bundleContext, registrationHandler, registryListenerHandler, forwardingRegistryWrapper);
         initHandlers(registrationHandler, registryListenerHandler);
         return injector;
+    }
+
+    private static ForwardingRegistryWrapper getForwardingRegistryWrapper(Injector injector) {
+        return injector.getInstance(ForwardingRegistryWrapper.class);
     }
 
     private static void initHandlers(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
@@ -95,8 +100,8 @@ public final class YarOSGis {
         return injector.getInstance(RegistryListenerHandler.class);
     }
 
-    private static void attachStoppingListener(BundleContext bundleContext, RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
-        bundleContext.addBundleListener(new BundleStoppingListener(registrationHandler, registryListenerHandler, bundleContext.getBundle().getBundleId()));
+    private static void attachStoppingListener(BundleContext bundleContext, RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, ForwardingRegistryWrapper forwardingRegistryWrapper) {
+        bundleContext.addBundleListener(new BundleStoppingListener(registrationHandler, registryListenerHandler, forwardingRegistryWrapper, bundleContext.getBundle().getBundleId()));
     }
 
     private static Iterable<Module> getModules(BundleContext bundleContext, Iterable<Module> modules) {
@@ -107,12 +112,13 @@ public final class YarOSGis {
     }
 
     public static Module newYarOSGiModule(final BundleContext bundleContext) {
-        final BlockingSupplierRegistry blockingSupplierRegistry = getBlockingSupplierRegistry(bundleContext);
+        final ForwardingRegistryWrapper blockingSupplierRegistry = getBlockingSupplierRegistry(bundleContext);
         return new AbstractModule() {
             @Override
             protected void configure() {
                 install(newRegistryDeclarationModule(blockingSupplierRegistry));
                 install(newOSGiModule(bundleContext));
+                bind(ForwardingRegistryWrapper.class).toInstance(blockingSupplierRegistry);
             }
         };
     }
@@ -127,10 +133,10 @@ public final class YarOSGis {
         };
     }
 
-    private static BlockingSupplierRegistry getBlockingSupplierRegistry(BundleContext bundleContext) {
+    private static ForwardingRegistryWrapper getBlockingSupplierRegistry(BundleContext bundleContext) {
         ServiceReference<BlockingSupplierRegistry> serviceReference = checkNotNull(bundleContext.getServiceReference(BlockingSupplierRegistry.class)
                 , SERVICE_REGISTRY_ERROR_MESSAGE);
-        return checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available");
+        return new ForwardingRegistryWrapper(checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available"));
     }
 
 
@@ -138,10 +144,12 @@ public final class YarOSGis {
         private final RegistrationHandler registrationHandler;
         private final RegistryListenerHandler registryListenerHandler;
         private final long bundleId;
+        private final ForwardingRegistryWrapper forwardingRegistryWrapper;
 
-        private BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, long bundleId) {
+        private BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, ForwardingRegistryWrapper forwardingRegistryWrapper, long bundleId) {
             this.registrationHandler = registrationHandler;
             this.registryListenerHandler = registryListenerHandler;
+            this.forwardingRegistryWrapper = forwardingRegistryWrapper;
             this.bundleId = bundleId;
         }
 
@@ -152,6 +160,7 @@ public final class YarOSGis {
             }
             clearSupplierRegistration();
             clearListenerRegistration();
+            clearMissingRegistrations();
         }
 
         private boolean isStopping(BundleEvent bundleEvent) {
@@ -164,6 +173,10 @@ public final class YarOSGis {
 
         private void clearListenerRegistration() {
             registryListenerHandler.clear();
+        }
+
+        private void clearMissingRegistrations() {
+            forwardingRegistryWrapper.clear();
         }
     }
 }

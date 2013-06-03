@@ -86,4 +86,27 @@ class ListMultimapContainer<K, V> implements Container<K, V> {
         return new ListMultimapContainer<>(ArrayListMultimap.<K, V>create());
     }
 
+    @Override
+    public void invalidate(K key) {
+        delegate.removeAll(key);
+    }
+
+    @Override
+    public void invalidateAll(Iterable<K> keys) {
+        for (K key : keys) {
+            invalidate(key
+            );
+        }
+
+    }
+
+    @Override
+    public void addKeyListener(KeyListener<K> keyListener) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void removeKeyListener(KeyListener<K> keyListener) {
+        throw new UnsupportedOperationException();
+    }
 }

@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
+import org.javabits.yar.TypeEvent;
+import org.javabits.yar.TypeListener;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
@@ -32,6 +34,8 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import static org.javabits.yar.TypeEvent.newAddTypeEvent;
+import static org.javabits.yar.TypeEvent.newRemoveTypeEvent;
 import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
 
 /**
@@ -63,12 +67,9 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     private final Container<Type, WatcherRegistration<?>> watcherRegistry;
     private final ExecutionStrategy executor;
 
-//    public GuiceWatchableRegistrationContainer() {
-//        this(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer());
-//    }
 
     public GuiceWatchableRegistrationContainer() {
-        this(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), SERIALIZED);
+        this(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(), SERIALIZED);
     }
 
     public GuiceWatchableRegistrationContainer(Container<Type, SupplierRegistration<?>> supplierRegistry
@@ -199,6 +200,30 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         });
     }
 
+    @Override
+    public void addTypeListener(TypeListener typeListener) {
+        supplierRegistry.addKeyListener(adapt(typeListener));
+    }
+
+    private static KeyListener<Type> adapt(final TypeListener typeListener) {
+        return new KeyListener<Type>() {
+            @Override
+            public void keyAdded(KeyEvent<Type> event) {
+                typeListener.typeChanged(newAddTypeEvent(event.key()));
+            }
+
+            @Override
+            public void keyRemoved(KeyEvent<Type> event) {
+                typeListener.typeChanged(newRemoveTypeEvent(event.key()));
+            }
+        };
+    }
+
+    @Override
+    public void removeTypeListener(TypeListener typeListener) {
+        supplierRegistry.removeKeyListener(adapt(typeListener));
+    }
+
     static class ActionAdapter<T> implements Callable<Void> {
         private final WatcherRegistration<T> watcherRegistration;
         private final SupplierRegistration<T> supplierRegistration;
@@ -236,6 +261,17 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         return watcherRegistry.remove(getRegistryKey(watcherRegistration), watcherRegistration);
     }
 
+    @Override
+    public boolean removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException {
+        List<SupplierRegistration<?>> all = getAll(type);
+        for (SupplierRegistration<?> supplierRegistration: all) {
+            remove(supplierRegistration,timeout, unit);
+        }
+        watcherRegistry.invalidate(type);
+        supplierRegistry.invalidate(type);
+        return true;
+    }
+
     private Type getRegistryKey(Registration<?> watcherRegistration) {
         return watcherRegistration.id().type();
     }
@@ -249,6 +285,6 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer(ExecutionStrategy executionStrategy) {
-        return new GuiceWatchableRegistrationContainer(CacheContainer.<Type, SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<Type, WatcherRegistration<?>>newNonConcurrentContainer(), executionStrategy);
+        return new GuiceWatchableRegistrationContainer(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(), executionStrategy);
     }
 }
