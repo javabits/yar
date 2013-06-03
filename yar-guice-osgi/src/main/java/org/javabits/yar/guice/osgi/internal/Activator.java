@@ -16,12 +16,9 @@
 
 package org.javabits.yar.guice.osgi.internal;
 
-import org.javabits.yar.RegistryHook;
-import org.javabits.yar.guice.YarGuices;
-import org.osgi.framework.BundleActivator;
-import org.osgi.framework.BundleContext;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Registry;
+import org.javabits.yar.RegistryHook;
 import org.javabits.yar.guice.BlockingSupplierFactory;
 import org.javabits.yar.guice.ExecutionStrategy;
 import org.javabits.yar.guice.NoWaitBlockingSupplierFactory;
@@ -79,7 +76,7 @@ public class Activator implements BundleActivator {
     @Override
     public void start(BundleContext bundleContext) throws Exception {
         BlockingSupplierRegistry registry = newRegistry(bundleContext);
-        bundleContext.addBundleListener(new BundleTypeCleaner((RegistryHook)registry));
+        bundleContext.addBundleListener(new BundleTypeCleaner((RegistryHook) registry));
         bundleContext.registerService(REGISTRY_INTERFACES, registry, null);
     }
 
