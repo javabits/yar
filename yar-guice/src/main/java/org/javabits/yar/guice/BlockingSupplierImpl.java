@@ -106,8 +106,7 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     @Override
     public String toString() {
         return "BlockingSupplierImpl{" +
-                "supplierRef=" + supplierRef +
-                ", selfRegistration=" + selfRegistration +
+                "delegate=" + get() +
                 '}';
     }
 }
