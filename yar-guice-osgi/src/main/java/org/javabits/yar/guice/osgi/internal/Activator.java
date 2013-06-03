@@ -16,6 +16,7 @@
 
 package org.javabits.yar.guice.osgi.internal;
 
+import org.javabits.yar.RegistryHook;
 import org.javabits.yar.guice.YarGuices;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -62,11 +63,13 @@ public class Activator implements BundleActivator {
     public static final ExecutionStrategy DEFAULT_EXECUTION_STRATEGY = PARALLEL;
 
     private static final String[] REGISTRY_INTERFACES = new String[]{Registry.class.getName()
-            , BlockingSupplierRegistry.class.getName()};
+            , BlockingSupplierRegistry.class.getName(), RegistryHook.class.getName()};
 
     @Override
     public void start(BundleContext bundleContext) throws Exception {
-        bundleContext.registerService(REGISTRY_INTERFACES, newRegistry(bundleContext), null);
+        BlockingSupplierRegistry registry = newRegistry(bundleContext);
+        bundleContext.addBundleListener(new BundleTypeCleaner((RegistryHook)registry));
+        bundleContext.registerService(REGISTRY_INTERFACES, registry, null);
     }
 
     private BlockingSupplierRegistry newRegistry(BundleContext bundleContext) {

@@ -1,6 +1,7 @@
 package org.javabits.yar;
 
 import java.lang.reflect.Type;
+import java.util.Collection;
 
 /**
  * This class provides methods for frameworks that need specific actions on the registry
@@ -13,7 +14,7 @@ import java.lang.reflect.Type;
  *     Type type = ...;
  *     Registry myRegistry = ...;
  *     if (myRegistry instanceof RegistryHook) {
- *         ((RegistryHook)myRegistry).removeAll(type);
+ *         ((RegistryHook)myRegistry).invalidate(type);
  *     }
  * </pre>
  * Date: 5/20/13
@@ -29,5 +30,11 @@ public interface RegistryHook {
      *
      * @param type the type whose the corresponding entries will be removed.
      */
-    void removeAll(Type type);
+    void invalidate(Type type);
+
+    void invalidateAll(Collection<Type> types);
+
+    void addTypeListener(TypeListener typeListener);
+
+    void removeTypeListener(TypeListener typeListener);
 }

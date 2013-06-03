@@ -16,7 +16,9 @@
 
 package org.javabits.yar.guice;
 
+
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +43,11 @@ public interface Container<K, V> {
 
     Map<K, ? extends Collection<V>> asMap();
 
-    public void invalidate(K key);
+    void invalidate(K key);
 
+    void invalidateAll(Iterable<K> keys);
+
+    void addKeyListener(KeyListener<K> keyListener);
+
+    void removeKeyListener(KeyListener<K> keyListener);
 }

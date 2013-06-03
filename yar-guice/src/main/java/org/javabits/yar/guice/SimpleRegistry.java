@@ -18,6 +18,8 @@ package org.javabits.yar.guice;
 
 import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -28,6 +30,8 @@ import org.javabits.yar.*;
 import javax.annotation.Nullable;
 import java.lang.InterruptedException;
 import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
@@ -36,6 +40,8 @@ import java.util.logging.Logger;
 
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
+import static java.lang.Boolean.TRUE;
+import static java.util.Collections.singletonList;
 import static java.util.Objects.requireNonNull;
 import static org.javabits.yar.InterruptedException.newInterruptedException;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
@@ -182,19 +188,30 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     @Override
     public void remove(org.javabits.yar.Registration<?> registration) {
-        RegistryAction action = new Remove(checkSupplierRegistration(registration));
-        executeActionOnRegistry(action);
+        removeAll(singletonList(registration));
     }
 
+    @Override
+    public void removeAll(Collection<? extends Registration<?>> registrations) {
+        Collection<SupplierRegistration<?>> supplierRegistrations = Collections2.transform(registrations, new Function<Registration<?>, SupplierRegistration<?>>() {
+            @Nullable
+            @Override
+            public SupplierRegistration<?> apply(@Nullable Registration<?> registration) {
+                return checkSupplierRegistration(registration);
+            }
+        });
+        RegistryAction action = new Remove(supplierRegistrations);
+        executeActionOnRegistry(action);
+    }
 
     private void executeActionOnRegistry(RegistryAction action) {
         try {
             registryActionQueue.put(action);
             if (!action.asFuture().get()) {
-                LOG.warning(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()));
+                LOG.warning(String.format("Cannot execute action %s on the registry", action));
             }
         } catch (InterruptedException e) {
-            throw newInterruptedException(String.format("Cannot execute action [%s] id [%s] on the registry", action.getClass().getSimpleName(), action.id()), e);
+            throw newInterruptedException(String.format("Cannot execute action [%s] on the registry", action), e);
         } catch (ExecutionException e) {
             throw propagate(e);
         }
@@ -238,19 +255,44 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     @Override
     public void removeWatcher(Registration<?> watcherRegistration) {
-        WatcherRegistration<?> registration = checkRegistration(watcherRegistration, WatcherRegistration.class);
-        RemoveWatcher<?> action = new RemoveWatcher<>(registration);
+        removeAllWatchers(Collections.singletonList(watcherRegistration));
+    }
+
+    @Override
+    public void removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations) {
+        Collection<WatcherRegistration<?>> registrations = Collections2.transform(watcherRegistrations, new Function<Registration<?>, WatcherRegistration<?>>() {
+            @Nullable
+            @Override
+            public WatcherRegistration<?> apply(@Nullable Registration<?> watcherRegistration) {
+                return checkRegistration(watcherRegistration, WatcherRegistration.class);
+            }
+        });
+        RemoveWatcher action = new RemoveWatcher(registrations);
         executeActionOnRegistry(action);
     }
 
     @Override
-    public void removeAll(Type type) {
-        RegistryAction removeAllAction = new RemoveAll(type);
+    public void invalidate(Type type) {
+        invalidateAll(singletonList(type));
+    }
+
+    @Override
+    public void invalidateAll(Collection<Type> types) {
+        RegistryAction removeAllAction = new InvalidateType(types);
         executeActionOnRegistry(removeAllAction);
     }
 
+    @Override
+    public void addTypeListener(TypeListener typeListener) {
+        registrationContainer.addTypeListener(typeListener);
+    }
+
+    @Override
+    public void removeTypeListener(TypeListener typeListener) {
+        registrationContainer.removeTypeListener(typeListener);
+    }
+
     static interface RegistryAction {
-        Id<?> id();
 
         void execute();
 
@@ -258,27 +300,13 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     }
 
-    abstract class AbstractAction implements RegistryAction {
-        private final Registration<?> registration;
-
-        AbstractAction(Registration<?> registration) {
-            this.registration = registration;
-        }
-
-        @Override
-        public Id<?> id() {
-            return registration.id();
-        }
-    }
-
-    private class Add extends AbstractAction implements RegistryAction {
+    private class Add implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final AddCall addCall;
         private final SupplierRegistration<?> registration;
 
 
         Add(SupplierRegistration<?> registration) {
-            super(registration);
             this.registration = registration;
             addCall = new AddCall();
             this.futureTask = new FutureTask<>(addCall);
@@ -307,14 +335,13 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     }
 
-    private class Remove extends AbstractAction implements RegistryAction {
+    private class Remove implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final RemoveCall removeCall;
-        private final SupplierRegistration<?> registration;
+        private final Iterable<SupplierRegistration<?>> registrations;
 
-        Remove(SupplierRegistration<?> registration) {
-            super(registration);
-            this.registration = registration;
+        Remove(Iterable<SupplierRegistration<?>> registrations) {
+            this.registrations = registrations;
             removeCall = new RemoveCall();
             this.futureTask = new FutureTask<>(removeCall);
         }
@@ -332,26 +359,25 @@ public class SimpleRegistry implements Registry, RegistryHook {
         private class RemoveCall implements Callable<Boolean> {
             @Override
             public Boolean call() throws Exception {
-                return registrationContainer.remove(registration, defaultTimeOut, defaultTimeoutUnit);
+                for (SupplierRegistration<?> registration : registrations) {
+                    registrationContainer.remove(registration, defaultTimeOut, defaultTimeoutUnit);
+                }
+                return true;
             }
         }
 
     }
 
-    class RemoveAll implements RegistryAction {
+    class InvalidateType implements RegistryAction {
         private final FutureTask<Boolean> futureTask;
         private final RemoveAllCall removeCall;
-        private final Type type;
+        private final Iterable<Type> types;
 
-        RemoveAll(Type type) {
-            this.type = type;
+        InvalidateType(Iterable<Type> types) {
+            Preconditions.checkArgument(!Iterables.isEmpty(types), "No null or empty types list");
+            this.types = types;
             this.removeCall = new RemoveAllCall();
             this.futureTask = new FutureTask<>(removeCall);
-        }
-
-        @Override
-        public Id<?> id() {
-            return GuiceId.of(type, null);
         }
 
         @Override
@@ -368,21 +394,23 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
             @Override
             public Boolean call() throws Exception {
-                return registrationContainer.removeAll(type, defaultTimeOut, defaultTimeoutUnit);
+                for (Type type : types) {
+                    registrationContainer.removeAll(type, defaultTimeOut, defaultTimeoutUnit);
+                }
+                return TRUE;
             }
         }
 
     }
 
 
-    private class AddWatcher<T> extends AbstractAction implements RegistryAction {
+    private class AddWatcher<T> implements RegistryAction {
 
         private final WatcherRegistration<T> watcherRegistration;
         private final AddWatcherCall addWatcherCall;
         private final FutureTask<Boolean> futureTask;
 
         public AddWatcher(WatcherRegistration<T> watcherRegistration) {
-            super(watcherRegistration);
             this.watcherRegistration = watcherRegistration;
             addWatcherCall = new AddWatcherCall();
             this.futureTask = new FutureTask<>(addWatcherCall);
@@ -409,14 +437,13 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
     }
 
-    private class RemoveWatcher<T> extends AbstractAction implements RegistryAction {
-        private final WatcherRegistration<T> watcherRegistration;
+    private class RemoveWatcher implements RegistryAction {
+        private final Collection<WatcherRegistration<?>> watcherRegistrations;
         private final RemoveWatcherCall removeWatcherCall;
         private final FutureTask<Boolean> futureTask;
 
-        public RemoveWatcher(WatcherRegistration<T> watcherRegistration) {
-            super(watcherRegistration);
-            this.watcherRegistration = watcherRegistration;
+        public RemoveWatcher(Collection<WatcherRegistration<?>> watcherRegistrations) {
+            this.watcherRegistrations = watcherRegistrations;
             removeWatcherCall = new RemoveWatcherCall();
             this.futureTask = new FutureTask<>(removeWatcherCall);
         }
@@ -434,7 +461,10 @@ public class SimpleRegistry implements Registry, RegistryHook {
         private class RemoveWatcherCall implements Callable<Boolean> {
             @Override
             public Boolean call() throws Exception {
-                return registrationContainer.remove(watcherRegistration);
+                for (WatcherRegistration<?> watcherRegistration : watcherRegistrations) {
+                    registrationContainer.remove(watcherRegistration);
+                }
+                return TRUE;
             }
         }
     }

@@ -22,6 +22,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Iterables;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -31,43 +32,69 @@ import java.util.concurrent.ExecutionException;
 import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.newArrayList;
 import static java.util.Collections.unmodifiableList;
+import static org.javabits.yar.guice.KeyEvent.newKeyEvent;
 
 /**
- * TODO comment
- * Date: 3/11/13
- * Time: 9:05 PM
+ * This class is responsible to maintain a multi-map of {@link Type}s
+ * associated to values. It's implementation is based on Guava {@code LoadingCache}.
+ * {@link KeyListener}{@literal <Type>} can be added. They will be
+ * triggered on {@code CacheLoader.load(Type)} for addition, and on
+ * {@link #invalidate(java.lang.reflect.Type)}, {@link #invalidateAll(Iterable)}
+ * for removal.
+ *
+ * @param <V> the type of the multi-values associated to a {@link Type}
  *
  * @author Romain Gilles
  */
-public class CacheContainer<K, V> implements Container<K, V> {
+class CacheContainer<V> implements Container<Type, V> {
 
 
-    private final LoadingCache<K, List<V>> loadingCache;
+    private final LoadingCache<Type, List<V>> loadingCache;
+    private final Collection<KeyListener<Type>> keyListeners;
 
-    static <K, V> CacheContainer<K, V> newConcurrentContainer() {
-        return new CacheContainer<>(CacheBuilder.newBuilder().build(new CacheLoader<K, List<V>>() {
+    static <V> CacheContainer<V> newConcurrentContainer() {
+        return newConcurrentContainer(new CopyOnWriteArrayList<KeyListener<Type>>());
+    }
+
+    private static <V> CacheContainer<V> newConcurrentContainer(final Collection<KeyListener<Type>> typeListeners) {
+        return new CacheContainer<>(CacheBuilder.newBuilder().build(new CacheLoader<Type, List<V>>() {
             @Override
-            public List<V> load(K key) {
+            public List<V> load(Type key) {
+                for (KeyListener<Type> typeListener : typeListeners) {
+                    typeListener.keyAdded(newKeyEvent(key));
+                }
                 return new CopyOnWriteArrayList<>();
             }
-        }));
+        }), typeListeners);
     }
 
-    static <K, V> CacheContainer<K, V> newNonConcurrentContainer() {
-        return new CacheContainer<>(CacheBuilder.newBuilder().build(new CacheLoader<K, List<V>>() {
+
+    static <V> CacheContainer<V> newNonConcurrentContainer() {
+        return new CacheContainer<>();
+    }
+
+
+    private CacheContainer() {
+        final CopyOnWriteArrayList<KeyListener<Type>> keyListeners = new CopyOnWriteArrayList<>();
+        this.keyListeners = keyListeners;
+        this.loadingCache = CacheBuilder.newBuilder().build(new CacheLoader<Type, List<V>>() {
             @Override
-            public List<V> load(K key) {
-                return newArrayList();
+            public List<V> load(Type key) {
+                for (KeyListener<Type> keyListener : keyListeners) {
+                    keyListener.keyAdded(newKeyEvent(key));
+                }
+                return new CopyOnWriteArrayList<>();
             }
-        }));
+        });
     }
 
-    public CacheContainer(LoadingCache<K, List<V>> loadingCache) {
+    private CacheContainer(LoadingCache<Type, List<V>> loadingCache, Collection<KeyListener<Type>> keyListeners) {
         this.loadingCache = loadingCache;
+        this.keyListeners = keyListeners;
     }
 
     @Override
-    public List<V> getAll(K key) {
+    public List<V> getAll(Type key) {
         try {
             return unmodifiableList(loadingCache.get(key));
         } catch (ExecutionException e) {
@@ -77,12 +104,12 @@ public class CacheContainer<K, V> implements Container<K, V> {
 
     @Nullable
     @Override
-    public V getFirst(K key) {
+    public V getFirst(Type key) {
         return Iterables.getFirst(getAll(key), null);
     }
 
     @Override
-    public boolean put(K key, V value) {
+    public boolean put(Type key, V value) {
         try {
             List<V> valueList = loadingCache.get(key);
             return valueList.add(value);
@@ -92,7 +119,7 @@ public class CacheContainer<K, V> implements Container<K, V> {
     }
 
     @Override
-    public boolean remove(K key, V value) {
+    public boolean remove(Type key, V value) {
         try {
             return loadingCache.get(key).remove(value);
         } catch (ExecutionException e) {
@@ -101,12 +128,37 @@ public class CacheContainer<K, V> implements Container<K, V> {
     }
 
     @Override
-    public void invalidate(K key) {
+    public void invalidate(Type key) {
         loadingCache.invalidate(key);
+        fireKeyRemoved(key);
+
+    }
+
+    private void fireKeyRemoved(Type key) {
+        for (KeyListener<Type> keyListener : keyListeners) {
+            keyListener.keyRemoved(newKeyEvent(key));
+        }
+    }
+
+    public void invalidateAll(Iterable<Type> keys) {
+        loadingCache.invalidateAll(keys);
+        for (Type key : keys) {
+            fireKeyRemoved(key);
+        }
     }
 
     @Override
-    public Map<K, ? extends Collection<V>> asMap() {
+    public Map<Type, ? extends Collection<V>> asMap() {
         return loadingCache.asMap();
+    }
+
+    @Override
+    public void addKeyListener(KeyListener<Type> keyListener) {
+        keyListeners.add(keyListener);
+    }
+
+    @Override
+    public void removeKeyListener(KeyListener<Type> keyListener) {
+        keyListeners.add(keyListener);
     }
 }

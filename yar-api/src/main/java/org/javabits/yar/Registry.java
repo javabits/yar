@@ -21,6 +21,7 @@ import com.google.common.reflect.TypeToken;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -60,8 +61,12 @@ public interface Registry {
 
     void remove(Registration<?> registration);
 
+    void removeAll(Collection<? extends Registration<?>> registrations);
+
     <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<T> watcher);
 
     void removeWatcher(Registration<?> watcherRegistration);
+
+    void removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations);
 
 }
