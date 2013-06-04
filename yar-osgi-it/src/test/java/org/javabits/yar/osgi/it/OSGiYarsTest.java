@@ -17,11 +17,16 @@
 package org.javabits.yar.osgi.it;
 
 import com.google.inject.Injector;
+import org.javabits.yar.BlockingSupplierRegistry;
+import org.javabits.yar.Registry;
+import org.javabits.yar.guice.RegistrationHandler;
+import org.javabits.yar.guice.RegistryListenerHandler;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.javabits.yar.guice.RegistryModule;
 
@@ -67,6 +72,18 @@ public class OSGiYarsTest {
             }
         });
         assertThat(injector, is(not(nullValue())));
+        checkYarSingletonBinding(injector, RegistrationHandler.class);
+        checkYarSingletonBinding(injector, RegistryListenerHandler.class);
+        checkYarSingletonBinding(injector, BundleContext.class);
+        checkYarSingletonBinding(injector, Bundle.class);
+        checkYarSingletonBinding(injector, Registry.class);
+        checkYarSingletonBinding(injector, BlockingSupplierRegistry.class);
+    }
+
+    private <T> void checkYarSingletonBinding(Injector injector, Class<T> type) {
+        T registryListenerHandler = injector.getInstance(type);
+        assertThat(registryListenerHandler, is(not(nullValue())));
+        assertThat(registryListenerHandler, is(injector.getInstance(type)));
     }
 
     static interface IOSGiYarsTest {

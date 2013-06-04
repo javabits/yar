@@ -28,6 +28,7 @@ import org.javabits.yar.Registry;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.List;
 
 import static com.google.common.collect.Lists.newArrayList;
@@ -40,6 +41,7 @@ import static com.google.common.collect.Lists.transform;
  *
  * @author Romain Gilles
  */
+@Singleton
 public class RegistrationBindingHandler implements RegistrationHandler {
     private final Injector injector;
     private final Registry registry;

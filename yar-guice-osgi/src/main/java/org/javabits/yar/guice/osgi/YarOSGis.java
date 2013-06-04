@@ -18,10 +18,10 @@ package org.javabits.yar.guice.osgi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.*;
-import org.osgi.framework.*;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.guice.RegistrationHandler;
 import org.javabits.yar.guice.RegistryListenerHandler;
+import org.osgi.framework.*;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.Arrays.asList;
@@ -29,9 +29,38 @@ import static org.javabits.yar.guice.YarGuices.newRegistryDeclarationModule;
 
 /**
  * This class provides utility methods to help you to handle Guice Injector creation.
- * TODO add tracker to remove service from registry when bundle is stopped
- * Date: 3/12/13
- * Time: 11:36 PM
+ * <h2>Injector creation</h2>
+ * <p>
+ * You have several {@code YarGuices.newInjector(...)} methods that try to mimic the {@code Guice.createInjector(...)}
+ * methods.
+ * <pre>
+ * YarGuices.newInjector(bundleContext, PRODUCTION
+ *                       , new AbstractModule() {...}
+ *                       , new AbstractModule() {...}
+ *                       , ...
+ *                       , new AbstractRegistryModule() {...}
+ *                       , new AbstractRegistryModule() {...}
+ *                       , ...
+ *                       , new RegistryModule() {...});
+ * </pre>
+ * This methods will chain the creation of the injector and the
+ * {@link #start(org.osgi.framework.BundleContext, com.google.inject.Injector)} method to initialized Yar properly.
+ * </p>
+ * <p>
+ * <b>Warning:</b> You must add one and only one instance of {@link org.javabits.yar.guice.RegistryModule}
+ * but as many as you want {@link org.javabits.yar.guice.AbstractRegistryModule}.
+ * </p>
+ * <p>
+ * To create your injector by your self you must add to the list of modules provided to the {@code Guice#createInjector()} method the
+ * injector provided by the {@link YarOSGis#newYarOSGiModule(org.osgi.framework.BundleContext)}. This module binds:
+ * <ul>
+ * <li>the {@code Bundle}</li>
+ * <li>the {@code BundleContext}</li>
+ * <li>the {@code Registry}</li>
+ * <li>the {@code BlockingSupplierRegistry}</li>
+ * </ul>
+ * Then you have the start the registry by calling the {@code start(...)} method.
+ * </p>
  *
  * @author Romain Gilles
  */
@@ -59,14 +88,33 @@ public final class YarOSGis {
         return start(bundleContext, Guice.createInjector(stage, getModules(bundleContext, modules)));
     }
 
+    /**
+     * The start method is responsible to 'start' the given injector.
+     * <p>More formally, it:
+     * <ul>
+     * <li>registers the injector has an OSGi</li>
+     * <li>Gets the inject supplier registration handler and registry listener handle</li>
+     * <li>saves the Handlers into the OSGi registry.</li>
+     * <li>Init the Handlers.</li>
+     * <li>Add cleaner to remove all the registered suppliers and listeners on bundle shutdown.</li>
+     * </ul>
+     * </p>
+     * <p><b>Warning:</b>This injector must have been created with
+     * one and only one {@link org.javabits.yar.guice.RegistryModule}
+     * to ensure bind registry handlers for Guice. But you can add/use as many as you want
+     * {@link org.javabits.yar.guice.AbstractRegistryModule}.</p>
+     *
+     * @param bundleContext the bundle context from where the injector is created.
+     * @param injector      the injector that must be started.
+     * @return the given injector.
+     */
     public static Injector start(BundleContext bundleContext, Injector injector) {
         registerInjector(bundleContext, injector);
         RegistrationHandler registrationHandler = getRegistrationHandler(injector);
         registerRegistrationHandler(bundleContext, registrationHandler);
         RegistryListenerHandler registryListenerHandler = getRegistryListenerHandler(injector);
         registerListenerHandler(bundleContext, registryListenerHandler);
-        ForwardingRegistryWrapper forwardingRegistryWrapper = getForwardingRegistryWrapper(injector);
-        attachStoppingListener(bundleContext, registrationHandler, registryListenerHandler, forwardingRegistryWrapper);
+        attachStoppingListener(bundleContext, injector);
         initHandlers(registrationHandler, registryListenerHandler);
         return injector;
     }
@@ -100,8 +148,11 @@ public final class YarOSGis {
         return injector.getInstance(RegistryListenerHandler.class);
     }
 
-    private static void attachStoppingListener(BundleContext bundleContext, RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, ForwardingRegistryWrapper forwardingRegistryWrapper) {
-        bundleContext.addBundleListener(new BundleStoppingListener(registrationHandler, registryListenerHandler, forwardingRegistryWrapper, bundleContext.getBundle().getBundleId()));
+    private static void attachStoppingListener(BundleContext bundleContext, Injector injector) {
+        bundleContext.addBundleListener(new BundleStoppingListener(getRegistrationHandler(injector)
+                , getRegistryListenerHandler(injector)
+                , getForwardingRegistryWrapper(injector)
+                , bundleContext.getBundle().getBundleId()));
     }
 
     private static Iterable<Module> getModules(BundleContext bundleContext, Iterable<Module> modules) {
@@ -111,6 +162,15 @@ public final class YarOSGis {
         return modulesBuilder.build();
     }
 
+    /**
+     * Create a new module that bind the OSGi element: {@code Bundle} and {@code BundleContext}, and the bind the Yar's
+     * elements: {@code Registry} and {@code BlockingSupplierRegistry}.
+     * This module is required to make Yar works properly in the registry.
+     * This method return an instance of {@code AbstractModule} and not an instance of {@link org.javabits.yar.guice.RegistryModule}.
+     *
+     * @param bundleContext the bundle context associated to the injector.
+     * @return A module that binds all the {@code Registry} interfaces + the {@code Bundle} and the {@code BundleContext}
+     */
     public static Module newYarOSGiModule(final BundleContext bundleContext) {
         final ForwardingRegistryWrapper blockingSupplierRegistry = getBlockingSupplierRegistry(bundleContext);
         return new AbstractModule() {

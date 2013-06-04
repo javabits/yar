@@ -26,6 +26,7 @@ import org.javabits.yar.*;
 
 import javax.annotation.Nullable;
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -38,6 +39,7 @@ import static com.google.common.collect.Lists.newArrayList;
  *
  * @author Romain Gilles
  */
+@Singleton
 public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     private final Injector injector;
     private final Registry registry;
