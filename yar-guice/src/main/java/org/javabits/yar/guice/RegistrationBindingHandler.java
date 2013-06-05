@@ -79,7 +79,7 @@ public class RegistrationBindingHandler implements RegistrationHandler {
     @SuppressWarnings("unchecked")
     private StrongPair<Id, GuiceSupplier> newPair(Key<?> key) {
         Id<?> id = GuiceId.of(key);
-        return new StrongPair<Id, GuiceSupplier>(id, new GuiceSupplier(id, injector.getProvider(key)));
+        return new StrongPair<Id, GuiceSupplier>(id, new GuiceSupplier(injector.getProvider(key)));
     }
 
     @SuppressWarnings("unchecked")

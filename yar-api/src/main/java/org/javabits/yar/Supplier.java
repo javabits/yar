@@ -19,17 +19,18 @@ package org.javabits.yar;
 import javax.annotation.Nullable;
 
 /**
- * TODO use the guava class instead
+ * Extension of the guava {@code Supplier} with it {@link Id}.
+ * This class represents the registration that associates a {@code Supplier} to an {@code Id}.
+ * It is created on registration phase and returned by all pull methods.
  *
  * @author Romain Gilles
- *         Date: 2/9/13
- *         Time: 2:41 PM
  * @since 1.0
  */
 public interface Supplier<T> extends com.google.common.base.Supplier<T> {
 
     Id<T> id();
 
+    @Override
     @Nullable
     T get();
 }

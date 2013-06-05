@@ -1,10 +1,10 @@
 package org.javabits.yar.guice;
 
+import com.google.common.base.Supplier;
 import com.google.inject.*;
 import com.google.inject.name.Names;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
-import org.javabits.yar.Supplier;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -26,7 +26,8 @@ public class DynamicCollectionsBindingTest {
         //given
         BlockingSupplierRegistry blockingSupplierRegistry = YarGuices.newLoadingCacheBlockingSupplierRegistry();
         Module registryDeclarationModule = YarGuices.newRegistryDeclarationModule(blockingSupplierRegistry);
-        final TypeLiteral<List<MyInterface>> listTypeLiteral = new TypeLiteral<List<MyInterface>>() {};
+        final TypeLiteral<List<MyInterface>> listTypeLiteral = new TypeLiteral<List<MyInterface>>() {
+        };
         final Key<List<MyInterface>> listKey2 = Key.get(listTypeLiteral, Names.named("test"));
         Injector injector = Guice.createInjector(registryDeclarationModule, new RegistryModule() {
             @Override
@@ -45,11 +46,6 @@ public class DynamicCollectionsBindingTest {
         final MyInterfaceImpl myImpl = new MyInterfaceImpl();
         final Id<MyInterface> id = GuiceId.of(MyInterface.class);
         blockingSupplierRegistry.put(id, new Supplier<MyInterface>() {
-            @Override
-            public Id<MyInterface> id() {
-                return id;
-            }
-
             @Nullable
             @Override
             public MyInterface get() {
@@ -58,11 +54,6 @@ public class DynamicCollectionsBindingTest {
         });
         final MyInterfaceImpl myImpl2 = new MyInterfaceImpl();
         blockingSupplierRegistry.put(id, new Supplier<MyInterface>() {
-            @Override
-            public Id<MyInterface> id() {
-                return id;
-            }
-
             @Nullable
             @Override
             public MyInterface get() {

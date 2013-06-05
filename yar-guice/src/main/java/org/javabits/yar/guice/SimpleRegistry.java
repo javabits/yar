@@ -162,8 +162,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         return registration.right();
     }
 
-    @Override
-    public <T> SupplierRegistration<T> put(Id<T> id, Supplier<T> supplier) {
+    private <T> SupplierRegistration<T> put(Id<T> id, Supplier<T> supplier) {
         checkKey(id, "id");
         checkSupplier(supplier);
         SupplierRegistration<T> registration = new SupplierRegistration<>(id, supplier);

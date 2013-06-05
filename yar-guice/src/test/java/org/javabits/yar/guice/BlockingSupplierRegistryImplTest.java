@@ -14,25 +14,23 @@
 
 package org.javabits.yar.guice;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
-import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.newBlockingSupplierRegistry;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import javax.inject.Provider;
-
+import com.google.common.util.concurrent.ListenableFuture;
 import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
 import org.junit.Test;
-import com.google.common.util.concurrent.ListenableFuture;
+
+import javax.inject.Provider;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.newBlockingSupplierRegistry;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 /**
  * TODO comment Date: 2/28/13 Time: 11:43 AM
@@ -44,20 +42,20 @@ public class BlockingSupplierRegistryImplTest {
     @Test
     public void testNonBlockingGet() {
         BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
-        BlockingSupplier<MyService> supplier=registry.get(MyService.class);
+        BlockingSupplier<MyService> supplier = registry.get(MyService.class);
 
         assertNotNull(supplier);
         assertNull(supplier.get());
 
         final MyService myService = new MyServiceImpl();
-        registry.put(GuiceId.of(MyService.class), new GuiceSupplier<>(GuiceId.of(MyService.class), new Provider<MyService>() {
+        registry.put(GuiceId.of(MyService.class), new GuiceSupplier<>(new Provider<MyService>() {
             @Override
             public MyService get() {
                 return myService;
             }
         }));
 
-        assertThat(supplier.get(),is(myService));
+        assertThat(supplier.get(), is(myService));
     }
 
     @Test
@@ -86,7 +84,7 @@ public class BlockingSupplierRegistryImplTest {
         thread.start();
         Thread.sleep(100);
         Id<MyService> id = GuiceId.of(MyService.class);
-        registry.put(id, new GuiceSupplier<>(id, new Provider<MyService>() {
+        registry.put(id, new GuiceSupplier<>(new Provider<MyService>() {
             @Override
             public MyService get() {
                 return myService;
@@ -124,7 +122,7 @@ public class BlockingSupplierRegistryImplTest {
         thread.start();
         Thread.sleep(100);
         Id<MyService> id = GuiceId.of(MyService.class);
-        registry.put(id, new GuiceSupplier<>(id, new Provider<MyService>() {
+        registry.put(id, new GuiceSupplier<>(new Provider<MyService>() {
             @Override
             public MyService get() {
                 return myService;

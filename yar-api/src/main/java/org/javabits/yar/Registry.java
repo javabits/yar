@@ -20,7 +20,6 @@ package org.javabits.yar;
 import com.google.common.reflect.TypeToken;
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -54,8 +53,6 @@ public interface Registry {
 
     @Nullable
     <T> Supplier<T> get(Id<T> id);
-
-    <T> Registration<T> put(Id<T> id, Supplier<T> supplier);
 
     <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<T> supplier);
 

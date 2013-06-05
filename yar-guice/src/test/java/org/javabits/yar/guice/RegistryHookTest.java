@@ -1,11 +1,9 @@
 package org.javabits.yar.guice;
 
-import com.google.common.base.*;
+import com.google.common.base.Supplier;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import org.hamcrest.*;
 import org.javabits.yar.*;
-import org.javabits.yar.Supplier;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -14,13 +12,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.javabits.yar.TypeEvent.Type.ADDED;
 
 /**
- * TODO comment
- * Date: 5/21/13
- * Time: 8:57 AM
- *
  * @author Romain Gilles
  */
 public class RegistryHookTest {
@@ -41,11 +34,6 @@ public class RegistryHookTest {
     public void testInvalidate() {
         final Id<MyService> id = GuiceId.of(MyService.class);
         Registration<MyService> myServiceRegistration = registry.put(id, new Supplier<MyService>() {
-            @Override
-            public Id<MyService> id() {
-                return id;
-            }
-
             @Nullable
             @Override
             public MyService get() {
@@ -87,13 +75,13 @@ public class RegistryHookTest {
 
         @Nullable
         @Override
-        public Supplier<MyService> add(Supplier<MyService> element) {
+        public org.javabits.yar.Supplier<MyService> add(org.javabits.yar.Supplier<MyService> element) {
             counter.incrementAndGet();
             return element;
         }
 
         @Override
-        public void remove(Supplier<MyService> element) {
+        public void remove(org.javabits.yar.Supplier<MyService> element) {
             counter.decrementAndGet();
         }
     }
@@ -119,7 +107,7 @@ public class RegistryHookTest {
             }
         });
         //when register first service
-        Registration<MyService> serviceRegistration = registry.put(GuiceId.of(MyService.class), new com.google.common.base.Supplier<MyService>() {
+        Registration<MyService> serviceRegistration = registry.put(GuiceId.of(MyService.class), new Supplier<MyService>() {
             @Override
             public MyService get() {
                 return new MyServiceImpl();
@@ -130,7 +118,7 @@ public class RegistryHookTest {
             assertThat(count[0], is(1));
         }
         // when register second service on the same type
-        Registration<MyService> serviceRegistration2 = registry.put(GuiceId.of(Key.get(MyService.class, Names.named("test"))), new com.google.common.base.Supplier<MyService>() {
+        Registration<MyService> serviceRegistration2 = registry.put(GuiceId.of(Key.get(MyService.class, Names.named("test"))), new Supplier<MyService>() {
             @Override
             public MyService get() {
                 return new MyServiceImpl();
@@ -153,14 +141,14 @@ public class RegistryHookTest {
             assertThat(count[0], is(1));
         }
         // when invalidate the type MyService
-        assertThat(registry.getAll(MyService.class), org.hamcrest.Matchers.<Supplier<MyService>>iterableWithSize(0));
+        assertThat(registry.getAll(MyService.class), org.hamcrest.Matchers.<org.javabits.yar.Supplier<MyService>>iterableWithSize(0));
         registryHook.invalidate(MyService.class);
         // then count must be 0
         synchronized (count) {
             assertThat(count[0], is(0));
         }
         // when re-register a service on type MyService
-        registry.put(GuiceId.of(Key.get(MyService.class, Names.named("test"))), new com.google.common.base.Supplier<MyService>() {
+        registry.put(GuiceId.of(Key.get(MyService.class, Names.named("test"))), new Supplier<MyService>() {
             @Override
             public MyService get() {
                 return new MyServiceImpl();

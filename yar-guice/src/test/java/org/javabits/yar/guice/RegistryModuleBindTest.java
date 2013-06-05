@@ -270,7 +270,7 @@ public class RegistryModuleBindTest {
     }
 
     private Registration<MyInterface> getMyInterfaceRegistration(Registry registry, Id<MyInterface> id) {
-        return registry.put(id, GuiceSupplier.of(id, new Provider<MyInterface>() {
+        return registry.put(id, GuiceSupplier.of(new Provider<MyInterface>() {
             @Override
             public MyInterface get() {
                 return new MyInterface() {
