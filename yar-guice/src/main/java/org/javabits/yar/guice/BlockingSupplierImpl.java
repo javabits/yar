@@ -1,5 +1,6 @@
 package org.javabits.yar.guice;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
 import static com.google.common.util.concurrent.Futures.getUnchecked;
 
@@ -11,6 +12,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
+import com.google.common.base.Preconditions;
 import org.javabits.yar.*;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -18,15 +20,23 @@ import com.google.common.util.concurrent.SettableFuture;
 
 class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
+    private final Id<T> id;
     @SuppressWarnings("unused")
     private Registration<T> selfRegistration;
 
-    BlockingSupplierImpl(Supplier<T> supplier) {
+    BlockingSupplierImpl(Id<T> id, Supplier<T> supplier) {
+        this.id = checkNotNull(id, "id");
         SettableFuture<Supplier<T>> settableFuture = SettableFuture.<Supplier<T>>create();
         if (supplier != null) {
             settableFuture.set(supplier);
         }
         this.supplierRef = new AtomicReference<>(settableFuture);
+    }
+
+
+    @Override
+    public Id<T> id() {
+        return id;
     }
 
     @Nullable

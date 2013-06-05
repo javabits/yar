@@ -1,5 +1,6 @@
 package org.javabits.yar.guice;
 
+import org.javabits.yar.Id;
 import org.javabits.yar.Supplier;
 
 import javax.annotation.Nullable;
@@ -15,9 +16,16 @@ import static java.util.Objects.requireNonNull;
  */
 class GuavaSupplierAdapter<T> implements Supplier<T> {
     private final com.google.common.base.Supplier<T> delegate;
+    private final Id<T> id;
 
-    GuavaSupplierAdapter(com.google.common.base.Supplier<T> delegate) {
+    GuavaSupplierAdapter(Id<T> id, com.google.common.base.Supplier<T> delegate) {
+        this.id = requireNonNull(id, "id");
         this.delegate = requireNonNull(delegate, "delegate");
+    }
+
+    @Override
+    public Id<T> id() {
+        return id;
     }
 
     @Nullable

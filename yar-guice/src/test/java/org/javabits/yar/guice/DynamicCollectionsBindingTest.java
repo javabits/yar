@@ -3,6 +3,7 @@ package org.javabits.yar.guice;
 import com.google.inject.*;
 import com.google.inject.name.Names;
 import org.javabits.yar.BlockingSupplierRegistry;
+import org.javabits.yar.Id;
 import org.javabits.yar.Supplier;
 import org.junit.Test;
 
@@ -42,7 +43,13 @@ public class DynamicCollectionsBindingTest {
         assertThat(myInterfaceList2, is(emptyIterable()));
         //when
         final MyInterfaceImpl myImpl = new MyInterfaceImpl();
-        blockingSupplierRegistry.put(GuiceId.of(MyInterface.class), new Supplier<MyInterface>() {
+        final Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        blockingSupplierRegistry.put(id, new Supplier<MyInterface>() {
+            @Override
+            public Id<MyInterface> id() {
+                return id;
+            }
+
             @Nullable
             @Override
             public MyInterface get() {
@@ -50,7 +57,12 @@ public class DynamicCollectionsBindingTest {
             }
         });
         final MyInterfaceImpl myImpl2 = new MyInterfaceImpl();
-        blockingSupplierRegistry.put(GuiceId.of(MyInterface.class), new Supplier<MyInterface>() {
+        blockingSupplierRegistry.put(id, new Supplier<MyInterface>() {
+            @Override
+            public Id<MyInterface> id() {
+                return id;
+            }
+
             @Nullable
             @Override
             public MyInterface get() {

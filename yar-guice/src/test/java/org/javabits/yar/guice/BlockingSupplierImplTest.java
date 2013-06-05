@@ -28,7 +28,7 @@ public class BlockingSupplierImplTest {
      */@Test
     public void testCreateWithValueAndAdd() {
         // given a supplier at construction time
-        BlockingSupplierImpl blockingSupplier = new BlockingSupplierImpl(supplier);
+        BlockingSupplierImpl blockingSupplier = new BlockingSupplierImpl(GuiceId.of(MyInterface.class), supplier);
         // when trigger supplier changed by the reactor
         blockingSupplier.supplierChanged(new SupplierEvent(ADD, supplier));
         //then now exception must be throw

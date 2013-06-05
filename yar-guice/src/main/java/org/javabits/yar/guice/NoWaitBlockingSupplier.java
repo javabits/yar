@@ -22,16 +22,8 @@ import static com.google.common.util.concurrent.Futures.getUnchecked;
  */
 public class NoWaitBlockingSupplier<T> extends BlockingSupplierImpl<T> {
 
-    private static final Supplier NULL_SUPPLIER = new Supplier() {
-        @Nullable
-        @Override
-        public Object get() {
-            return null;
-        }
-    };
-
-    public NoWaitBlockingSupplier(Supplier<T> supplier) {
-        super(supplier);
+    public NoWaitBlockingSupplier(Id<T> id, Supplier<T> supplier) {
+        super(id, supplier);
     }
 
     @Override

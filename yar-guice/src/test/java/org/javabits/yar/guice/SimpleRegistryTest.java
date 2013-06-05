@@ -42,9 +42,14 @@ public class SimpleRegistryTest {
 
     @Test
     public void testPutIdYarSupplier() {
-        Id<String> id = GuiceId.of(String.class);
+        final Id<String> id = GuiceId.of(String.class);
         assertThat(registry.get(id), is(nullValue()));
         registry.put(id, new org.javabits.yar.Supplier<String>() {
+            @Override
+            public Id<String> id() {
+                return id;
+            }
+
             @Override
             public String get() {
                 return "test";
@@ -56,10 +61,10 @@ public class SimpleRegistryTest {
 
     @Test
     public void testPutIdGuiceSupplier() {
-        Id<String> id = GuiceId.of(String.class);
+        final Id<String> id = GuiceId.of(String.class);
         assertThat(registry.get(id), is(nullValue()));
 
-        registry.put(id, GuiceSupplier.of(new Provider<String>() {
+        registry.put(id, GuiceSupplier.of(id, new Provider<String>() {
             @Override
             public String get() {
                 return "test";

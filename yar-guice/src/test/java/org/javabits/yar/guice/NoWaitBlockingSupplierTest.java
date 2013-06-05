@@ -3,6 +3,7 @@ package org.javabits.yar.guice;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.Id;
 import org.javabits.yar.Supplier;
 import org.javabits.yar.SupplierEvent;
 import org.junit.Test;
@@ -21,9 +22,12 @@ import static org.javabits.yar.SupplierEvent.Type.ADD;
  *         Time: 7:39 PM
  */
 public class NoWaitBlockingSupplierTest {
+
+    private final Id<MyInterface> id = GuiceId.of(MyInterface.class);
+
     @Test
     public void testDirectGetNull() throws Exception {
-        BlockingSupplier<MyInterface> supplier = new NoWaitBlockingSupplier<>(null);
+        BlockingSupplier<MyInterface> supplier = new NoWaitBlockingSupplier<>(id, null);
         assertThat(supplier.get(), is(nullValue()));
     }
 
@@ -31,7 +35,7 @@ public class NoWaitBlockingSupplierTest {
     public void testDirectInitNullAndThenSet() throws Exception {
         final Boolean[] set = {null};
         ListeningExecutorService listeningExecutorService = MoreExecutors.sameThreadExecutor();
-        final NoWaitBlockingSupplier<MyInterface> supplier = new NoWaitBlockingSupplier<>(null);
+        final NoWaitBlockingSupplier<MyInterface> supplier = new NoWaitBlockingSupplier<>(id, null);
         assertThat(supplier.get(), is(nullValue()));
         supplier.getAsync().addListener(new Runnable() {
             @Override
@@ -41,6 +45,12 @@ public class NoWaitBlockingSupplierTest {
         }, listeningExecutorService);
         assertThat(set[0], is(nullValue()));
         supplier.supplierChanged(new SupplierEvent(ADD, new Supplier<MyInterface>() {
+
+            @Override
+            public Id<MyInterface> id() {
+                return id;
+            }
+
             @Nullable
             @Override
             public MyInterface get() {
@@ -53,7 +63,13 @@ public class NoWaitBlockingSupplierTest {
     @Test
     public void testDirectGetNonNull() throws Exception {
         final MyInterfaceImpl myInterface = new MyInterfaceImpl();
-        BlockingSupplier<MyInterface> supplier = new NoWaitBlockingSupplier<>(new Supplier<MyInterface>() {
+        BlockingSupplier<MyInterface> supplier = new NoWaitBlockingSupplier<>(id, new Supplier<MyInterface>() {
+
+            @Override
+            public Id<MyInterface> id() {
+                return id;
+            }
+
             @Nullable
             @Override
             public MyInterface get() {

@@ -39,7 +39,13 @@ public class RegistryHookTest {
 
     @Test
     public void testInvalidate() {
-        Registration<MyService> myServiceRegistration = registry.put(GuiceId.of(MyService.class), new Supplier<MyService>() {
+        final Id<MyService> id = GuiceId.of(MyService.class);
+        Registration<MyService> myServiceRegistration = registry.put(id, new Supplier<MyService>() {
+            @Override
+            public Id<MyService> id() {
+                return id;
+            }
+
             @Nullable
             @Override
             public MyService get() {
@@ -55,17 +61,17 @@ public class RegistryHookTest {
 
             @Override
             public Id<MyService> id() {
-                return GuiceId.of(MyService.class);
+                return id;
             }
         }, watcher
         );
         assertThat(myServiceRegistration, is(not(nullValue())));
         assertThat(myServiceWatcherRegistration, is(not(nullValue())));
         assertThat(watcher.counter.get(), is(1));
-        assertThat(registry.ids(), hasItem(GuiceId.of(MyService.class)));
+        assertThat(registry.ids(), hasItem(id));
         registryHook.invalidate(MyService.class);
         assertThat(watcher.counter.get(), is(0));
-        assertThat(registry.ids(), not(hasItem(GuiceId.of(MyService.class))));
+        assertThat(registry.ids(), not(hasItem(id)));
         registry.remove(myServiceRegistration);
         registry.removeWatcher(myServiceWatcherRegistration);
     }

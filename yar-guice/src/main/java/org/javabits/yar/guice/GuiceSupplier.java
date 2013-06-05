@@ -16,6 +16,8 @@
 
 package org.javabits.yar.guice;
 
+import com.google.inject.Key;
+import org.javabits.yar.Id;
 import org.javabits.yar.Supplier;
 
 import javax.inject.Provider;
@@ -30,13 +32,24 @@ import javax.inject.Provider;
 class GuiceSupplier<T> implements Supplier<T> {
 
     private final Provider<T> provider;
+    private final Id<T> id;
 
-    GuiceSupplier(Provider<T> provider) {
+    GuiceSupplier(Id<T> id, Provider<T> provider) {
         this.provider = provider;
+        this.id = id;
     }
 
-    static <T> GuiceSupplier<T> of(Provider<T> provider) {
-        return new GuiceSupplier<>(provider);
+    static <T> GuiceSupplier<T> of(Key<T> key, Provider<T> provider) {
+        return new GuiceSupplier<>(GuiceId.of(key), provider);
+    }
+
+    static <T> GuiceSupplier<T> of(Id<T> id, Provider<T> provider) {
+        return new GuiceSupplier<>(id, provider);
+    }
+
+    @Override
+    public Id<T> id() {
+        return id;
     }
 
     @Override
@@ -47,7 +60,8 @@ class GuiceSupplier<T> implements Supplier<T> {
     @Override
     public String toString() {
         return "GuiceSupplier{" +
-                "provider=" + provider +
+                "id=" + id +
+                ",provider=" + provider +
                 '}';
     }
 }

@@ -27,6 +27,9 @@ import javax.annotation.Nullable;
  * @since 1.0
  */
 public interface Supplier<T> extends com.google.common.base.Supplier<T> {
+
+    Id<T> id();
+
     @Nullable
     T get();
 }

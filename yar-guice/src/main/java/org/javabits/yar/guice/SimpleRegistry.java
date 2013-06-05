@@ -174,7 +174,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     @Override
     public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<T> supplier) {
-        return put(id, requireNonNull(new GuavaSupplierAdapter<>(supplier), "supplier"));
+        return put(id, requireNonNull(new GuavaSupplierAdapter<>(id, supplier), "supplier"));
     }
 
     private <T> GuiceId<T> checkKey(Id<T> watchedId, String attribute) {
