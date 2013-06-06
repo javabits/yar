@@ -162,7 +162,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         if (isBlockingSupplier(matcher)) {
             throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
         } else if (isSupplier(matcher)) {
-            //TODO
+            throw new IllegalArgumentException("Only simple Supplier are supported. Supplier are only available as injectable element (constructor/field/method param).");
         } else {
             bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, key));
         }
@@ -172,16 +172,16 @@ public abstract class AbstractRegistryModule extends AbstractModule {
         return isBlockingSupplier(Matchers.getTargetTypeLiteral(matcher));  //To change body of created methods use File | Settings | File Templates.
     }
 
-    protected <T> boolean isSupplier(Matcher<Key<T>> matcher) {
+    private <T> boolean isSupplier(Matcher<Key<T>> matcher) {
         return isSupplier(Matchers.getTargetTypeLiteral(matcher));
     }
 
     @Beta
     protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
         if (isBlockingSupplier(matcher)) {
-            throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
+            throw new IllegalArgumentException("Only simple Type are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
         } else if (isSupplier(matcher)) {
-            //TODO
+            throw new IllegalArgumentException("Only simple Supplier are supported. Supplier are only available as injectable element (constructor/field/method param).");
         } else {
             bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, listener));
         }

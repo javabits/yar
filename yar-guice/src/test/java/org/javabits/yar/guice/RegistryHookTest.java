@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.*;
 public class RegistryHookTest {
     private RegistryHook registryHook;
     private Registry registry;
+    private final int[] count = new int[]{0};
 
     @Before
     public void setUp() throws Exception {
@@ -88,7 +89,6 @@ public class RegistryHookTest {
 
     @Test
     public void testTypeListener() throws Exception {
-        final int[] count = {0};
         registryHook.addTypeListener(new TypeListener() {
             @Override
             public void typeChanged(TypeEvent typeEvent) {

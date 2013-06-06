@@ -59,6 +59,7 @@ public final class Reflections {
     /**
      * Copy paste from Guice MoreTypes
      */
+    @SuppressWarnings("unckecked")
     public static Class<?> getRawType(Type type) {
         if (type instanceof Class<?>) {
             // type is a normal class.

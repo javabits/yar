@@ -81,14 +81,17 @@ public class GuiceId<T> implements Id<T> {
         return new GuiceId<>(key);
     }
 
+    @SuppressWarnings("unchecked")
     public static <T> Id<T> of(Type type, @Nullable Key<?> annotatedKey) {
-        if (annotatedKey.getAnnotation() != null) {
-            return of((Key<T>)Key.get(type, annotatedKey.getAnnotation()));
-        } else if (annotatedKey.getAnnotationType() != null) {
-            return of((Key<T>)Key.get(type, annotatedKey.getAnnotationType()));
-        } else {
-            return of((Key<T>)Key.get(type));
+        if (annotatedKey != null) {
+            if (annotatedKey.getAnnotation() != null) {
+                return of((Key<T>) Key.get(type, annotatedKey.getAnnotation()));
+            } else if (annotatedKey.getAnnotationType() != null) {
+                return of((Key<T>) Key.get(type, annotatedKey.getAnnotationType()));
+            }
         }
+        return of((Key<T>) Key.get(type));
+
     }
 
     public static <T> Id<T> of(Class<T> type) {

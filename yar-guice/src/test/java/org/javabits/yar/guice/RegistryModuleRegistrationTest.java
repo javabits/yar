@@ -144,19 +144,19 @@ public class RegistryModuleRegistrationTest {
     }
 
     //    @Test
-    public void testConfigureBindFromRegistry() {
-        Injector injector = createInjector(new RegistryModule() {
-            @Override
-            protected void configureRegistry() {
-            }
-
-            @Provides
-            @Register
-            public MyServiceInterface myMethodServiceProvider(Registry registry) {
-                return new MyService();
-            }
-        });
-    }
+//    public void testConfigureBindFromRegistry() {
+//        Injector injector = createInjector(new RegistryModule() {
+//            @Override
+//            protected void configureRegistry() {
+//            }
+//
+//            @Provides
+//            @Register
+//            public MyServiceInterface myMethodServiceProvider(Registry registry) {
+//                return new MyService();
+//            }
+//        });
+//    }
 
     interface MyServiceInterface {
     }

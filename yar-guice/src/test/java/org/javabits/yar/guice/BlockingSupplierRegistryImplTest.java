@@ -42,15 +42,15 @@ public class BlockingSupplierRegistryImplTest {
     @Test
     public void testNonBlockingGet() {
         BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
-        BlockingSupplier<MyService> supplier = registry.get(MyService.class);
+        BlockingSupplier<MyInterface> supplier = registry.get(MyInterface.class);
 
         assertNotNull(supplier);
         assertNull(supplier.get());
 
-        final MyService myService = new MyServiceImpl();
-        registry.put(GuiceId.of(MyService.class), new GuiceSupplier<>(new Provider<MyService>() {
+        final MyInterface myService = new MyInterfaceImpl();
+        registry.put(GuiceId.of(MyInterface.class), new GuiceSupplier<>(new Provider<MyInterface>() {
             @Override
-            public MyService get() {
+            public MyInterface get() {
                 return myService;
             }
         }));
@@ -61,7 +61,7 @@ public class BlockingSupplierRegistryImplTest {
     @Test
     public void testGetSync() throws InterruptedException {
         final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
-        final MyServiceImpl myService = new MyServiceImpl();
+        final MyInterfaceImpl myService = new MyInterfaceImpl();
         final Object[] myServiceSupplier = new Object[1];
         final Lock lock = new ReentrantLock();
 
@@ -70,8 +70,8 @@ public class BlockingSupplierRegistryImplTest {
             public void run() {
                 lock.lock();
                 try {
-                    BlockingSupplier<MyService> myServiceBlockingSupplier = registry
-                            .get(MyService.class);
+                    BlockingSupplier<MyInterface> myServiceBlockingSupplier = registry
+                            .get(MyInterface.class);
                     assertThat(myServiceBlockingSupplier, is(not(nullValue())));
                     myServiceSupplier[0] = myServiceBlockingSupplier.getSync(200, MILLISECONDS);
                 } catch (InterruptedException | TimeoutException e) {
@@ -83,17 +83,17 @@ public class BlockingSupplierRegistryImplTest {
         });
         thread.start();
         Thread.sleep(100);
-        Id<MyService> id = GuiceId.of(MyService.class);
-        registry.put(id, new GuiceSupplier<>(new Provider<MyService>() {
+        Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        registry.put(id, new GuiceSupplier<>(new Provider<MyInterface>() {
             @Override
-            public MyService get() {
+            public MyInterface get() {
                 return myService;
             }
         }));
         lock.lock();
         try {
             assertThat(myServiceSupplier[0], is(not(nullValue())));
-            assertThat((MyServiceImpl) myServiceSupplier[0], is(myService));
+            assertThat((MyInterfaceImpl) myServiceSupplier[0], is(myService));
         } finally {
             lock.unlock();
         }
@@ -102,16 +102,16 @@ public class BlockingSupplierRegistryImplTest {
     @Test
     public void testGetAsync() throws Exception {
         final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
-        final MyServiceImpl myService = new MyServiceImpl();
+        final MyInterfaceImpl myService = new MyInterfaceImpl();
         final Lock lock = new ReentrantLock();
-        final ListenableFuture<MyService>[] listenableFuture = new ListenableFuture[1];
+        final ListenableFuture<MyInterface>[] listenableFuture = new ListenableFuture[1];
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 lock.lock();
                 try {
-                    BlockingSupplier<MyService> myServiceBlockingSupplier = registry
-                            .get(MyService.class);
+                    BlockingSupplier<MyInterface> myServiceBlockingSupplier = registry
+                            .get(MyInterface.class);
                     assertThat(myServiceBlockingSupplier, is(not(nullValue())));
                     listenableFuture[0] = myServiceBlockingSupplier.getAsync();
                 } finally {
@@ -121,26 +121,19 @@ public class BlockingSupplierRegistryImplTest {
         });
         thread.start();
         Thread.sleep(100);
-        Id<MyService> id = GuiceId.of(MyService.class);
-        registry.put(id, new GuiceSupplier<>(new Provider<MyService>() {
+        Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        registry.put(id, new GuiceSupplier<>(new Provider<MyInterface>() {
             @Override
-            public MyService get() {
+            public MyInterface get() {
                 return myService;
             }
         }));
         lock.lock();
         try {
             assertThat(listenableFuture[0], is(not(nullValue())));
-            assertThat(listenableFuture[0].get(1, MILLISECONDS), is((MyService) myService));
+            assertThat(listenableFuture[0].get(1, MILLISECONDS), is((MyInterface) myService));
         } finally {
             lock.unlock();
         }
     }
-
-    static interface MyService {
-    }
-
-    static class MyServiceImpl implements MyService {
-    }
-
 }

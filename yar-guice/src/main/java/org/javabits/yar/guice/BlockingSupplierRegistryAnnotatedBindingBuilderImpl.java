@@ -92,13 +92,13 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
         }
     }
 
-    static void checkParameterizedType(Type type) {
+    private static void checkParameterizedType(Type type) {
         if (!isParameterizedType(type)) {
             throw new IllegalArgumentException("Supplier type must be parameterized: " + type);
         }
     }
 
-    static boolean isParameterizedType(Type type) {
+    private static boolean isParameterizedType(Type type) {
         return type instanceof ParameterizedType;
     }
 

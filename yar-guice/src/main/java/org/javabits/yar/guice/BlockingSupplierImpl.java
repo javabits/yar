@@ -26,7 +26,7 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
 
     BlockingSupplierImpl(Id<T> id, Supplier<T> supplier) {
         this.id = checkNotNull(id, "id");
-        SettableFuture<Supplier<T>> settableFuture = SettableFuture.<Supplier<T>>create();
+        SettableFuture<Supplier<T>> settableFuture = SettableFuture.create();
         if (supplier != null) {
             settableFuture.set(supplier);
         }

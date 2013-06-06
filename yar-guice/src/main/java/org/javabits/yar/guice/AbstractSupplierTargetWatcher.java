@@ -31,7 +31,7 @@ import static java.util.Objects.requireNonNull;
  * @author Romain Gilles
  */
 public abstract class AbstractSupplierTargetWatcher<T> implements Watcher<T> {
-    protected final Watcher<T> registryListener;
+    private final Watcher<T> registryListener;
 
     public AbstractSupplierTargetWatcher(Watcher<T> listener) {
         registryListener = listener;
