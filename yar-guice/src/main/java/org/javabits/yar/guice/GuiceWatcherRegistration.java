@@ -20,14 +20,11 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.matcher.Matcher;
-import org.javabits.yar.*;
-
-import javax.annotation.Nullable;
-import java.util.IdentityHashMap;
-import java.util.Map;
+import org.javabits.yar.Id;
+import org.javabits.yar.IdMatcher;
+import org.javabits.yar.Watcher;
 
 import static org.javabits.yar.guice.Matchers.getId;
-import static org.javabits.yar.guice.Reflections.getUniqueParameterType;
 
 /**
  * TODO comment
@@ -51,7 +48,7 @@ abstract class GuiceWatcherRegistration<T> {
         return new InstanceGuiceWatcherRegistration<>(matcher, listener);
     }
 
-    public abstract Watcher<Supplier<T>> watcher();
+    public abstract Watcher<T> watcher();
 
     public IdMatcher<T> matcher() {
         return newKeyMatcher(matcher);
@@ -72,7 +69,7 @@ abstract class GuiceWatcherRegistration<T> {
         }
 
         @Override
-        public Watcher<Supplier<T>> watcher() {
+        public Watcher<T> watcher() {
             return newWatcherAdapter(injector.getInstance(key));
         }
 
@@ -92,86 +89,16 @@ abstract class GuiceWatcherRegistration<T> {
         }
 
         @Override
-        public Watcher<Supplier<T>> watcher() {
+        public Watcher<T> watcher() {
             return newWatcherAdapter(listener);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> Watcher<Supplier<T>> newWatcherAdapter(final RegistryListener listener) {
-        if (Supplier.class.isAssignableFrom(Reflections.getRawType(getUniqueParameterType(listener.getClass()
-                , RegistryListener.class, "RegistryListener<T>")))) {
-            return new SupplierWatcher(listener);
-        } else if (listener instanceof AbstractSingleElementWatcher) {
-            return new SupplierSingleTargetWatcher(listener);
-        } else {
-            return new SupplierMultiTargetWatcher(listener);
-        }
+    private static <T> Watcher<T> newWatcherAdapter(final RegistryListener listener) {
+        return listener;
     }
 
-    private static class SupplierWatcher<T> implements Watcher<T> {
-        private final Watcher<T> registryListener;
-
-        public SupplierWatcher(Watcher<T> listener) {
-            registryListener = listener;
-        }
-
-        @Nullable
-        @Override
-        public Supplier<T> add(Supplier<T> element) {
-            if (registryListener.add(element) != null) {
-                return element;
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public void remove(Supplier<T> element) {
-            registryListener.remove(element);
-        }
-    }
-
-    private static class SupplierMultiTargetWatcher<T> extends AbstractSupplierTargetWatcher<T> {
-        private final Map<Supplier<T>, Boolean> trackedElements = new IdentityHashMap<>();
-
-        public SupplierMultiTargetWatcher(Watcher<T> listener) {
-            super(listener);
-        }
-
-        @Override
-        protected Supplier<T> track(Supplier<T> element) {
-            trackedElements.put(element, Boolean.TRUE);
-            return element;
-        }
-
-        @Override
-        protected Supplier<T> removeTracked(Supplier<T> element) {
-            if (trackedElements.remove(element)) {
-                return element;
-            }
-            throw new IllegalArgumentException("Try to remove ");
-        }
-    }
-
-    private static class SupplierSingleTargetWatcher<T> extends AbstractSupplierTargetWatcher<T> {
-        private Supplier<T> trackedElement;
-
-        public SupplierSingleTargetWatcher(Watcher<T> listener) {
-            super(listener);
-        }
-
-        @Override
-        protected Supplier<T> track(Supplier<T> element) {
-            this.trackedElement = element;
-            return element;
-        }
-
-        @Override
-        protected Supplier<T> removeTracked(Supplier<T> element) {
-            return trackedElement;
-        }
-    }
 
     private static class IdMatcherWrapper<T> implements IdMatcher<T> {
         private final Matcher<Key<T>> matcher;
@@ -211,5 +138,12 @@ abstract class GuiceWatcherRegistration<T> {
                     "id=" + id +
                     '}';
         }
+    }
+
+    @Override
+    public String toString() {
+        return "GuiceWatcherRegistration{" +
+                "matcher=" + matcher +
+                '}';
     }
 }
