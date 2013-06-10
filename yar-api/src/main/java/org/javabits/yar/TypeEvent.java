@@ -12,7 +12,7 @@ import java.util.EventObject;
 public class TypeEvent extends EventObject {
 
     public enum Type {
-        ADDED, REMOVED;
+        ADDED, REMOVED
     }
     private final Type eventType;
     private final java.lang.reflect.Type type;
@@ -23,7 +23,7 @@ public class TypeEvent extends EventObject {
      * @throws IllegalArgumentException
      *          if source is null.
      */
-    public TypeEvent(Type eventType, java.lang.reflect.Type type) {
+    private TypeEvent(Type eventType, java.lang.reflect.Type type) {
         super(type);
         this.eventType = eventType;
         this.type = type;

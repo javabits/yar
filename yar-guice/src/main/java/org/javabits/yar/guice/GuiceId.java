@@ -38,7 +38,7 @@ public class GuiceId<T> implements Id<T> {
 
     private final com.google.inject.Key<T> key;
 
-    GuiceId(com.google.inject.Key<T> key) {
+    private GuiceId(com.google.inject.Key<T> key) {
         this.key = requireNonNull(key, "key");
     }
 

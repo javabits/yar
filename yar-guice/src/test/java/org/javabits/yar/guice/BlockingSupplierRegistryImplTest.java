@@ -104,6 +104,7 @@ public class BlockingSupplierRegistryImplTest {
         final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         final MyInterfaceImpl myService = new MyInterfaceImpl();
         final Lock lock = new ReentrantLock();
+        @SuppressWarnings("unchecked")
         final ListenableFuture<MyInterface>[] listenableFuture = new ListenableFuture[1];
         Thread thread = new Thread(new Runnable() {
             @Override

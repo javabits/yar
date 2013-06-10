@@ -30,7 +30,7 @@ import java.util.EventObject;
 public class SupplierEvent extends EventObject {
 
     public enum Type {
-        ADD, REMOVE;
+        ADD, REMOVE
     }
 
     private final Type type;

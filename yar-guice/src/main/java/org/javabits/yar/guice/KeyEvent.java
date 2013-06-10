@@ -21,7 +21,7 @@ public class KeyEvent<T> extends EventObject {
      * @throws IllegalArgumentException
      *          if source is null.
      */
-    public KeyEvent(T source) {
+    private KeyEvent(T source) {
         super(source);
         key = source;
     }

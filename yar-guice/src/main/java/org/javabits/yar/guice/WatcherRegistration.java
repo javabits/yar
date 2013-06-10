@@ -104,15 +104,13 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Watcher<T>> implem
                 }
                 return trackedElement;
             } else {
-                return clearTrackedElements();
+                clearTrackedElements();
+                return null;
             }
         }
 
-        private Supplier<T> clearTrackedElements() {
-            if (trackedElements.size() != 0) {
-                trackedElements.clear();
-            }
-            return null;
+        private void clearTrackedElements() {
+            trackedElements.clear();
         }
 
         @Override

@@ -58,7 +58,7 @@ import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
  * @author Romain Gilles
  */
 public class SimpleRegistry implements Registry, RegistryHook {
-    private Logger LOG = Logger.getLogger(SimpleRegistry.class.getName());
+    private static final Logger LOG = Logger.getLogger(SimpleRegistry.class.getName());
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
     private final FinalizableReferenceQueue referenceQueue;
@@ -473,7 +473,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
     }
 
     private static class RegistryActionHandler implements Runnable {
-        private Logger LOG = Logger.getLogger(RegistryActionHandler.class.getName());
+        private static final Logger LOG = Logger.getLogger(RegistryActionHandler.class.getName());
         private final BlockingQueue<RegistryAction> registryActionQueue;
 
         RegistryActionHandler(BlockingQueue<RegistryAction> registryActionQueue) {

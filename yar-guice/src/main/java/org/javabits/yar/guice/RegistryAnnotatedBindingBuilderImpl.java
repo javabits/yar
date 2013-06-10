@@ -24,7 +24,7 @@ public class RegistryAnnotatedBindingBuilderImpl<T> implements RegistryAnnotated
 
     private Key<T> key;
     private AnnotatedBindingBuilder<T> annotatedBindingBuilder;
-    private LinkedBindingBuilder<T> linkedBindingBuilder;
+    private final LinkedBindingBuilder<T> linkedBindingBuilder;
     //Lax type binding represent qualified versus non qualified types
     private boolean laxTypeBinding = false;
 

@@ -19,7 +19,7 @@ import static org.javabits.yar.guice.SimpleRegistry.newLoadingCacheRegistry;
  * @author Romain Gilles
  */
 public class SimpleRegistryTest {
-    Registry registry;
+    private Registry registry;
 
     @Before
     public void setUp() throws Exception {

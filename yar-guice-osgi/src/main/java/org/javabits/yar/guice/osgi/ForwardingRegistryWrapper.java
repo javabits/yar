@@ -47,8 +47,8 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry {
 
     private final BlockingSupplierRegistry delegate;
     private static final Object NULL_VALUE = Boolean.TRUE;
-    private ConcurrentMap<Registration<?>, Object> supplierRegistrations = new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
-    private ConcurrentMap<Registration<?>, Object> watcherRegistrations = new MapMaker().weakKeys().initialCapacity(DEFAULT_INITIAL_CAPACITY).concurrencyLevel(DEFAULT_CONCURRENCY_LEVEL).makeMap();
+    private final ConcurrentMap<Registration<?>, Object> supplierRegistrations = new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
+    private final ConcurrentMap<Registration<?>, Object> watcherRegistrations = new MapMaker().weakKeys().initialCapacity(DEFAULT_INITIAL_CAPACITY).concurrencyLevel(DEFAULT_CONCURRENCY_LEVEL).makeMap();
 
     ForwardingRegistryWrapper(BlockingSupplierRegistry delegate) {
         this.delegate = delegate;

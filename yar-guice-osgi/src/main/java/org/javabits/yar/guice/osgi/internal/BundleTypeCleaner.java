@@ -30,7 +30,7 @@ import static org.javabits.yar.guice.Reflections.getRawType;
 class BundleTypeCleaner implements SynchronousBundleListener, TypeListener {
     private static final Logger LOG = Logger.getLogger(BundleTypeCleaner.class.getName());
     private final RegistryHook registryHook;
-    private LoadingCache<Long, Set<Type>> loadingCache = CacheBuilder.newBuilder().build(new CacheLoader<Long, Set<Type>>() {
+    private final LoadingCache<Long, Set<Type>> loadingCache = CacheBuilder.newBuilder().build(new CacheLoader<Long, Set<Type>>() {
         @Override
         public Set<Type> load(Long key) {
             return new CopyOnWriteArraySet<>();
