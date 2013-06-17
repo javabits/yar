@@ -150,6 +150,17 @@ public class SimpleRegistry implements Registry, RegistryHook {
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
+    public <T> Supplier<T> get(TypeToken<T> type) {
+        SupplierRegistration<?> registration = registrationContainer.getFirst(type.getType());
+        if (registration == null) {
+            return null;
+        }
+        return (Supplier<T>) registration.right();
+    }
+
+    @Nullable
+    @Override
+    @SuppressWarnings("unchecked")
     public <T> Supplier<T> get(Id<T> id) {
         return getDirectly(id);
     }

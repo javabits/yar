@@ -100,8 +100,9 @@ public interface Registry {
      * ids {@code other} in the registry returns the first {@link Supplier} where {@code id.equals(other)}</p>
      * <p>This method is a strict comparison regarding the {@link #get(Class)}
      * and {@link #get(com.google.common.reflect.TypeToken)} which are more weak.</p>
-     * @param id not {@code null} {@link Id} whose associated {@link Supplier} is to be returned.
-     * @param <T>  the matching type between the {@link Id} parameter and the returned {@link Supplier}
+     *
+     * @param id  not {@code null} {@link Id} whose associated {@link Supplier} is to be returned.
+     * @param <T> the matching type between the {@link Id} parameter and the returned {@link Supplier}
      * @return the value to which the specified {@link Id} is mapped, or
      *         {@code null} if this map contains no mapping for the given {@link Id}.
      * @throws NullPointerException if the given {@link Id} parameter is {@code null}.
@@ -119,13 +120,32 @@ public interface Registry {
      * <p>This method is a strict comparison regarding the {@link #getAll(Class)}
      * and {@link #getAll(com.google.common.reflect.TypeToken)} which are more weak.</p>
      *
-     * @param id not {@code null} {@link Id} whose associated {@link Supplier}s are to be returned
-     * @param <T>  the matching type between the class parameter and the returned {@link Supplier}s
+     * @param id  not {@code null} {@link Id} whose associated {@link Supplier}s are to be returned
+     * @param <T> the matching type between the class parameter and the returned {@link Supplier}s
      * @return the list of {@link Supplier}s value to which the specified {@link Id} is mapped, or
      *         an empty list if this map contains no mapping for the given {@link Id}.
      * @throws NullPointerException if the given {@link Id} parameter is {@code null}.
      */
     <T> List<Supplier<T>> getAll(Id<T> id);
+
+    /**
+     * Returns the first {@link Supplier} to which the specified type is mapped
+     * or {@code null} if the map contains no mapping for this type.
+     * <p/>
+     * <p>More formally, if this registry contains at least a mapping for a type
+     * then it returns the first available mapping where for a given {@code TypeToken} {@code t} for all
+     * ids in the registry if {@code id.type()} == {@code t.getType()}</p>
+     * <p>This implementation is lest strict that the {@link #get(Id)} because it just validate
+     * the type and forget the annotation.</p>
+     *
+     * @param type not {@code null} type whose associated {@link Supplier} is to be returned
+     * @param <T>  the matching type between the class parameter and the returned {@link Supplier}
+     * @return the value to which the specified type is mapped, or
+     *         {@code null} if this map contains no mapping for the key
+     * @throws NullPointerException if the given type parameter is {@code null}
+     */
+    @Nullable
+    <T> Supplier<T> get(TypeToken<T> type);
 
     /**
      * Returns all {@link Supplier}s to which the specified {@code TypeToken} is mapped

@@ -1,13 +1,16 @@
 package org.javabits.yar.guice;
 
 import com.google.common.base.Supplier;
+import com.google.common.reflect.TypeToken;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registry;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.inject.Provider;
+import java.util.List;
 
+import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.javabits.yar.guice.SimpleRegistry.newLoadingCacheRegistry;
@@ -67,5 +70,40 @@ public class SimpleRegistryTest {
         }));
         assertThat(registry.get(id), is(not(nullValue())));
         assertThat(registry.get(id).get(), is("test"));
+    }
+
+    @Test
+    public void testGetTypeToken() {
+        final TypeToken<List<String>> type = new TypeToken<List<String>>() {
+        };
+        final Id<List<String>> id = GuiceId.of(type.getType(), null);
+        assertThat(registry.get(id), is(nullValue()));
+
+        registry.put(id, GuiceSupplier.of(new Provider<List<String>>() {
+            @Override
+            public List<String> get() {
+                return emptyList();
+            }
+        }));
+        assertThat(registry.get(type), is(not(nullValue())));
+        assertThat(registry.get(type).get(), is((List) emptyList()));
+    }
+
+    @Test
+    public void testGetAllTypeToken() {
+        final TypeToken<String> type = new TypeToken<String>() {
+        };
+        final Id<String> id = GuiceId.of(type.getType(), null);
+        assertThat(registry.get(id), is(nullValue()));
+
+        registry.put(id, GuiceSupplier.of(new Provider<String>() {
+            @Override
+            public String get() {
+                return "test";
+            }
+        }));
+        assertThat(registry.getAll(type), is(not(nullValue())));
+        assertThat(registry.getAll(type).size(), is(1));
+        assertThat(registry.getAll(type).get(0).get(), is("test"));
     }
 }
