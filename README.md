@@ -56,15 +56,39 @@ Then following query on the registry will produce:
 ```
 
 ### Implementation detail
-All modifications to the registry are done by a single thread to simplify the implementation. They are queued by
-the registry mutation methods and them consumed by the mutation unique thread.
+All modifications to the registry are done by a single thread (reactor like pattern) to simplify the implementation.
+They are queued by the registry mutation methods and them consumed by the mutation unique thread.
+
 
 Guice Integration
 -----------------
 
-TODO
+This project provide an extension of the Guice EDSL to tightly integrate the registry features to Guice.
+You can register or pull Suppliers to the registry as follow:
+
+```java
+new RegistryModule() {
+    @Override
+    protected void configureRegistry() {
+        //bind an interface from the registry
+        bind(MyInterface.class).toRegistry();
+        //register an implementation to the registry
+        register(MyInterface2.class).to(MyImpl2.class);
+    }
+}
+```
+
+As you can see you just have to create a registry module and then leverage on the Guice's EDSL extension.
+The `AbstractRegistryModule` javadoc provide a complete description on the capability added to the Guice EDSL.
 
 OSGi Guice Integration
-----------------
+----------------------
 
-TODO
+The main target of this project is to replace the original OSGi registry by providing a Type-safe registry and where
+the lifecycle of the component is not by default a singleton or a per-bundle client singleton.
+In our registry we strongly advice you to use the instance guice's scope. This is the default guice scope and by
+transitivity the Yar default scope.
+
+This project provide a bundle with an activator that will create and register the Guice registry into the OSGi registry.
+This component will take care of your bundle life-cycle to cleanup the registry and avoid any memory leaks
+as ClassLoader leak.
