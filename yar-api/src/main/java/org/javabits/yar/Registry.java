@@ -21,6 +21,7 @@ import com.google.common.reflect.TypeToken;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -56,6 +57,26 @@ public interface Registry {
      * @return all the ids contained by this registry.
      */
     Set<Id<?>> ids();
+
+    /**
+     * Returns all the {@link Type}s contained by this registry
+     * at a certain point of time. The registry can contains more
+     * than one {@link Id} for a given type. Therefore the size of the
+     * {@code Set} returned by {@link #ids()} is {@code >=} to the size
+     * of the {@code Set} returned by this method.
+     * <p>The returned {@code Set} can be link to the registry state. Any modification
+     * to the content of the registry may have to be reported to this {@code Set}. You can
+     * see it as a in sync with the registry. But it must be unmodifiable.</p>
+     * <p>This intent of this method is to provide information on the content
+     * of the {@code Registry}. It can be used for monitoring and supervision.</p>
+     * <p>Warning: Due to the dynamic nature of the {@code Registry} the returned
+     * {@code Set} must be immutable. And you must get, it use and discard it. Keeping
+     * a long reference to it can introduce issues as memory leak. As it is a snapshot
+     * of the {@code Registry} content it as only informational value.</p>
+     *
+     * @return all the types contained by this registry.
+     */
+    Set<Type> types();
 
     /**
      * Returns the first {@link Supplier} to which the specified type is mapped

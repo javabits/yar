@@ -3,10 +3,6 @@ package org.javabits.yar.guice.osgi;
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
 import org.javabits.yar.*;
-import org.javabits.yar.Supplier;
-import org.javabits.yar.guice.Reflections;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleReference;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
@@ -15,15 +11,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-
-import static org.javabits.yar.guice.Reflections.getRawType;
 
 /**
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
  * It must remove all the remaning suppliers and watchers/listeners. And finally invalidate
  * the entries associated a type whose the stopping bundle is the owner.
- *
+ * <p/>
  * Date: 5/29/13
  * Time: 9:42 AM
  *
@@ -66,14 +59,25 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry {
         return delegate.get(id);
     }
 
+    @Nullable
     @Override
-    public <T> List<Supplier<T>> getAll(Class<T> type) {
-        return delegate.getAll(type);
+    public <T> Supplier<T> get(TypeToken<T> type) {
+        return delegate.get(type);
+    }
+
+    @Override
+    public Set<Type> types() {
+        return delegate.types();
     }
 
     @Override
     public Set<Id<?>> ids() {
         return delegate.ids();
+    }
+
+    @Override
+    public <T> List<Supplier<T>> getAll(Class<T> type) {
+        return delegate.getAll(type);
     }
 
     @Override

@@ -8,7 +8,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.inject.Provider;
+import java.lang.reflect.Type;
 import java.util.List;
+import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -79,7 +81,7 @@ public class SimpleRegistryTest {
 
     @Test(expected = NullPointerException.class)
     public void testGetAllClassNullPointerException() throws Exception {
-        registry.getAll((Class)null);
+        registry.getAll((Class) null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -89,7 +91,7 @@ public class SimpleRegistryTest {
 
     @Test(expected = NullPointerException.class)
     public void testGetAllIdNullPointerException() throws Exception {
-        registry.getAll((Id)null);
+        registry.getAll((Id) null);
     }
 
     @Test
@@ -132,7 +134,48 @@ public class SimpleRegistryTest {
     }
     @Test(expected = NullPointerException.class)
     public void testGetAllTypeTokenNullPointerException() throws Exception {
-        registry.getAll((TypeToken)null);
+        registry.getAll((TypeToken) null);
     }
 
+    @Test
+    public void testTypes() {
+        final Id<String> id = GuiceId.of(String.class);
+        registry.put(id, GuiceSupplier.of(new Provider<String>() {
+            @Override
+            public String get() {
+                return "test";
+            }
+        }));
+
+        final Id<Double> idDouble = GuiceId.of(Double.class);
+        registry.put(idDouble, GuiceSupplier.of(new Provider<Double>() {
+            @Override
+            public Double get() {
+                return 2.0D;
+            }
+        }));
+        assertThat(registry.types(), hasItems((Type)Double.class, String.class));
+    }
+
+    @Test
+    public void testIds() {
+        final Id<String> id = GuiceId.of(String.class);
+        registry.put(id, GuiceSupplier.of(new Provider<String>() {
+            @Override
+            public String get() {
+                return "test";
+            }
+        }));
+
+        final Id<Double> idDouble = GuiceId.of(Double.class);
+        registry.put(idDouble, GuiceSupplier.of(new Provider<Double>() {
+            @Override
+            public Double get() {
+                return 2.0D;
+            }
+        }));
+        assertThat(registry.ids().size(), is(2));
+        assertThat(registry.ids().contains(id), is(true));
+        assertThat(registry.ids().contains(idDouble), is(true));
+    }
 }

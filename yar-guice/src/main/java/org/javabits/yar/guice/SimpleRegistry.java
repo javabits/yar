@@ -19,12 +19,8 @@ package org.javabits.yar.guice;
 import com.google.common.base.FinalizableReferenceQueue;
 import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Collections2;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
+import com.google.common.collect.*;
 import com.google.common.reflect.TypeToken;
-import com.google.inject.Key;
 import org.javabits.yar.*;
 
 import javax.annotation.Nullable;
@@ -42,6 +38,7 @@ import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
 import static org.javabits.yar.InterruptedException.newInterruptedException;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
@@ -84,15 +81,26 @@ public class SimpleRegistry implements Registry, RegistryHook {
         this.defaultTimeoutUnit = unit;
     }
 
+
+    @Override
+    public Set<Type> types() {
+        return unmodifiableSet(registrationContainer.types());
+    }
+
     @Override
     public Set<Id<?>> ids() {
-        return ImmutableSet.copyOf(Iterables.transform(registrationContainer.types(), new Function<Type, Id<?>>() {
-            @Nullable
-            @Override
-            public Id<?> apply(@Nullable Type input) {
-                return GuiceId.of(Key.get(input));
-            }
-        }));
+        ImmutableSet.Builder<Id<?>> builder = ImmutableSet.builder();
+        for (Type type : registrationContainer.types()) {
+            builder.addAll(Lists.transform(getAll(TypeToken.of(type)), new Function<Supplier<?>, Id<?>>() {
+                @Nullable
+                @Override
+                public Id<?> apply(@Nullable Supplier<?> supplier) {
+                    requireNonNull(supplier, "supplier");
+                    return supplier.id();
+                }
+            }));
+        }
+        return builder.build();
     }
 
     @Override
