@@ -72,6 +72,26 @@ public class SimpleRegistryTest {
         assertThat(registry.get(id).get(), is("test"));
     }
 
+    @Test(expected = NullPointerException.class)
+    public void testGetClassNullPointerException() throws Exception {
+        registry.get((Class)null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testGetAllClassNullPointerException() throws Exception {
+        registry.getAll((Class)null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testGetIdNullPointerException() throws Exception {
+        registry.get((Id)null);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void testGetAllIdNullPointerException() throws Exception {
+        registry.getAll((Id)null);
+    }
+
     @Test
     public void testGetTypeToken() {
         final TypeToken<List<String>> type = new TypeToken<List<String>>() {
@@ -87,6 +107,10 @@ public class SimpleRegistryTest {
         }));
         assertThat(registry.get(type), is(not(nullValue())));
         assertThat(registry.get(type).get(), is((List) emptyList()));
+    }
+    @Test(expected = NullPointerException.class)
+    public void testGetTypeTokenNullPointerException() throws Exception {
+        registry.get((TypeToken)null);
     }
 
     @Test
@@ -106,4 +130,9 @@ public class SimpleRegistryTest {
         assertThat(registry.getAll(type).size(), is(1));
         assertThat(registry.getAll(type).get(0).get(), is("test"));
     }
+    @Test(expected = NullPointerException.class)
+    public void testGetAllTypeTokenNullPointerException() throws Exception {
+        registry.getAll((TypeToken)null);
+    }
+
 }
