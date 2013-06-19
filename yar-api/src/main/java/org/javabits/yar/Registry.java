@@ -187,16 +187,75 @@ public interface Registry {
      */
     <T> List<Supplier<T>> getAll(TypeToken<T> type);
 
+    /**
+     * Associates the specified supplier with the specified id in this registry.
+     * If the map previously contained a mapping for the id, the new supplier is
+     * added after the old one or an runtime exception is throw for duplicated entry,
+     * This behaviour depends on the implementation.
+     * <p/>
+     * (A registry {@code r} is said to contain a mapping for a id {@code i} if
+     * and only if {@link #contains(Id) r.contains(i)} would return {@code true}.)
+     *
+     * @param id       id with which the specified supplier is to be associated.
+     * @param supplier supplier to be associated with the specified id
+     * @return the registration handle for use by the caller to remove this
+     *         registration action. It not intents to be shared by the caller.
+     * @throws NullPointerException if the specified key or value is null
+     *                              and this map does not permit null keys or values
+     * @see Registration
+     * @see #remove(Registration)
+     */
     <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<T> supplier);
 
+    /**
+     * Removes the supplier referenced by the specified
+     * {@code Registration} object.
+     *
+     * @param registration A reference to the supplier to be released.
+     */
     void remove(Registration<?> registration);
 
+    /**
+     * Bulk remove the suppliers referenced by the specified list of
+     * {@code Registration} objects.
+     *
+     * @param registrations A list of references to the suppliers to be released.
+     */
     void removeAll(Collection<? extends Registration<?>> registrations);
 
-    <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<T> watcher);
+    /**
+     * Registers a listener / watcher for suppliers life-cycle events (add / remove).
+     * The registry will notify the listener when a supplier is added of removed
+     * and its Id is matched by the given {@link Id} matcher.
+     * <p><b>Warning:</b> To avoid memory leak watcher are stored in the registry
+     * with weak reference. Therefore the caller must keep a strong reference to
+     * the registration to avoid premature garbage collection of the watcher.</p>
+     *
+     * @param idMatcher the matcher that matches supplier ids the listener
+     *                  should be notified of.
+     * @param watcher   the watcher for suppliers whose associated ids are
+     *                  matched by idMatcher
+     * @param <T>       the supplied type
+     * @return the registration that represent this action. This registration is
+     *         the only way to remove this watcher from the registry. It is not intended
+     *         to be shared by the caller
+     */
+    <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<T> watcher);
 
+    /**
+     * Removes the {@link Watcher} instance referenced by the specified
+     * {@code Registration} object.
+     *
+     * @param watcherRegistration A reference to the watcher to be released.
+     */
     void removeWatcher(Registration<?> watcherRegistration);
 
+    /**
+     * Bulk remove the {@link Watcher Watchers} referenced by the specified list of
+     * {@code Registration Registration}.
+     *
+     * @param watcherRegistrations A list of references to the watchers to be released.
+     */
     void removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations);
 
 }
