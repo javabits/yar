@@ -33,7 +33,7 @@ public class RegistryHookTest {
 
     @Test
     public void testInvalidate() {
-        final Id<MyService> id = GuiceId.of(MyService.class);
+        final Id<MyService> id = Ids.newId(MyService.class);
         Registration<MyService> myServiceRegistration = registry.put(id, new Supplier<MyService>() {
             @Nullable
             @Override
@@ -107,7 +107,7 @@ public class RegistryHookTest {
             }
         });
         //when register first service
-        Registration<MyService> serviceRegistration = registry.put(GuiceId.of(MyService.class), new Supplier<MyService>() {
+        Registration<MyService> serviceRegistration = registry.put(Ids.newId(MyService.class), new Supplier<MyService>() {
             @Override
             public MyService get() {
                 return new MyServiceImpl();
@@ -118,7 +118,7 @@ public class RegistryHookTest {
             assertThat(count[0], is(1));
         }
         // when register second service on the same type
-        Registration<MyService> serviceRegistration2 = registry.put(GuiceId.of(Key.get(MyService.class, Names.named("test"))), new Supplier<MyService>() {
+        Registration<MyService> serviceRegistration2 = registry.put(Ids.newId(MyService.class, Names.named("test")), new Supplier<MyService>() {
             @Override
             public MyService get() {
                 return new MyServiceImpl();

@@ -1,5 +1,6 @@
 package org.javabits.yar.guice;
 
+import org.javabits.yar.Ids;
 import org.javabits.yar.Supplier;
 import org.javabits.yar.SupplierEvent;
 import org.junit.Test;
@@ -28,7 +29,7 @@ public class BlockingSupplierImplTest {
      */@Test
     public void testCreateWithValueAndAdd() {
         // given a supplier at construction time
-        BlockingSupplierImpl<MyInterface> blockingSupplier = new BlockingSupplierImpl<>(GuiceId.of(MyInterface.class), supplier);
+        BlockingSupplierImpl<MyInterface> blockingSupplier = new BlockingSupplierImpl<>(Ids.newId(MyInterface.class), supplier);
         // when trigger supplier changed by the reactor
         blockingSupplier.supplierChanged(new SupplierEvent(ADD, supplier));
         //then now exception must be throw

@@ -5,6 +5,7 @@ import com.google.inject.*;
 import com.google.inject.name.Names;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
+import org.javabits.yar.Ids;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -44,7 +45,7 @@ public class DynamicCollectionsBindingTest {
         assertThat(myInterfaceList2, is(emptyIterable()));
         //when
         final MyInterfaceImpl myImpl = new MyInterfaceImpl();
-        final Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        final Id<MyInterface> id = Ids.newId(MyInterface.class);
         blockingSupplierRegistry.put(id, new Supplier<MyInterface>() {
             @Nullable
             @Override

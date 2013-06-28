@@ -265,7 +265,7 @@ public class RegistryModuleBindTest {
     }
 
     private Registration<MyInterface> putMyInterfaceSupplierToRegistry(Registry registry) {
-        Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        Id<MyInterface> id = Ids.newId(MyInterface.class);
         return getMyInterfaceRegistration(registry, id);
     }
 

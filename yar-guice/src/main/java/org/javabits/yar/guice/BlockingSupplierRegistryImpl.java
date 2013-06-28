@@ -16,16 +16,10 @@
 
 package org.javabits.yar.guice;
 
-import org.javabits.yar.BlockingSupplier;
-import org.javabits.yar.Id;
-import org.javabits.yar.Registration;
-import org.javabits.yar.TypeListener;
+import org.javabits.yar.*;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 
-import static org.javabits.yar.IdMatchers.newKeyMatcher;
 import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
@@ -57,7 +51,7 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
 
     @Override
     public <T> BlockingSupplier<T> get(Class<T> type) {
-        return get(GuiceId.of(type));
+        return get(Ids.newId(type));
     }
 
     @Override

@@ -3,14 +3,13 @@ package org.javabits.yar.guice;
 import com.google.common.base.Supplier;
 import com.google.common.reflect.TypeToken;
 import org.javabits.yar.Id;
+import org.javabits.yar.Ids;
 import org.javabits.yar.Registry;
 import org.junit.Before;
 import org.junit.Test;
 
 import javax.inject.Provider;
-import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Set;
 
 import static java.util.Collections.emptyList;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -33,7 +32,7 @@ public class SimpleRegistryTest {
 
     @Test
     public void testPutIdGuavaSupplier() {
-        Id<String> id = GuiceId.of(String.class);
+        Id<String> id = Ids.newId(String.class);
         assertThat(registry.get(id), is(nullValue()));
         registry.put(id, new Supplier<String>() {
             @Override
@@ -47,7 +46,7 @@ public class SimpleRegistryTest {
 
     @Test
     public void testPutIdYarSupplier() {
-        final Id<String> id = GuiceId.of(String.class);
+        final Id<String> id = Ids.newId(String.class);
         assertThat(registry.get(id), is(nullValue()));
         registry.put(id, new Supplier<String>() {
             @Override
@@ -61,7 +60,7 @@ public class SimpleRegistryTest {
 
     @Test
     public void testPutIdGuiceSupplier() {
-        final Id<String> id = GuiceId.of(String.class);
+        final Id<String> id = Ids.newId(String.class);
         assertThat(registry.get(id), is(nullValue()));
 
         registry.put(id, GuiceSupplier.of(new Provider<String>() {
@@ -76,7 +75,7 @@ public class SimpleRegistryTest {
 
     @Test(expected = NullPointerException.class)
     public void testGetClassNullPointerException() throws Exception {
-        registry.get((Class)null);
+        registry.get((Class) null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -86,7 +85,7 @@ public class SimpleRegistryTest {
 
     @Test(expected = NullPointerException.class)
     public void testGetIdNullPointerException() throws Exception {
-        registry.get((Id)null);
+        registry.get((Id) null);
     }
 
     @Test(expected = NullPointerException.class)
@@ -110,9 +109,10 @@ public class SimpleRegistryTest {
         assertThat(registry.get(type), is(not(nullValue())));
         assertThat(registry.get(type).get(), is((List) emptyList()));
     }
+
     @Test(expected = NullPointerException.class)
     public void testGetTypeTokenNullPointerException() throws Exception {
-        registry.get((TypeToken)null);
+        registry.get((TypeToken) null);
     }
 
     @Test
@@ -132,50 +132,10 @@ public class SimpleRegistryTest {
         assertThat(registry.getAll(type).size(), is(1));
         assertThat(registry.getAll(type).get(0).get(), is("test"));
     }
+
     @Test(expected = NullPointerException.class)
     public void testGetAllTypeTokenNullPointerException() throws Exception {
         registry.getAll((TypeToken) null);
     }
 
-    @Test
-    public void testTypes() {
-        final Id<String> id = GuiceId.of(String.class);
-        registry.put(id, GuiceSupplier.of(new Provider<String>() {
-            @Override
-            public String get() {
-                return "test";
-            }
-        }));
-
-        final Id<Double> idDouble = GuiceId.of(Double.class);
-        registry.put(idDouble, GuiceSupplier.of(new Provider<Double>() {
-            @Override
-            public Double get() {
-                return 2.0D;
-            }
-        }));
-        assertThat(registry.types(), hasItems((Type)Double.class, String.class));
-    }
-
-    @Test
-    public void testIds() {
-        final Id<String> id = GuiceId.of(String.class);
-        registry.put(id, GuiceSupplier.of(new Provider<String>() {
-            @Override
-            public String get() {
-                return "test";
-            }
-        }));
-
-        final Id<Double> idDouble = GuiceId.of(Double.class);
-        registry.put(idDouble, GuiceSupplier.of(new Provider<Double>() {
-            @Override
-            public Double get() {
-                return 2.0D;
-            }
-        }));
-        assertThat(registry.ids().size(), is(2));
-        assertThat(registry.ids().contains(id), is(true));
-        assertThat(registry.ids().contains(idDouble), is(true));
-    }
 }

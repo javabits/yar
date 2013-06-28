@@ -18,6 +18,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
+import org.javabits.yar.Ids;
 import org.junit.Test;
 
 import javax.inject.Provider;
@@ -48,7 +49,7 @@ public class BlockingSupplierRegistryImplTest {
         assertNull(supplier.get());
 
         final MyInterface myService = new MyInterfaceImpl();
-        registry.put(GuiceId.of(MyInterface.class), new GuiceSupplier<>(new Provider<MyInterface>() {
+        registry.put(Ids.newId(MyInterface.class), new GuiceSupplier<>(new Provider<MyInterface>() {
             @Override
             public MyInterface get() {
                 return myService;
@@ -83,7 +84,7 @@ public class BlockingSupplierRegistryImplTest {
         });
         thread.start();
         Thread.sleep(100);
-        Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        Id<MyInterface> id = Ids.newId(MyInterface.class);
         registry.put(id, new GuiceSupplier<>(new Provider<MyInterface>() {
             @Override
             public MyInterface get() {
@@ -122,7 +123,7 @@ public class BlockingSupplierRegistryImplTest {
         });
         thread.start();
         Thread.sleep(100);
-        Id<MyInterface> id = GuiceId.of(MyInterface.class);
+        Id<MyInterface> id = Ids.newId(MyInterface.class);
         registry.put(id, new GuiceSupplier<>(new Provider<MyInterface>() {
             @Override
             public MyInterface get() {

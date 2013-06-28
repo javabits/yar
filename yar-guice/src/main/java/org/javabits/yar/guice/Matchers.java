@@ -21,6 +21,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.matcher.Matcher;
 import org.javabits.yar.Id;
+import org.javabits.yar.Ids;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -42,7 +43,7 @@ public final class Matchers {
     private static final String MATCHER_PARAMETER_TYPE_ERROR = "The matcher type must be implementation of " + KEY_MATCHER_SIGNATURE;
 
     public static <T> Id<T> getId(Matcher<Key<T>> matcher) {
-        return GuiceId.of(getKey(matcher));
+        return (Id<T>)Ids.newId(getTargetType(matcher));
     }
 
     public static <T> Key<T> getKey(Matcher<Key<T>> matcher) {
@@ -50,11 +51,6 @@ public final class Matchers {
     }
 
     public static <T> TypeLiteral<T> getTargetTypeLiteral(Matcher<Key<T>> matcher) {
-        if (matcher instanceof KeyProvider) {
-            @SuppressWarnings("unchecked")
-            KeyProvider<T> keyProvider = (KeyProvider<T>) matcher;
-            return keyProvider.get().getTypeLiteral();
-        }
         Type keyTargetType = getTargetType(matcher);
         return getTypeLiteral(keyTargetType);
     }
@@ -65,6 +61,11 @@ public final class Matchers {
     }
 
     private static <T> Type getTargetType(Matcher<Key<T>> matcher) {
+        if (matcher instanceof KeyProvider) {
+            @SuppressWarnings("unchecked")
+            KeyProvider<T> keyProvider = (KeyProvider<T>) matcher;
+            return keyProvider.get().getTypeLiteral().getType();
+        }
         Type matcherTargetType = getUniqueParameterType(matcher.getClass(), Matcher.class, KEY_MATCHER_SIGNATURE);
         if (isParameterizedType(matcherTargetType) && Key.class.isAssignableFrom(Reflections.getRawType(matcherTargetType))) {
             return getUniqueParameterType((ParameterizedType) matcherTargetType, "Key<T>");

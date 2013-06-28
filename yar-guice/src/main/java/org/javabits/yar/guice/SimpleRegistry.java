@@ -195,13 +195,9 @@ public class SimpleRegistry implements Registry, RegistryHook {
         return put(id, requireNonNull(new GuavaSupplierAdapter<>(id, supplier), "supplier"));
     }
 
-    private <T> GuiceId<T> checkKey(Id<T> watchedId, String attribute) {
-        requireNonNull(watchedId, attribute);
-        if (watchedId instanceof GuiceId) {
-            return (GuiceId<T>) watchedId;
-        } else {
-            throw new IllegalArgumentException("The " + attribute + " parameter must be a GuiceId instance");
-        }
+    private <T> Id<T> checkKey(Id<T> watchedId, String attribute) {
+        return requireNonNull(watchedId, attribute);
+        //TODO test equals to Ids.IdImpl
     }
 
     private <T> void checkSupplier(Supplier<? extends T> supplier) {

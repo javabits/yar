@@ -20,6 +20,7 @@ import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import org.javabits.yar.Id;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -68,7 +69,7 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
         }
 
         @SuppressWarnings("unchecked")
-        private GuiceId<T> getSupplierTypeParameter() {
+        private Id<T> getSupplierTypeParameter() {
             Type type = key.getTypeLiteral().getType();
             checkParameterizedType(type);
             ParameterizedType parameterizedType = (ParameterizedType) type;
@@ -78,7 +79,7 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
             }
 
             Type actualTypeArgument = actualTypeArguments[0];
-            return (GuiceId<T>) GuiceId.of(actualTypeArgument, key);
+            return GuiceId.of(actualTypeArgument, key);
         }
 
         @Inject

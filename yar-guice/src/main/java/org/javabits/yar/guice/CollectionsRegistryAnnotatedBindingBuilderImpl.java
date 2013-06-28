@@ -23,6 +23,7 @@ import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import org.javabits.yar.Ids;
 import org.javabits.yar.Registry;
 import org.javabits.yar.Supplier;
 
@@ -88,7 +89,7 @@ public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryA
             if (laxTypeBinding) {
                 return registry().getAll(TypeToken.of(getCollectionsTypeParameter()));
             } else {
-                return registry().getAll(GuiceId.of(Key.get(getCollectionsTypeParameter())));
+                return registry().getAll(Ids.newId(getCollectionsTypeParameter()));
             }
         }
 

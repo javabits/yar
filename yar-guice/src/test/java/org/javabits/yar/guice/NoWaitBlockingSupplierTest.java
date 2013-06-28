@@ -2,10 +2,7 @@ package org.javabits.yar.guice;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
-import org.javabits.yar.BlockingSupplier;
-import org.javabits.yar.Id;
-import org.javabits.yar.Supplier;
-import org.javabits.yar.SupplierEvent;
+import org.javabits.yar.*;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -23,7 +20,7 @@ import static org.javabits.yar.SupplierEvent.Type.ADD;
  */
 public class NoWaitBlockingSupplierTest {
 
-    private final Id<MyInterface> id = GuiceId.of(MyInterface.class);
+    private final Id<MyInterface> id = Ids.newId(MyInterface.class);
 
     @Test
     public void testDirectGetNull() throws Exception {
