@@ -91,7 +91,7 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry {
     }
 
     @Override
-    public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<T> supplier) {
+    public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
         Registration<T> registration = delegate.put(id, supplier);
         supplierRegistrations.put(registration, NULL_VALUE);
         return registration;

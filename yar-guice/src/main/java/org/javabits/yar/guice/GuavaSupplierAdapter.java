@@ -15,10 +15,10 @@ import static java.util.Objects.requireNonNull;
  * @author Romain Gilles
  */
 class GuavaSupplierAdapter<T> implements Supplier<T> {
-    private final com.google.common.base.Supplier<T> delegate;
+    private final com.google.common.base.Supplier<? extends T> delegate;
     private final Id<T> id;
 
-    GuavaSupplierAdapter(Id<T> id, com.google.common.base.Supplier<T> delegate) {
+    GuavaSupplierAdapter(Id<T> id, com.google.common.base.Supplier<? extends T> delegate) {
         this.id = requireNonNull(id, "id");
         this.delegate = requireNonNull(delegate, "delegate");
     }

@@ -205,7 +205,7 @@ public interface Registry {
      * @see Registration
      * @see #remove(Registration)
      */
-    <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<T> supplier);
+    <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier);
 
     /**
      * Removes the supplier referenced by the specified
