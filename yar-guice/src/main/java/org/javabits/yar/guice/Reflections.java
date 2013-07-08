@@ -101,21 +101,29 @@ public final class Reflections {
     }
 
     private static ParameterizedType getParameterizedType(Class<?> matcher, Class<?> expectedType) {
-        ParameterizedType matcherType = null;
-
         Type superType = matcher.getGenericSuperclass();
         if (expectedType.isAssignableFrom(getRawType(superType)) && isParameterizedType(superType)) {
             return (ParameterizedType) superType;
         }
         for (Type type : matcher.getGenericInterfaces()) {
-            matcherType = asParameterizedType(type, expectedType);
+            ParameterizedType matcherType = asParameterizedType(type, expectedType);
+            if (matcherType != null) {
+                return matcherType;
+            }
         }
-        if (matcherType == null) {
-            throw new IllegalArgumentException("type must be of type: " + expectedType);
-        }
-        return matcherType;
+        throw new IllegalArgumentException("Class [" + matcher + "] must be of type: " + expectedType);
     }
 
+    /**
+     * Returns the given type casted to {@code ParameterizedType} if and only
+     * if it is a {@code ParameterizedType} and its raw type is assignable from
+     * the given expected type.
+     *
+     * @param type         the type whose expect parameterized must be tested.
+     * @param expectedType expected parameterized type.
+     * @return the expected parameterized type or {@code null}.
+     */
+    @Nullable
     private static ParameterizedType asParameterizedType(Type type, Class<?> expectedType) {
         ParameterizedType result = null;
         if (isParameterizedType(type)) {

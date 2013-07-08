@@ -18,6 +18,7 @@ package org.javabits.yar.guice;
 
 import org.junit.Test;
 
+import java.io.Serializable;
 import java.lang.reflect.Type;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -79,6 +80,13 @@ public class ReflectionsTest {
         thenReturnedParameterTypeMustBeString(actual);
     }
 
+    @Test
+    public void testGetParameterizedStringTypeInterfaceOnMultiInterfacesImpl() {
+        Class<? extends MonoParameterized<String>> given = MultiImplInterfaceAndMonoParameterized.class;
+        Type actual = whenGetUniqueParameterType(given);
+        thenReturnedParameterTypeMustBeString(actual);
+    }
+
     private Class<MonoParameterizedImpl> givenStringInterfaceImpl() {
         return MonoParameterizedImpl.class;
     }
@@ -107,4 +115,6 @@ public class ReflectionsTest {
     static class AbstractMonoParameterizedImpl extends AbstractMonoParameterized<String> {
     }
 
+
+    static class MultiImplInterfaceAndMonoParameterized implements MonoParameterized<String>, Serializable {}
 }
