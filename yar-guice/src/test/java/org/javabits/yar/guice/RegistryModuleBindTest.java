@@ -479,6 +479,28 @@ public class RegistryModuleBindTest {
 
     }
 
+    @Test
+    public void testMultiParametersGeneric() {
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        final TypeLiteral<MultiParametersGeneric<String, String>> typeLiteral = new TypeLiteral<MultiParametersGeneric<String, String>>() {
+        };
+        Injector injector = Guice.createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+
+                register(typeLiteral).to(MultiParametersGenericImpl.class);
+            }
+        });
+        assertThat(injector.getInstance(Key.get(typeLiteral)), is(not(nullValue())));
+    }
+
+    static interface MultiParametersGeneric<I, O> {
+    }
+
+    static class MultiParametersGenericImpl implements MultiParametersGeneric<String, String> {
+    }
+
     static interface MyInterface {
 
     }
