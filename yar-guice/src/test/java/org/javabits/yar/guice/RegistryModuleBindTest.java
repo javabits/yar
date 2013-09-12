@@ -493,12 +493,18 @@ public class RegistryModuleBindTest {
             }
         });
         assertThat(injector.getInstance(Key.get(typeLiteral)), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(typeLiteral)).accept("test"), is("test"));
     }
 
     static interface MultiParametersGeneric<I, O> {
+        O accept(I input);
     }
 
     static class MultiParametersGenericImpl implements MultiParametersGeneric<String, String> {
+        @Override
+        public String accept(String input) {
+            return input;
+        }
     }
 
     static interface MyInterface {
