@@ -16,7 +16,6 @@ package org.javabits.yar.guice;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,10 +47,6 @@ public enum ExecutionStrategy {
         }
     };
 
-    private static void logTaskExecutionException(Object task, Throwable e) {
-        LOG.log(Level.SEVERE, "cannot execute the submitted a task: " + task, e);
-    }
-
     private static final Logger LOG = Logger.getLogger(ExecutionStrategy.class.getName());
 
     abstract ExecutorService executorService();
@@ -61,15 +56,14 @@ public enum ExecutionStrategy {
         for (int i = 0; i < futures.size(); i++) {
             Future<Void> future = futures.get(i);
             try {
-                if (future.isCancelled()) {
-                    LOG.severe(String.format("task not canceled (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)));
-                } else if (future.isDone())
-                    future.get();
-                else {
-                    LOG.severe("task not done: " + tasks.get(i));
-                }
+                future.get();
+            } catch (CancellationException e) {
+                LOG.log(Level.SEVERE, String.format("task canceled (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
             } catch (ExecutionException | RuntimeException e) {
-                logTaskExecutionException(tasks.get(i), e);
+                LOG.log(Level.SEVERE, "cannot execute due to an error the submitted a task: " + tasks.get(i), e);
+            } catch (InterruptedException e) {
+                LOG.log(Level.SEVERE, String.format("task interrupted (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
+                throw e;
             }
         }
     }

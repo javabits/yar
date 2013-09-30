@@ -17,18 +17,14 @@
 package org.javabits.yar.guice;
 
 import com.google.common.base.Function;
-import com.google.common.base.Objects;
-import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
-import org.javabits.yar.TypeEvent;
 import org.javabits.yar.TypeListener;
 
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -151,7 +147,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
             @Nullable
             @Override
             public Callable<Void> apply(@Nullable WatcherRegistration<T> watcherRegistration) {
-                return new ActionAdapter<>(watcherRegistration, supplierRegistration, action);
+                return new UpdateWatcherOnSupplierEvent<>(watcherRegistration, supplierRegistration, action);
             }
         });
     }
@@ -195,7 +191,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
             @Nullable
             @Override
             public Callable<Void> apply(@Nullable SupplierRegistration<T> supplierRegistration) {
-                return new ActionAdapter<>(watcherRegistration, supplierRegistration, Action.ADD);
+                return new AddToNewWatcher<>(watcherRegistration, supplierRegistration, Action.ADD);
             }
         });
     }
@@ -243,13 +239,26 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
         @Override
         public String toString() {
-            return "ActionAdapter{" +
+            return this.getClass().getSimpleName() + "{" +
                     "watcherRegistration=" + watcherRegistration +
                     ", supplierRegistration=" + supplierRegistration +
                     ", action=" + action +
                     '}';
         }
     }
+
+    static class AddToNewWatcher<T> extends ActionAdapter<T> {
+        AddToNewWatcher(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
+            super(watcherRegistration, supplierRegistration, action);
+        }
+    }
+
+    static class UpdateWatcherOnSupplierEvent<T> extends ActionAdapter<T> {
+        UpdateWatcherOnSupplierEvent(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
+            super(watcherRegistration, supplierRegistration, action);
+        }
+    }
+
     static private <T> void fireAddToWatcherIfMatches(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
         if (watcherRegistration.left().matches(supplierRegistration.id())) {
             action.execute(watcherRegistration, supplierRegistration);
