@@ -119,8 +119,8 @@ public final class YarOSGis {
         return injector;
     }
 
-    private static ForwardingRegistryWrapper getForwardingRegistryWrapper(Injector injector) {
-        return injector.getInstance(ForwardingRegistryWrapper.class);
+    private static BundleRegistryWrapper getBundleRegistryWrapper(Injector injector) {
+        return injector.getInstance(BundleRegistryWrapper.class);
     }
 
     private static void initHandlers(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
@@ -151,7 +151,7 @@ public final class YarOSGis {
     private static void attachStoppingListener(BundleContext bundleContext, Injector injector) {
         bundleContext.addBundleListener(new BundleStoppingListener(getRegistrationHandler(injector)
                 , getRegistryListenerHandler(injector)
-                , getForwardingRegistryWrapper(injector)
+                , getBundleRegistryWrapper(injector)
                 , bundleContext.getBundle().getBundleId()));
     }
 
@@ -178,6 +178,7 @@ public final class YarOSGis {
             protected void configure() {
                 Key<ForwardingRegistryWrapper> registryKey = Key.get(ForwardingRegistryWrapper.class);
                 bind(registryKey).toInstance(blockingSupplierRegistry);
+                bind(BundleRegistryWrapper.class).to(registryKey);
                 install(newRegistryDeclarationModule(registryKey));
                 install(newOSGiModule(bundleContext));
             }
@@ -205,9 +206,9 @@ public final class YarOSGis {
         private final RegistrationHandler registrationHandler;
         private final RegistryListenerHandler registryListenerHandler;
         private final long bundleId;
-        private final ForwardingRegistryWrapper forwardingRegistryWrapper;
+        private final BundleRegistryWrapper forwardingRegistryWrapper;
 
-        private BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, ForwardingRegistryWrapper forwardingRegistryWrapper, long bundleId) {
+        private BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, BundleRegistryWrapper forwardingRegistryWrapper, long bundleId) {
             this.registrationHandler = registrationHandler;
             this.registryListenerHandler = registryListenerHandler;
             this.forwardingRegistryWrapper = forwardingRegistryWrapper;

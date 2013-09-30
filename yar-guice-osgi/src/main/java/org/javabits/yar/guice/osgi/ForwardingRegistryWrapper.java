@@ -1,5 +1,6 @@
 package org.javabits.yar.guice.osgi;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
 import org.javabits.yar.*;
@@ -22,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
  *
  * @author Romain Gilles
  */
-class ForwardingRegistryWrapper implements BlockingSupplierRegistry {
+class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegistryWrapper {
     /**
      * The default initial capacity for concurrent maps
      */
@@ -130,10 +131,29 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry {
         delegate.removeAllWatchers(watcherRegistrations);
     }
 
+    @Override
     public void clear() {
         //remove first the supplier to let to the watcher a chance handle it
         delegate.removeAll(supplierRegistrations.keySet());
         //then remove the watcher
         delegate.removeAllWatchers(watcherRegistrations.keySet());
+    }
+
+    @Override
+    public Set<Id<?>> getBundleWatchers() {
+        return transformRegistrationsToIds(watcherRegistrations.keySet());
+    }
+
+    @Override
+    public Set<Id<?>> getBundleSuppliers() {
+        return transformRegistrationsToIds(supplierRegistrations.keySet());
+    }
+
+    private Set<Id<?>> transformRegistrationsToIds(Set<Registration<?>> registrations) {
+        ImmutableSet.Builder<Id<?>> bundleWatchers = ImmutableSet.builder();
+        for (Registration<?> registration : registrations) {
+            bundleWatchers.add(registration.id());
+        }
+        return bundleWatchers.build();
     }
 }
