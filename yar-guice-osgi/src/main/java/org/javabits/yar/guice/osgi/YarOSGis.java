@@ -18,6 +18,7 @@ package org.javabits.yar.guice.osgi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.*;
+import com.google.inject.name.Names;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.guice.RegistrationHandler;
 import org.javabits.yar.guice.RegistryListenerHandler;
@@ -67,6 +68,7 @@ import static org.javabits.yar.guice.YarGuices.newRegistryDeclarationModule;
 public final class YarOSGis {
 
     private static final String SERVICE_REGISTRY_ERROR_MESSAGE = "no BlockingSupplierRegistry service reference found in OSGi service registry";
+    public static final Key<BundleListener> CLEANUP_BUNDLE_LISTENER = Key.get(BundleListener.class, Names.named("cleanup"));
 
     private YarOSGis() {
         throw new AssertionError("not for you!");
@@ -149,10 +151,8 @@ public final class YarOSGis {
     }
 
     private static void attachStoppingListener(BundleContext bundleContext, Injector injector) {
-        bundleContext.addBundleListener(new BundleStoppingListener(getRegistrationHandler(injector)
-                , getRegistryListenerHandler(injector)
-                , getBundleRegistryWrapper(injector)
-                , bundleContext.getBundle().getBundleId()));
+        BundleListener listener = injector.getInstance(CLEANUP_BUNDLE_LISTENER);
+        bundleContext.addBundleListener(listener);
     }
 
     private static Iterable<Module> getModules(BundleContext bundleContext, Iterable<Module> modules) {
@@ -179,6 +179,7 @@ public final class YarOSGis {
                 Key<ForwardingRegistryWrapper> registryKey = Key.get(ForwardingRegistryWrapper.class);
                 bind(registryKey).toInstance(blockingSupplierRegistry);
                 bind(BundleRegistryWrapper.class).to(registryKey);
+                bind(CLEANUP_BUNDLE_LISTENER).to(BundleStoppingListener.class);
                 install(newRegistryDeclarationModule(registryKey));
                 install(newOSGiModule(bundleContext));
             }
@@ -201,18 +202,19 @@ public final class YarOSGis {
         return new ForwardingRegistryWrapper(checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available"));
     }
 
-
-    private static class BundleStoppingListener implements SynchronousBundleListener {
+    @Singleton
+    static class BundleStoppingListener implements SynchronousBundleListener {
         private final RegistrationHandler registrationHandler;
         private final RegistryListenerHandler registryListenerHandler;
         private final long bundleId;
         private final BundleRegistryWrapper forwardingRegistryWrapper;
 
-        private BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, BundleRegistryWrapper forwardingRegistryWrapper, long bundleId) {
+        @Inject
+        BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, BundleRegistryWrapper forwardingRegistryWrapper, Bundle bundle) {
             this.registrationHandler = registrationHandler;
             this.registryListenerHandler = registryListenerHandler;
             this.forwardingRegistryWrapper = forwardingRegistryWrapper;
-            this.bundleId = bundleId;
+            this.bundleId = bundle.getBundleId();
         }
 
         @Override
