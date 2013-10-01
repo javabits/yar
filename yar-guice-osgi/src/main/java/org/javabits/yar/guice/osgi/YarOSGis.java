@@ -151,8 +151,22 @@ public final class YarOSGis {
     }
 
     private static void attachStoppingListener(BundleContext bundleContext, Injector injector) {
-        BundleListener listener = injector.getInstance(CLEANUP_BUNDLE_LISTENER);
+        BundleListener listener = getCleanupBundleListener(injector);
         bundleContext.addBundleListener(listener);
+    }
+
+    /**
+     * Returns the bundle listener responsible to cleanup any remaining
+     * registry entries associated to current bundle.
+     * <p>This method can be use with cautions when you want to handle the life-cycle
+     * of the injector associated to a bundle without going to a bundle restart. It allow
+     * you to remove the bundle listener to avoid some leaks.</p>
+     *
+     * @param injector associated to the current bundle
+     * @return the cleanup bundle listener.
+     */
+    public static BundleListener getCleanupBundleListener(Injector injector) {
+        return injector.getInstance(CLEANUP_BUNDLE_LISTENER);
     }
 
     private static Iterable<Module> getModules(BundleContext bundleContext, Iterable<Module> modules) {
