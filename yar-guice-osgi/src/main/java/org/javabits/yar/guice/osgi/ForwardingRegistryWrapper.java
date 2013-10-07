@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
@@ -38,6 +39,11 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
      * The default concurrency level for concurrent maps
      */
     static final int DEFAULT_CONCURRENCY_LEVEL = 16;
+
+    /**
+     * Flag use to make the registry read only when it is cleared.
+     */
+    private final AtomicBoolean mutable = new AtomicBoolean(true);
 
     private final BlockingSupplierRegistry delegate;
     private static final Object NULL_VALUE = Boolean.TRUE;
@@ -93,6 +99,9 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
 
     @Override
     public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
+        if (!mutable.get()) {
+            return newNullRegistration(id);
+        }
         Registration<T> registration = delegate.put(id, supplier);
         supplierRegistrations.put(registration, NULL_VALUE);
         return registration;
@@ -100,12 +109,18 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
 
     @Override
     public void remove(Registration<?> registration) {
+        if (!mutable.get()) {
+            return;
+        }
         supplierRegistrations.remove(registration);
         delegate.remove(registration);
     }
 
     @Override
     public void removeAll(Collection<? extends Registration<?>> registrations) {
+        if (!mutable.get()) {
+            return;
+        }
         for (Registration<?> registration : registrations) {
             supplierRegistrations.remove(registration);
         }
@@ -114,6 +129,9 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
 
     @Override
     public <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<T> watcher) {
+        if (!mutable.get()) {
+            return newNullRegistration(watchedKey.id());
+        }
         Registration<T> registration = delegate.addWatcher(watchedKey, watcher);
         watcherRegistrations.put(registration, NULL_VALUE);
         return registration;
@@ -121,18 +139,25 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
 
     @Override
     public void removeWatcher(Registration<?> watcherRegistration) {
+        if (!mutable.get()) {
+            return;
+        }
         watcherRegistrations.remove(watcherRegistration);
         delegate.removeWatcher(watcherRegistration);
     }
 
     @Override
     public void removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations) {
+        if (!mutable.get()) {
+            return;
+        }
         watcherRegistrations.removeAll(watcherRegistrations);
         delegate.removeAllWatchers(watcherRegistrations);
     }
 
     @Override
     public void clear() {
+        mutable.set(false);
         //remove first the supplier to let to the watcher a chance handle it
         delegate.removeAll(supplierRegistrations.keySet());
         //then remove the watcher
@@ -155,5 +180,14 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
             bundleWatchers.add(registration.id());
         }
         return bundleWatchers.build();
+    }
+
+    private static <T> Registration<T> newNullRegistration(final Id<T> id) {
+        return new Registration<T>() {
+            @Override
+            public Id<T> id() {
+                return id;
+            }
+        };
     }
 }
