@@ -22,12 +22,8 @@ import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matcher;
-import org.javabits.yar.BlockingSupplier;
-import org.javabits.yar.Supplier;
 
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.List;
 
 import static org.javabits.yar.guice.RegistrationBindingBuilderImpl.bindRegistration;
 
@@ -50,8 +46,11 @@ import static org.javabits.yar.guice.RegistrationBindingBuilderImpl.bindRegistra
  */
 public abstract class AbstractRegistryModule extends AbstractModule {
 
+    private RegistryBinderImpl registryBinderImpl;
+
     @Override
     protected final void configure() {
+        registryBinderImpl = new RegistryBinderImpl(this.binder());
         doBeforeConfiguration();
         configureRegistry();
         bindProviderMethods();
@@ -158,147 +157,35 @@ public abstract class AbstractRegistryModule extends AbstractModule {
     protected abstract void configureRegistry();
 
     @Beta
-    protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, Key<? extends RegistryListener<? super T>> key) {
-        if (isBlockingSupplier(matcher)) {
-            throw new IllegalArgumentException("Only simple Supplier are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
-        } else if (isSupplier(matcher)) {
-            throw new IllegalArgumentException("Only simple Supplier are supported. Supplier are only available as injectable element (constructor/field/method param).");
-        } else {
-            bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, key));
-        }
-    }
-
-    private <T> boolean isBlockingSupplier(Matcher<Key<T>> matcher) {
-        return isBlockingSupplier(Matchers.getTargetTypeLiteral(matcher));  //To change body of created methods use File | Settings | File Templates.
-    }
-
-    private <T> boolean isSupplier(Matcher<Key<T>> matcher) {
-        return isSupplier(Matchers.getTargetTypeLiteral(matcher));
-    }
-
-    @Beta
     protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {
-        if (isBlockingSupplier(matcher)) {
-            throw new IllegalArgumentException("Only simple Type are supported. BlockingSupplier are only available as injectable element (constructor/field/method param).");
-        } else if (isSupplier(matcher)) {
-            throw new IllegalArgumentException("Only simple Supplier are supported. Supplier are only available as injectable element (constructor/field/method param).");
-        } else {
-            bind(Key.get(GuiceWatcherRegistration.class, UniqueAnnotations.create())).toInstance(GuiceWatcherRegistration.get(matcher, listener));
-        }
-        requestInjection(listener);
+        registryBinderImpl.bindRegistryListener(matcher, listener);
     }
-
-
-//    protected <T> void bindListenerBounded(Matcher<Key<? extends T>> typeMatcher, RegistryListener<? super T> listener) {
-//        if (isBlockingSupplier(typeLiteral)) {
-//
-//        } else if (isSupplier(typeLiteral)) {
-//
-//        } else {
-//
-//        }
-//    }
 
     protected <T> RegistrationLinkedBindingBuilder<T> register(Key<T> key) {
-        return new RegistrationBindingBuilderImpl<>(binder(), key);
+        return registryBinderImpl.register(key);
     }
 
     protected <T> RegistrationAnnotatedBindingBuilder<T> register(TypeLiteral<T> typeLiteral) {
-        return new RegistrationBindingBuilderImpl<>(binder(), typeLiteral);
+        return registryBinderImpl.register(typeLiteral);
     }
 
     // TODO cannot be scoped
     protected <T> RegistrationAnnotatedBindingBuilder<T> register(Class<T> type) {
-        return new RegistrationBindingBuilderImpl<>(binder(), type);
+        return registryBinderImpl.register(type);
     }
 
     @Override
     protected <T> RegistryLinkedBindingBuilder<T> bind(Key<T> key) {
-        return getRegistryBindingBuilderFactory(key).newFrom(key);
+        return registryBinderImpl.bind(key);
     }
 
     @Override
     protected <T> RegistryAnnotatedBindingBuilder<T> bind(TypeLiteral<T> typeLiteral) {
-        return getRegistryBindingBuilderFactory(typeLiteral).newFrom(typeLiteral);
+        return registryBinderImpl.bind(typeLiteral);
     }
 
     @Override
     protected <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
-        return new RegistryAnnotatedBindingBuilderImpl<>(binder(), clazz);
-    }
-
-    private <T> RegistryBindingBuilderFactory getRegistryBindingBuilderFactory(Key<T> key) {
-        return getRegistryBindingBuilderFactory(key.getTypeLiteral());
-    }
-
-    private <T> RegistryBindingBuilderFactory getRegistryBindingBuilderFactory(TypeLiteral<T> typeLiteral) {
-        if (isBlockingSupplier(typeLiteral) || isSupplier(typeLiteral)) {
-            return new BlockingSupplierRegistryBindingBuilderFactory();
-        } else if (isSupportedCollectionsInterface(typeLiteral)) {
-            return new CollectionsRegistryBindingBuilderFactory();
-        } else {
-            return new SimpleRegistryBindingBuilderFactory();
-        }
-    }
-
-    private <T> boolean isBlockingSupplier(TypeLiteral<T> typeLiteral) {
-        return BlockingSupplier.class.isAssignableFrom(typeLiteral.getRawType());
-    }
-
-    private <T> boolean isSupplier(TypeLiteral<T> typeLiteral) {
-        return Supplier.class.isAssignableFrom(typeLiteral.getRawType())
-                || com.google.common.base.Supplier.class.isAssignableFrom(typeLiteral.getRawType());
-    }
-
-    private <T> boolean isSupportedCollectionsInterface(TypeLiteral<T> typeLiteral) {
-        return isClassEqualsToLiteralRowType(List.class, typeLiteral)
-                || isClassEqualsToLiteralRowType(Collection.class, typeLiteral)
-                || isClassEqualsToLiteralRowType(Iterable.class, typeLiteral);
-    }
-
-    private <T> boolean isClassEqualsToLiteralRowType(Class<?> type, TypeLiteral<T> typeLiteral) {
-        return type.equals(typeLiteral.getRawType());
-    }
-
-    private interface RegistryBindingBuilderFactory {
-        <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral);
-
-        <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key);
-    }
-
-    private class SimpleRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
-        @Override
-        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new RegistryAnnotatedBindingBuilderImpl<>(binder(), typeLiteral);
-        }
-
-        @Override
-        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new RegistryAnnotatedBindingBuilderImpl<>(binder(), key);
-        }
-    }
-
-    private class BlockingSupplierRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
-        @Override
-        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder(), typeLiteral);
-        }
-
-        @Override
-        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder(), key);
-        }
-    }
-
-    private class CollectionsRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
-        @Override
-        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder(), typeLiteral);
-        }
-
-        @Override
-        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder(), key);
-        }
+        return registryBinderImpl.bind(clazz);
     }
 }
