@@ -17,10 +17,8 @@
 package org.javabits.yar.guice;
 
 import com.google.common.annotations.Beta;
-import com.google.inject.AbstractModule;
-import com.google.inject.Key;
-import com.google.inject.Provides;
-import com.google.inject.TypeLiteral;
+import com.google.common.base.Preconditions;
+import com.google.inject.*;
 import com.google.inject.matcher.Matcher;
 
 import java.lang.reflect.Method;
@@ -46,11 +44,11 @@ import static org.javabits.yar.guice.RegistrationBindingBuilderImpl.bindRegistra
  */
 public abstract class AbstractRegistryModule extends AbstractModule {
 
-    private RegistryBinderImpl registryBinderImpl;
+    private RegistryBinder registryBinderImpl;
 
     @Override
     protected final void configure() {
-        registryBinderImpl = new RegistryBinderImpl(this.binder());
+        registryBinderImpl = new RegistryBinderImpl(super.binder());
         doBeforeConfiguration();
         configureRegistry();
         bindProviderMethods();
@@ -155,6 +153,17 @@ public abstract class AbstractRegistryModule extends AbstractModule {
      * @see RegistryModule
      */
     protected abstract void configureRegistry();
+
+    @Override
+    protected Binder binder() {
+        Preconditions.checkState(registryBinderImpl != null, "Binder is not defined before configuration start");
+        return registryBinderImpl;
+    }
+
+    @Beta
+    protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, Key<? extends RegistryListener<? super T>> key) {
+        registryBinderImpl.bindRegistryListener(matcher, key);
+    }
 
     @Beta
     protected <T> void bindRegistryListener(Matcher<Key<T>> matcher, RegistryListener<? super T> listener) {

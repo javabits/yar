@@ -417,23 +417,26 @@ public class RegistryModuleBindTest {
                                      }
                 );
 
+                RegistryListener<Object> listener = new RegistryListener<Object>() {
+                    @Nullable
+                    @Override
+                    public Supplier<Object> add(Supplier<Object> element) {
+                        return element;
+                    }
+
+                    @Override
+                    public void remove(Supplier<Object> element) {
+
+                    }
+                };
+                Key<RegistryListener<Object>> listenerKey = Key.get(new TypeLiteral<RegistryListener<Object>>() {});
+                bind(listenerKey).toInstance(listener);
                 bindRegistryListener(new AbstractMatcher<Key<MyInterface>>() {
                                          @Override
                                          public boolean matches(Key<MyInterface> item) {
                                              return false;
                                          }
-                                     }, new RegistryListener<Object>() {
-                                         @Nullable
-                                         @Override
-                                         public Supplier<Object> add(Supplier<Object> element) {
-                                             return element;
-                                         }
-
-                                         @Override
-                                         public void remove(Supplier<Object> element) {
-
-                                         }
-                                     }
+                                     }, listenerKey
                 );
 
 //                bindListenerBounded(new org.javabits.yar.Matcher<Id<? extends MyInterface>>() {
