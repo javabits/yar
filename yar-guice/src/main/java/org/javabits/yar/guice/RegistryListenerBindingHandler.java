@@ -19,7 +19,6 @@ package org.javabits.yar.guice;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.TypeLiteral;
@@ -28,12 +27,7 @@ import org.javabits.yar.*;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.lang.InterruptedException;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -78,7 +72,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
         for (Pair<IdMatcher, Watcher> guiceWatcherRegistration : getRegisteredWatchers()) {
             Watcher watcher = guiceWatcherRegistration.right();
             IdMatcher idMatcher = guiceWatcherRegistration.left();
-            ListenableFuture<Registration> registration = registry.addWatcher(idMatcher, watcher);
+            Registration registration = registry.addWatcher(idMatcher, watcher);
             ListenerRegistration listenerRegistration = new ListenerRegistration(registration, idMatcher, watcher);
             registrationsBuilder.add(listenerRegistration);
         }
@@ -121,28 +115,21 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
             return;
         }
         for (ListenerRegistration listenerRegistration : listenerRegistrations) {
-            final ListenableFuture<Registration> future = listenerRegistration.futureRegistration;
-            Concurrents.executeWithLog(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    Registration watcherRegistration = future.get();//no need of timeout as the yar registry reactor already handle the timeout.
-                    registry.removeWatcher(watcherRegistration);
-                    return null;
-                }
-            }, listenerRegistration.idMatcher.id(), "Listener Registration");
+            Registration watcherRegistration = listenerRegistration.registration;
+            registry.removeWatcher(watcherRegistration);
         }
         listenerRegistrations.clear();
     }
 
     private class ListenerRegistration {
-        private final ListenableFuture<Registration> futureRegistration;
+        private final Registration registration;
         private final IdMatcher<?> idMatcher;
         @SuppressWarnings("unused")
         //Strong ref is required to avoid gc.
         private final Watcher<?> watcher;
 
-        private ListenerRegistration(ListenableFuture<Registration> futureRegistration, IdMatcher<?> idMatcher, Watcher<?> watcher) {
-            this.futureRegistration = futureRegistration;
+        private ListenerRegistration(Registration registration, IdMatcher<?> idMatcher, Watcher<?> watcher) {
+            this.registration = registration;
             this.idMatcher = idMatcher;
             this.watcher = watcher;
         }

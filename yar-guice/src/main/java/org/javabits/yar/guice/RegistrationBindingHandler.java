@@ -18,7 +18,6 @@ package org.javabits.yar.guice;
 
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.inject.Binding;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -31,15 +30,10 @@ import javax.annotation.Nullable;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.CancellationException;
-import java.util.concurrent.ExecutionException;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Lists.transform;
-import static org.javabits.yar.guice.Concurrents.executeWithLog;
 
 /**
  * TODO comment
@@ -93,7 +87,7 @@ public class RegistrationBindingHandler implements RegistrationHandler {
 
     @SuppressWarnings("unchecked")
     private RegistrationHolder putRegistrationToRegistry(Pair<Id, GuiceSupplier> idGuiceSupplierPair) {
-        ListenableFuture<Registration<?>> future = registry.put(idGuiceSupplierPair.left(), idGuiceSupplierPair.right());
+        Registration<?> future = registry.put(idGuiceSupplierPair.left(), idGuiceSupplierPair.right());
         return new RegistrationHolder(future, idGuiceSupplierPair.left());
     }
 
@@ -124,23 +118,17 @@ public class RegistrationBindingHandler implements RegistrationHandler {
             return;
         }
         for (final RegistrationHolder registration : registrations) {
-            executeWithLog(new Callable<Void>() {
-                @Override
-                public Void call() throws Exception {
-                    registry.remove(registration.futureRegistration.get());
-                    return null;
-                }
-            }, registration.id, "Registration request");
+            registry.remove(registration.registration);
         }
         registrations.clear();
     }
 
     private class RegistrationHolder {
-        private final ListenableFuture<Registration<?>> futureRegistration;
+        private final Registration<?> registration;
         private final Id<?> id;
 
-        private RegistrationHolder(ListenableFuture<Registration<?>> futureRegistration, Id<?> id) {
-            this.futureRegistration = futureRegistration;
+        private RegistrationHolder(Registration<?> registration, Id<?> id) {
+            this.registration = registration;
             this.id = id;
         }
     }

@@ -2,9 +2,6 @@ package org.javabits.yar.guice.osgi;
 
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.*;
 
 import javax.annotation.Nullable;
@@ -18,11 +15,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.google.common.util.concurrent.Futures.addCallback;
-
 /**
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
- * It must remove all the remaning suppliers and watchers/listeners. And finally invalidate
+ * It must remove all the remaining suppliers and watchers/listeners. And finally invalidate
  * the entries associated a type whose the stopping bundle is the owner.
  * <p/>
  * Date: 5/29/13
@@ -104,88 +99,66 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
     }
 
     @Override
-    public <T> ListenableFuture<Registration<T>> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
+    public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
         if (!mutable.get()) {
             return newNullRegistration(id);
         }
-        ListenableFuture<Registration<T>> registration = delegate.put(id, supplier);
+        Registration<T> registration = delegate.put(id, supplier);
         trackRegistration(id, "Supplier", registration, supplierRegistrations);
         return registration;
     }
 
     @Override
-    public ListenableFuture<Void> remove(Registration<?> registration) {
+    public void remove(Registration<?> registration) {
         if (!mutable.get()) {
-            return newNullFuture();
+            return;
         }
         supplierRegistrations.remove(registration);
-        return delegate.remove(registration);
+        delegate.remove(registration);
     }
 
     @Override
-    public ListenableFuture<Void> removeAll(Collection<? extends Registration<?>> registrations) {
+    public void removeAll(Collection<? extends Registration<?>> registrations) {
         if (!mutable.get()) {
-            return newNullFuture();
+            return;
         }
         for (Registration<?> registration : registrations) {
             supplierRegistrations.remove(registration);
         }
-        return delegate.removeAll(registrations);
+        delegate.removeAll(registrations);
     }
 
     @Override
-    public <T> ListenableFuture<Registration<T>> addWatcher(final IdMatcher<T> watchedKey, Watcher<T> watcher) {
+    public <T> Registration<T> addWatcher(IdMatcher<T> watchedKey, Watcher<T> watcher) {
         if (!mutable.get()) {
             return newNullRegistration(watchedKey.id());
         }
-        final Id<T> id = watchedKey.id();
-        final String registrationType = "Watcher";
-        final ListenableFuture<Registration<T>> registration = delegate.addWatcher(watchedKey, watcher);
-        final ConcurrentMap<Registration<?>, Id<?>> registrations = watcherRegistrations;
-
-        trackRegistration(id, registrationType, registration, registrations);
-
+        Registration<T> registration = delegate.addWatcher(watchedKey, watcher);
+        trackRegistration(watchedKey.id(), "Watcher", registration, watcherRegistrations);
         return registration;
     }
 
-    private <T> void trackRegistration(final Id<T> id, final String registrationType, ListenableFuture<Registration<T>> registration, final ConcurrentMap<Registration<?>, Id<?>> registrations) {
-        addCallback(registration, new FutureCallback<Registration<T>>() {
-            @Override
-            public void onSuccess(Registration<T> result) {
-
-                registrations.put(result, id);
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-                 LOG.log(Level.FINE, registrationType + "Registration failed: " + id, t);
-                //do nothing
-            }
-        });
+    private <T> void trackRegistration(final Id<T> id, final String registrationType, Registration<T> registration, final ConcurrentMap<Registration<?>, Id<?>> registrations) {
+        LOG.log(Level.FINER, registrationType + " Registration: " + id);
+        registrations.put(registration, id);
     }
 
     @Override
-    public ListenableFuture<Void> removeWatcher(Registration<?> watcherRegistration) {
+    public void removeWatcher(Registration<?> watcherRegistration) {
         if (!mutable.get()) {
-            return newNullFuture();
+            return;
         }
         watcherRegistrations.remove(watcherRegistration);
-        return delegate.removeWatcher(watcherRegistration);
-    }
-
-    private ListenableFuture<Void> newNullFuture() {
-        SettableFuture<Void> settableFuture = SettableFuture.create();
-        settableFuture.set(null);
-        return settableFuture;
+        delegate.removeWatcher(watcherRegistration);
     }
 
     @Override
-    public ListenableFuture<Void> removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations) {
+    public void removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations) {
         if (!mutable.get()) {
-            return newNullFuture();
+            return;
         }
         watcherRegistrations.removeAll(watcherRegistrations);
-        return delegate.removeAllWatchers(watcherRegistrations);
+        delegate.removeAllWatchers(watcherRegistrations);
     }
 
     @Override
@@ -207,14 +180,12 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
         return supplierRegistrations.values();
     }
 
-    private static <T> ListenableFuture<Registration<T>> newNullRegistration(final Id<T> id) {
-        SettableFuture<Registration<T>> futureRegistration = SettableFuture.create();
-        futureRegistration.set(new Registration<T>() {
+    private static <T> Registration<T> newNullRegistration(final Id<T> id) {
+        return new Registration<T>() {
             @Override
             public Id<T> id() {
                 return id;
             }
-        });
-        return futureRegistration;
+        };
     }
 }

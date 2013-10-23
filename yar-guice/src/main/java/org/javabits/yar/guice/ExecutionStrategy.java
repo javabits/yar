@@ -14,7 +14,7 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.*;
 
 import java.util.List;
 import java.util.concurrent.*;
@@ -29,7 +29,7 @@ import java.util.logging.Logger;
  */
 public enum ExecutionStrategy {
 
-    SERIALIZED {
+    SAME_THREAD {
         private final ExecutorService executorService = MoreExecutors.sameThreadExecutor();
 
         @Override
@@ -38,33 +38,45 @@ public enum ExecutionStrategy {
         }
     },
     PARALLEL {
-        private final ExecutorService executorService = Executors
-                .newCachedThreadPool(new DaemonThreadFactory("registry"));
+        private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors
+                .newSingleThreadExecutor(new DaemonThreadFactory("parallel-listener-handler")));
 
         @Override
         ExecutorService executorService() {
             return executorService;
         }
-    };
+    },
+
+    SERIALIZED {
+        private final ExecutorService executorService = MoreExecutors.listeningDecorator(Executors
+                .newCachedThreadPool(new DaemonThreadFactory("serialized-listener-handler")));
+        @Override
+        ExecutorService executorService() {
+            return executorService;
+        }
+    }
+    ;
 
     private static final Logger LOG = Logger.getLogger(ExecutionStrategy.class.getName());
 
     abstract ExecutorService executorService();
 
-    void execute(List<Callable<Void>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+    void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) throws InterruptedException {
         List<Future<Void>> futures = executorService().invokeAll(tasks, timeout, unit);
         for (int i = 0; i < futures.size(); i++) {
-            Future<Void> future = futures.get(i);
-            try {
-                future.get();//no need to timeout as the tasks are themselves executed with a timeout!
-            } catch (CancellationException e) {
-                LOG.log(Level.SEVERE, String.format("Registry task canceled (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
-            } catch (ExecutionException | RuntimeException e) {
-                LOG.log(Level.SEVERE, "Registry task execution error: " + tasks.get(i), e);
-            } catch (InterruptedException e) {
-                LOG.log(Level.SEVERE, String.format("Registry task interrupted (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
-                throw e;
-            }
+            final int taskNumber = i;
+            ListenableFuture<Void> future = (ListenableFuture<Void>)futures.get(taskNumber);
+            Futures.addCallback(future, new FutureCallback<Void>() {
+                @Override
+                public void onSuccess(Void result) {
+                    LOG.log(Level.FINE, String.format("Listener task succeeded : %s", tasks.get(taskNumber)));
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                    LOG.log(Level.SEVERE, String.format("Listener task failed (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(taskNumber)), t);
+                }
+            });
         }
     }
 
