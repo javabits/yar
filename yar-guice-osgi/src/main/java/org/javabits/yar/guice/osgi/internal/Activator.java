@@ -22,7 +22,6 @@ import org.javabits.yar.RegistryHook;
 import org.javabits.yar.guice.BlockingSupplierFactory;
 import org.javabits.yar.guice.ExecutionStrategy;
 import org.javabits.yar.guice.NoWaitBlockingSupplierFactory;
-import org.javabits.yar.guice.YarGuices;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 
