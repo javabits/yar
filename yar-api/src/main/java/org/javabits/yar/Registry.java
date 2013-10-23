@@ -18,7 +18,6 @@ package org.javabits.yar;
 
 
 import com.google.common.reflect.TypeToken;
-import com.google.common.util.concurrent.ListenableFuture;
 
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
@@ -206,7 +205,7 @@ public interface Registry {
      * @see Registration
      * @see #remove(Registration)
      */
-    <T> ListenableFuture<Registration<T>> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier);
+    <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier);
 
     /**
      * Removes the supplier referenced by the specified
@@ -214,7 +213,7 @@ public interface Registry {
      *
      * @param registration A reference to the supplier to be released.
      */
-    ListenableFuture<Void> remove(Registration<?> registration);
+    void remove(Registration<?> registration);
 
     /**
      * Bulk remove the suppliers referenced by the specified list of
@@ -222,7 +221,7 @@ public interface Registry {
      *
      * @param registrations A list of references to the suppliers to be released.
      */
-    ListenableFuture<Void> removeAll(Collection<? extends Registration<?>> registrations);
+    void removeAll(Collection<? extends Registration<?>> registrations);
 
     /**
      * Registers a listener / watcher for suppliers life-cycle events (add / remove).
@@ -241,7 +240,7 @@ public interface Registry {
      *         the only way to remove this watcher from the registry. It is not intended
      *         to be shared by the caller
      */
-    <T> ListenableFuture<Registration<T>> addWatcher(IdMatcher<T> idMatcher, Watcher<T> watcher);
+    <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<T> watcher);
 
     /**
      * Removes the {@link Watcher} instance referenced by the specified
@@ -249,7 +248,7 @@ public interface Registry {
      *
      * @param watcherRegistration A reference to the watcher to be released.
      */
-    ListenableFuture<Void> removeWatcher(Registration<?> watcherRegistration);
+    void removeWatcher(Registration<?> watcherRegistration);
 
     /**
      * Bulk remove the {@link Watcher Watchers} referenced by the specified list of
@@ -257,6 +256,6 @@ public interface Registry {
      *
      * @param watcherRegistrations A list of references to the watchers to be released.
      */
-    ListenableFuture<Void> removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations);
+    void removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations);
 
 }

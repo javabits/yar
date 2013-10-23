@@ -1,7 +1,5 @@
 package org.javabits.yar;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
 import java.lang.reflect.Type;
 import java.util.Collection;
 
@@ -32,9 +30,9 @@ public interface RegistryHook {
      *
      * @param type the type whose the corresponding entries will be removed.
      */
-    ListenableFuture<Void> invalidate(Type type);
+    void invalidate(Type type);
 
-    ListenableFuture<Void> invalidateAll(Collection<Type> types);
+    void invalidateAll(Collection<Type> types);
 
     void addTypeListener(TypeListener typeListener);
 
