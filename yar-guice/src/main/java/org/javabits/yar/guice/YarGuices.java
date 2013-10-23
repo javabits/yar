@@ -235,5 +235,15 @@ public final class YarGuices {
         public BlockingSupplierRegistry build() {
             return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(executionStrategy, timeout, unit, blockingSupplierFactory);
         }
+
+        @Override
+        public String toString() {
+            return "Builder{" +
+                    "executionStrategy=" + executionStrategy +
+                    ", timeout=" + timeout +
+                    ", unit=" + unit +
+                    ", blockingSupplierFactory=" + blockingSupplierFactory +
+                    '}';
+        }
     }
 }

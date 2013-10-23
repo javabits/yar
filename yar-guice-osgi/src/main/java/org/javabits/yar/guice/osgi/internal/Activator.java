@@ -22,8 +22,11 @@ import org.javabits.yar.RegistryHook;
 import org.javabits.yar.guice.BlockingSupplierFactory;
 import org.javabits.yar.guice.ExecutionStrategy;
 import org.javabits.yar.guice.NoWaitBlockingSupplierFactory;
+import org.javabits.yar.guice.YarGuices;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+
+import java.util.logging.Logger;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.javabits.yar.guice.BlockingSupplierFactory.DEFAULT_BLOCKING_SUPPLIER;
@@ -46,6 +49,7 @@ import static org.javabits.yar.guice.YarGuices.builder;
  * @author Romain Gilles
  */
 public class Activator implements BundleActivator {
+    private static final Logger LOG = Logger.getLogger(Activator.class.getName());
     /**
      * property use to lockup the timeout that operator can provide through bundle context.
      */
@@ -80,11 +84,12 @@ public class Activator implements BundleActivator {
 
     private BlockingSupplierRegistry newRegistry(BundleContext bundleContext) {
         Builder builder = builder();
-        return builder.timeout(getExecutionTimeout(bundleContext))
+        builder.timeout(getExecutionTimeout(bundleContext))
                 .timeUnit(Registry.DEFAULT_TIME_UNIT)
                 .listenerUpdateExecutionStrategy(getExecutionStrategy(bundleContext))
-                .blockingSupplierStrategy(getBlockingSupplierStrategy(bundleContext))
-                .build();
+                .blockingSupplierStrategy(getBlockingSupplierStrategy(bundleContext));
+        LOG.info("Create Yar OSGi registry: " + builder);
+        return builder.build();
     }
 
     private BlockingSupplierFactory getBlockingSupplierStrategy(BundleContext bundleContext) {
