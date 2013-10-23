@@ -2,6 +2,7 @@ package org.javabits.yar.guice.osgi;
 
 import org.javabits.yar.Id;
 
+import java.util.Collection;
 import java.util.Set;
 
 /**
@@ -13,14 +14,14 @@ import java.util.Set;
 public interface BundleRegistryWrapper {
 
     /**
-     * Returns all the watchers registered to the registry from this bundle.
+     * Returns all the watchers registered into the registry from this bundle.
      */
-    Set<Id<?>> getBundleWatchers();
+    Collection<Id<?>> getBundleWatchers();
 
     /**
-     * Returns all the suppliers registered to the registry from this bundle.
+     * Returns all the suppliers registered into the registry from this bundle.
      */
-    Set<Id<?>> getBundleSuppliers();
+    Collection<Id<?>> getBundleSuppliers();
 
     /**
      * Remove all the suppliers and the watchers that this bundle as registered.

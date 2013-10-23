@@ -22,7 +22,7 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
     private final Id<T> id;
     @SuppressWarnings("unused")
-    private Registration<T> selfRegistration;
+    private ListenableFuture<Registration<T>> selfRegistration;
 
     BlockingSupplierImpl(Id<T> id, Supplier<T> supplier) {
         this.id = checkNotNull(id, "id");
@@ -109,7 +109,7 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
         }
     }
     //preserve a strong reference on the registration listener registration
-    void setSelfRegistration(Registration<T> selfRegistration) {
+    void setSelfRegistration(ListenableFuture<Registration<T>> selfRegistration) {
         this.selfRegistration = selfRegistration;
     }
 

@@ -107,9 +107,9 @@ public class Activator implements BundleActivator {
     }
 
     private long getExecutionTimeout(BundleContext bundleContext) {
-        String synchronously = bundleContext.getProperty(YAR_DEFAULT_TIMEOUT);
-        if (synchronously != null) {
-            return Long.parseLong(synchronously);
+        String timeout = bundleContext.getProperty(YAR_DEFAULT_TIMEOUT);
+        if (timeout != null) {
+            return Long.parseLong(timeout);
         } else {
             return DEFAULT_TIMEOUT;
         }

@@ -56,13 +56,13 @@ public enum ExecutionStrategy {
         for (int i = 0; i < futures.size(); i++) {
             Future<Void> future = futures.get(i);
             try {
-                future.get();
+                future.get();//no need to timeout as the tasks are themselves executed with a timeout!
             } catch (CancellationException e) {
-                LOG.log(Level.SEVERE, String.format("task canceled (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
+                LOG.log(Level.SEVERE, String.format("Registry task canceled (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
             } catch (ExecutionException | RuntimeException e) {
-                LOG.log(Level.SEVERE, "cannot execute due to an error the submitted a task: " + tasks.get(i), e);
+                LOG.log(Level.SEVERE, "Registry task execution error: " + tasks.get(i), e);
             } catch (InterruptedException e) {
-                LOG.log(Level.SEVERE, String.format("task interrupted (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
+                LOG.log(Level.SEVERE, String.format("Registry task interrupted (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(i)), e);
                 throw e;
             }
         }

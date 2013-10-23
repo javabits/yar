@@ -21,6 +21,8 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.*;
 
 import javax.annotation.Nullable;
@@ -34,7 +36,6 @@ import java.util.concurrent.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static com.google.common.base.Throwables.propagate;
 import static com.google.common.collect.Lists.transform;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.singletonList;
@@ -181,17 +182,17 @@ public class SimpleRegistry implements Registry, RegistryHook {
         return registration.right();
     }
 
-    private <T> SupplierRegistration<T> put(Id<T> id, Supplier<T> supplier) {
+    private <T> ListenableFuture<Registration<T>> put(Id<T> id, Supplier<T> supplier) {
         checkKey(id, "id");
         checkSupplier(supplier);
         SupplierRegistration<T> registration = new SupplierRegistration<>(id, supplier);
-        Add add = new Add(registration);
+        Add<T> add = new Add<>(registration);
         executeActionOnRegistry(add);
-        return registration;
+        return add.asFuture();
     }
 
     @Override
-    public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
+    public <T> ListenableFuture<Registration<T>> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
         return put(id, requireNonNull(new GuavaSupplierAdapter<>(id, supplier), "supplier"));
     }
 
@@ -205,12 +206,12 @@ public class SimpleRegistry implements Registry, RegistryHook {
     }
 
     @Override
-    public void remove(org.javabits.yar.Registration<?> registration) {
-        removeAll(singletonList(registration));
+    public ListenableFuture<Void> remove(org.javabits.yar.Registration<?> registration) {
+        return removeAll(singletonList(registration));
     }
 
     @Override
-    public void removeAll(Collection<? extends Registration<?>> registrations) {
+    public ListenableFuture<Void> removeAll(Collection<? extends Registration<?>> registrations) {
         Collection<SupplierRegistration<?>> supplierRegistrations = Collections2.transform(registrations, new Function<Registration<?>, SupplierRegistration<?>>() {
             @Nullable
             @Override
@@ -218,20 +219,16 @@ public class SimpleRegistry implements Registry, RegistryHook {
                 return checkSupplierRegistration(registration);
             }
         });
-        RegistryAction action = new Remove(supplierRegistrations);
-        executeActionOnRegistry(action);
+        RegistryAction<Void> action = new Remove(supplierRegistrations);
+        return executeActionOnRegistry(action);
     }
 
-    private void executeActionOnRegistry(RegistryAction action) {
+    private <T> ListenableFuture<T> executeActionOnRegistry(RegistryAction<T> action) {
         try {
             registryActionQueue.put(action);
-            if (!action.asFuture().get()) {
-                LOG.warning(String.format("Cannot execute action %s on the registry", action));
-            }
+            return action.asFuture();
         } catch (InterruptedException e) {
             throw newInterruptedException(String.format("Cannot execute action [%s] on the registry", action), e);
-        } catch (ExecutionException e) {
-            throw propagate(e);
         }
     }
 
@@ -249,18 +246,17 @@ public class SimpleRegistry implements Registry, RegistryHook {
     }
 
     @Override
-    public <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<T> watcher) {
+    public <T> ListenableFuture<Registration<T>> addWatcher(IdMatcher<T> idMatcher, Watcher<T> watcher) {
         checkKeyMatcher(idMatcher, "idMatcher");
         WatcherRegistration<T> watcherRegistration = newWatcherRegistration(idMatcher, watcher, referenceQueue, this);
         return addWatcherRegistration(watcherRegistration);
     }
 
-    <T> Registration<T> addWatcherRegistration(WatcherRegistration<T> watcherRegistration) {
-        executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
-        return watcherRegistration;
+    <T> ListenableFuture<Registration<T>> addWatcherRegistration(WatcherRegistration<T> watcherRegistration) {
+        return executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
     }
 
-    <T> Registration<T> addSupplierListener(IdMatcher<T> idMatcher, SupplierListener supplierListener) {
+    <T> ListenableFuture<Registration<T>> addSupplierListener(IdMatcher<T> idMatcher, SupplierListener supplierListener) {
         checkKeyMatcher(idMatcher, "idMatcher");
         requireNonNull(supplierListener, "supplierListener");
         WatcherRegistration<T> watcherRegistration = newWatcherRegistration(idMatcher, supplierListener, referenceQueue, this);
@@ -272,12 +268,12 @@ public class SimpleRegistry implements Registry, RegistryHook {
     }
 
     @Override
-    public void removeWatcher(Registration<?> watcherRegistration) {
-        removeAllWatchers(Collections.singletonList(watcherRegistration));
+    public ListenableFuture<Void> removeWatcher(Registration<?> watcherRegistration) {
+        return removeAllWatchers(Collections.singletonList(watcherRegistration));
     }
 
     @Override
-    public void removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations) {
+    public ListenableFuture<Void> removeAllWatchers(Collection<? extends Registration<?>> watcherRegistrations) {
         Collection<WatcherRegistration<?>> registrations = Collections2.transform(watcherRegistrations, new Function<Registration<?>, WatcherRegistration<?>>() {
             @Nullable
             @Override
@@ -286,18 +282,18 @@ public class SimpleRegistry implements Registry, RegistryHook {
             }
         });
         RemoveWatcher action = new RemoveWatcher(registrations);
-        executeActionOnRegistry(action);
+        return executeActionOnRegistry(action);
     }
 
     @Override
-    public void invalidate(Type type) {
-        invalidateAll(singletonList(type));
+    public ListenableFuture<Void> invalidate(Type type) {
+        return invalidateAll(singletonList(type));
     }
 
     @Override
-    public void invalidateAll(Collection<Type> types) {
-        RegistryAction removeAllAction = new InvalidateType(types);
-        executeActionOnRegistry(removeAllAction);
+    public ListenableFuture<Void> invalidateAll(Collection<Type> types) {
+        RegistryAction<Void> removeAllAction = new InvalidateType(types);
+        return executeActionOnRegistry(removeAllAction);
     }
 
     @Override
@@ -310,36 +306,50 @@ public class SimpleRegistry implements Registry, RegistryHook {
         registrationContainer.removeTypeListener(typeListener);
     }
 
-    static interface RegistryAction {
+    static interface RegistryAction<T> {
 
         void execute();
 
-        Future<Boolean> asFuture();
+        ListenableFuture<T> asFuture();
 
     }
 
-    private class Add implements RegistryAction {
-        private final FutureTask<Boolean> futureTask;
+    static abstract class AbstractRegistryAction<T> implements RegistryAction<T> {
+        private final SettableFuture<T> future = SettableFuture.create();
+
+        @Override
+        public final void execute() {
+            try {
+                T result = doExecute();
+                future.set(result);
+            } catch (Exception e) {
+                future.setException(e);
+            }
+        }
+
+        abstract T doExecute() throws Exception;
+
+        @Override
+        public final ListenableFuture<T> asFuture() {
+            return future;
+        }
+    }
+
+    private class Add<T> extends AbstractRegistryAction<Registration<T>> {
         private final AddCall addCall;
-        private final SupplierRegistration<?> registration;
+        private final SupplierRegistration<T> registration;
 
 
-        Add(SupplierRegistration<?> registration) {
+        Add(SupplierRegistration<T> registration) {
             this.registration = registration;
             addCall = new AddCall();
-            this.futureTask = new FutureTask<>(addCall);
-
         }
 
         @Override
-        public void execute() {
+        Registration<T> doExecute() throws Exception {
             addCall.registration = registration;
-            futureTask.run();
-        }
-
-        @Override
-        public Future<Boolean> asFuture() {
-            return futureTask;
+            addCall.call();
+            return registration;
         }
 
         private class AddCall implements Callable<Boolean> {
@@ -353,25 +363,19 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     }
 
-    private class Remove implements RegistryAction {
-        private final FutureTask<Boolean> futureTask;
+    private class Remove extends AbstractRegistryAction<Void> {
         private final RemoveCall removeCall;
         private final Iterable<SupplierRegistration<?>> registrations;
 
         Remove(Iterable<SupplierRegistration<?>> registrations) {
             this.registrations = registrations;
             removeCall = new RemoveCall();
-            this.futureTask = new FutureTask<>(removeCall);
         }
 
         @Override
-        public void execute() {
-            futureTask.run();
-        }
-
-        @Override
-        public Future<Boolean> asFuture() {
-            return futureTask;
+        Void doExecute() throws Exception {
+            removeCall.call();
+            return null;
         }
 
         private class RemoveCall implements Callable<Boolean> {
@@ -386,8 +390,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     }
 
-    class InvalidateType implements RegistryAction {
-        private final FutureTask<Boolean> futureTask;
+    class InvalidateType extends AbstractRegistryAction<Void> {
         private final RemoveAllCall removeCall;
         private final Iterable<Type> types;
 
@@ -395,17 +398,12 @@ public class SimpleRegistry implements Registry, RegistryHook {
             Preconditions.checkArgument(!Iterables.isEmpty(types), "No null or empty types list");
             this.types = types;
             this.removeCall = new RemoveAllCall();
-            this.futureTask = new FutureTask<>(removeCall);
         }
 
         @Override
-        public void execute() {
-            futureTask.run();
-        }
-
-        @Override
-        public Future<Boolean> asFuture() {
-            return futureTask;
+        Void doExecute() throws Exception {
+            removeCall.call();
+            return null;
         }
 
         private class RemoveAllCall implements Callable<Boolean> {
@@ -422,27 +420,21 @@ public class SimpleRegistry implements Registry, RegistryHook {
     }
 
 
-    private class AddWatcher<T> implements RegistryAction {
+    private class AddWatcher<T> extends AbstractRegistryAction<Registration<T>> {
 
         private final WatcherRegistration<T> watcherRegistration;
         private final AddWatcherCall addWatcherCall;
-        private final FutureTask<Boolean> futureTask;
 
         public AddWatcher(WatcherRegistration<T> watcherRegistration) {
             this.watcherRegistration = watcherRegistration;
             addWatcherCall = new AddWatcherCall();
-            this.futureTask = new FutureTask<>(addWatcherCall);
         }
 
         @Override
-        public void execute() {
+        Registration<T> doExecute() throws Exception {
             addWatcherCall.registrationContainer = registrationContainer;
-            futureTask.run();
-        }
-
-        @Override
-        public Future<Boolean> asFuture() {
-            return futureTask;
+            addWatcherCall.call();
+            return watcherRegistration;
         }
 
         private class AddWatcherCall implements Callable<Boolean> {
@@ -455,25 +447,19 @@ public class SimpleRegistry implements Registry, RegistryHook {
         }
     }
 
-    private class RemoveWatcher implements RegistryAction {
+    private class RemoveWatcher extends AbstractRegistryAction<Void> {
         private final Collection<WatcherRegistration<?>> watcherRegistrations;
         private final RemoveWatcherCall removeWatcherCall;
-        private final FutureTask<Boolean> futureTask;
 
         public RemoveWatcher(Collection<WatcherRegistration<?>> watcherRegistrations) {
             this.watcherRegistrations = watcherRegistrations;
             removeWatcherCall = new RemoveWatcherCall();
-            this.futureTask = new FutureTask<>(removeWatcherCall);
         }
 
         @Override
-        public void execute() {
-            futureTask.run();
-        }
-
-        @Override
-        public Future<Boolean> asFuture() {
-            return futureTask;
+        Void doExecute() throws Exception {
+            removeWatcherCall.call();
+            return null;
         }
 
         private class RemoveWatcherCall implements Callable<Boolean> {
