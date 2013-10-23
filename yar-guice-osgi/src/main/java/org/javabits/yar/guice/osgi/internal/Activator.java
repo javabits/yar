@@ -51,18 +51,16 @@ public class Activator implements BundleActivator {
      */
     public static final String YAR_DEFAULT_TIMEOUT = "yar.default.timeout";
     /**
-     * property use to lockup to activate serialized execution strategy that operator can provide through bundle context.
+     * property use to lockup to activate parallel execution strategy for watchers / listeners update that operator
+     * can provide through bundle context or system properties.
+     * If {@code true} then parallel mode is activated otherwise the serialized mode is used.
      */
-    public static final String YAR_SERIALIZED_EXECUTION = "yar.serialized.execution";
+    public static final String YAR_PARALLEL_EXECUTION_MODE = "yar.parallel.execution";
     /**
      * Default timeout value of 5 min if no external property is provided by the framework.
      * As specified in OSGi Blueprint container part.
      */
     public static final long DEFAULT_TIMEOUT = Registry.DEFAULT_TIMEOUT;
-    /**
-     * Default timeout value of execution strategy if no external property is provided by the framework.
-     */
-    public static final ExecutionStrategy DEFAULT_EXECUTION_STRATEGY = PARALLEL;
 
     /**
      * property use to define if the blocking strategy used for the suppliers. It can go to an no wait style.
@@ -98,11 +96,11 @@ public class Activator implements BundleActivator {
     }
 
     private ExecutionStrategy getExecutionStrategy(BundleContext bundleContext) {
-        String synchronously = bundleContext.getProperty(YAR_SERIALIZED_EXECUTION);
+        String synchronously = bundleContext.getProperty(YAR_PARALLEL_EXECUTION_MODE);
         if (synchronously != null && parseBoolean(synchronously)) {
-            return SERIALIZED;
+            return PARALLEL;
         } else {
-            return DEFAULT_EXECUTION_STRATEGY;
+            return SERIALIZED;
         }
     }
 
