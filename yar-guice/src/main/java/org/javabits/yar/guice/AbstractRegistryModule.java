@@ -155,7 +155,7 @@ public abstract class AbstractRegistryModule extends AbstractModule {
     protected abstract void configureRegistry();
 
     @Override
-    protected Binder binder() {
+    protected RegistryBinder binder() {
         Preconditions.checkState(registryBinderImpl != null, "Binder is not defined before configuration start");
         return registryBinderImpl;
     }
