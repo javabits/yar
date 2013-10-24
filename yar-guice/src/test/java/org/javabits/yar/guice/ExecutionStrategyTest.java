@@ -68,6 +68,20 @@ public class ExecutionStrategyTest {
         //succeed
     }
 
+
+    @Test
+    public void testListenerOnEmptyListOfTask() throws Exception {
+        ExecutionStrategy executionStrategy = newExecutionStrategy(SERIALIZED);
+        final CountDownLatch endOfTaskBarrier = new CountDownLatch(1);
+        executionStrategy.addEndOfListenerUpdateTasksListener(new RegistryHook.EndOfListenerUpdateTasksListener() {
+            @Override
+            public void completed() {
+                endOfTaskBarrier.countDown();
+            }
+        });
+        assertThat(endOfTaskBarrier.await(5, MILLISECONDS), is(true));
+    }
+
     private void executeAblockinglistOfTask(ExecutionStrategy executionStrategy) throws InterruptedException {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
         Callable<Void> barrierCallable = new Callable<Void>() {
@@ -89,7 +103,7 @@ public class ExecutionStrategyTest {
             }
         });
         countDownLatch.countDown();
-        endOfTaskBarrier.await(5, MILLISECONDS);
+        assertThat(endOfTaskBarrier.await(5, MILLISECONDS), is(true));
     }
 
     private Callable<Void> newDummyCallable() {

@@ -50,6 +50,10 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
 
     public void addEndOfListenerUpdateTasksListener(final RegistryHook.EndOfListenerUpdateTasksListener pendingTaskLister) {
         final Map<ListenableFuture<Void>, Callable<Void>> pendingTaskSnapshot = new ConcurrentHashMap(pendingTasks);
+        if (pendingTaskSnapshot.isEmpty()) {
+            pendingTaskLister.completed();
+            return;
+        }
         for (final ListenableFuture<Void> future : pendingTaskSnapshot.keySet()) {
             future.addListener(new Runnable() {
                 @Override

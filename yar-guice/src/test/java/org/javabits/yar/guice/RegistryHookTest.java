@@ -207,7 +207,7 @@ public class RegistryHookTest {
             @Override
             public org.javabits.yar.Supplier<String> add(org.javabits.yar.Supplier<String> element) {
                 try {
-                    countDownLatch.await(10, SECONDS);
+                    assertThat(countDownLatch.await(10, SECONDS), is(true));
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -230,6 +230,6 @@ public class RegistryHookTest {
             }
         });
         countDownLatch.countDown();
-        endOfTaskBarrier.await(5, MILLISECONDS);
+        assertThat(endOfTaskBarrier.await(5, MILLISECONDS), is(true));
     }
 }
