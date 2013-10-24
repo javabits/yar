@@ -15,6 +15,7 @@
 package org.javabits.yar.guice;
 
 import com.google.common.annotations.VisibleForTesting;
+import org.javabits.yar.RegistryHook;
 
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -37,4 +38,14 @@ public interface ExecutionStrategy {
 
     void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) throws InterruptedException;
 
+    /**
+     * Returns {@code true} if this execution strategy contains no pending task.
+     * This information in a lightly concurrent environment is really not relevant.
+     * It can be used at startup time when the system is not under evy stress.
+     *
+     * @return {@code true} if at this point of time there is no pending task.
+     */
+    boolean hasPendingTasks();
+
+    void addEndOfListenerUpdateTasksListener(RegistryHook.EndOfListenerUpdateTasksListener pendingTaskListener);
 }

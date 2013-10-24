@@ -17,6 +17,7 @@
 package org.javabits.yar.guice;
 
 import org.javabits.yar.Id;
+import org.javabits.yar.RegistryHook;
 import org.javabits.yar.TypeListener;
 
 import javax.annotation.Nullable;
@@ -59,4 +60,8 @@ interface WatchableRegistrationContainer {
     void addTypeListener(TypeListener typeListener);
 
     void removeTypeListener(TypeListener typeListener);
+
+    boolean hasPendingListenerUpdateTasks();
+
+    void addEndOfListenerUpdateTasksListener(RegistryHook.EndOfListenerUpdateTasksListener listener);
 }

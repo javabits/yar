@@ -37,4 +37,30 @@ public interface RegistryHook {
     void addTypeListener(TypeListener typeListener);
 
     void removeTypeListener(TypeListener typeListener);
+
+    /**
+     * Returns {@code true} if this execution strategy contains no pending task.
+     * This information in a lightly concurrent environment is really not relevant.
+     * It can be used at startup time when the system is not under evy stress.
+     *
+     * @return {@code true} if at this point of time there is no pending task.
+     */
+    boolean hasPendingListenerUpdateTasks();
+
+    /**
+     * Add a listener to the pending {@code Watcher} / {@code SupplierListener} update tasks list.
+     * It tack a snapshot of the pending update task then call the
+     * {@link org.javabits.yar.RegistryHook.EndOfListenerUpdateTasksListener#completed() completed()}
+     * method when all the pending task are achieved. Regarding the execution strategy you choose then
+     * this action can be call in different order.
+     *
+     * @param listener the listener whose the {@code complete} method has to be call when the snapshot
+     *                 of the current pending task is completed.
+     */
+    void addEndOfListenerUpdateTasksListener(EndOfListenerUpdateTasksListener listener);
+
+    interface EndOfListenerUpdateTasksListener {
+
+        void completed();
+    }
 }

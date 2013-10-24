@@ -307,6 +307,16 @@ public class SimpleRegistry implements Registry, RegistryHook {
         registrationContainer.removeTypeListener(typeListener);
     }
 
+    @Override
+    public boolean hasPendingListenerUpdateTasks() {
+        return registrationContainer.hasPendingListenerUpdateTasks();
+    }
+
+    @Override
+    public void addEndOfListenerUpdateTasksListener(EndOfListenerUpdateTasksListener listener) {
+        registrationContainer.addEndOfListenerUpdateTasksListener(listener);
+    }
+
     static interface RegistryAction<T> {
 
         void execute();

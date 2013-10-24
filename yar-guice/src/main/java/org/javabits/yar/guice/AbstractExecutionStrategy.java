@@ -17,16 +17,16 @@
 package org.javabits.yar.guice;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import org.javabits.yar.RegistryHook;
 
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -40,12 +40,41 @@ import static com.google.common.util.concurrent.Futures.addCallback;
 public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
     private static final Logger LOG = Logger.getLogger(ExecutionStrategy.class.getName());
 
+    private final Map<ListenableFuture<Void>, Callable<Void>> pendingTasks = Maps.newConcurrentMap();
+
     abstract ListeningExecutorService executorService();
+
+    public boolean hasPendingTasks() {
+        return !pendingTasks.isEmpty();
+    }
+
+    public void addEndOfListenerUpdateTasksListener(final RegistryHook.EndOfListenerUpdateTasksListener pendingTaskLister) {
+        final Map<ListenableFuture<Void>, Callable<Void>> pendingTaskSnapshot = new ConcurrentHashMap(pendingTasks);
+        for (final ListenableFuture<Void> future : pendingTaskSnapshot.keySet()) {
+            future.addListener(new Runnable() {
+                @Override
+                public void run() {
+                    pendingTaskSnapshot.remove(future);
+                    if (pendingTaskSnapshot.isEmpty())
+                        pendingTaskLister.completed();
+                }
+            }, executorService());
+        }
+    }
 
     public void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) throws InterruptedException {
         for (int i = 0; i < tasks.size(); i++) {
             final int taskNumber = i;
-            ListenableFuture<Void> future = executorService().submit(tasks.get(i));
+            Callable<Void> task = tasks.get(i);
+            final ListenableFuture<Void> future = executorService().submit(task);
+            pendingTasks.put(future, task);
+            future.addListener(new Runnable() {
+                @Override
+                public void run() {
+                    pendingTasks.remove(future);
+                }
+            }, executorService());
+
             addCallback(future, new FutureCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {

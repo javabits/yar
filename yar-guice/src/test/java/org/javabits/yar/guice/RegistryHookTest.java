@@ -10,11 +10,13 @@ import org.junit.Test;
 import javax.annotation.Nullable;
 import java.lang.InterruptedException;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -187,5 +189,47 @@ public class RegistryHookTest {
         synchronized (count) {
             assertThat(count[0], is(1));
         }
+    }
+
+    @Test
+    public void testHasPendingListenerUpdateTasks() throws Exception {
+        Id<String> stringId = Ids.newId(String.class);
+        final CountDownLatch countDownLatch = new CountDownLatch(1);
+
+        registry.put(stringId, new Supplier<String>() {
+            @Override
+            public String get() {
+                return "test";
+            }
+        });
+        registry.addWatcher(IdMatchers.newKeyMatcher(stringId), new Watcher<String>() {
+            @Nullable
+            @Override
+            public org.javabits.yar.Supplier<String> add(org.javabits.yar.Supplier<String> element) {
+                try {
+                    countDownLatch.await(10, SECONDS);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                return null;
+            }
+
+            @Override
+            public void remove(org.javabits.yar.Supplier<String> element) {
+                //nothing to do ;)
+            }
+        });
+
+        assertThat(registryHook.hasPendingListenerUpdateTasks(), is(true));
+        countDownLatch.countDown();
+        final CountDownLatch endOfTaskBarrier = new CountDownLatch(1);
+        registryHook.addEndOfListenerUpdateTasksListener(new RegistryHook.EndOfListenerUpdateTasksListener() {
+            @Override
+            public void completed() {
+                endOfTaskBarrier.countDown();
+            }
+        });
+        countDownLatch.countDown();
+        endOfTaskBarrier.await(5, MILLISECONDS);
     }
 }

@@ -17,8 +17,7 @@
 package org.javabits.yar.guice;
 
 import com.google.common.collect.ImmutableList;
-import org.hamcrest.*;
-import org.junit.Assert;
+import org.javabits.yar.RegistryHook;
 import org.junit.Test;
 
 import java.util.List;
@@ -81,7 +80,16 @@ public class ExecutionStrategyTest {
 
         List<Callable<Void>> callables = ImmutableList.of(newDummyCallable(), newDummyCallable(), barrierCallable);
         executionStrategy.execute(callables, 5, MILLISECONDS);
+        assertThat(executionStrategy.hasPendingTasks(), is(true));
+        final CountDownLatch endOfTaskBarrier = new CountDownLatch(1);
+        executionStrategy.addEndOfListenerUpdateTasksListener(new RegistryHook.EndOfListenerUpdateTasksListener() {
+            @Override
+            public void completed() {
+                endOfTaskBarrier.countDown();
+            }
+        });
         countDownLatch.countDown();
+        endOfTaskBarrier.await(5, MILLISECONDS);
     }
 
     private Callable<Void> newDummyCallable() {

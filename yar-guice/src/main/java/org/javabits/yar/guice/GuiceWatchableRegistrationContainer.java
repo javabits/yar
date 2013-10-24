@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
+import org.javabits.yar.RegistryHook;
 import org.javabits.yar.TypeListener;
 
 import javax.annotation.Nullable;
@@ -219,6 +220,16 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     @Override
     public void removeTypeListener(TypeListener typeListener) {
         supplierRegistry.removeKeyListener(adapt(typeListener));
+    }
+
+    @Override
+    public boolean hasPendingListenerUpdateTasks() {
+        return executor.hasPendingTasks();
+    }
+
+    @Override
+    public void addEndOfListenerUpdateTasksListener(RegistryHook.EndOfListenerUpdateTasksListener listener) {
+        executor.addEndOfListenerUpdateTasksListener(listener);
     }
 
     static class ActionAdapter<T> implements Callable<Void> {
