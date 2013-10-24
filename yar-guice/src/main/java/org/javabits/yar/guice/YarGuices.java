@@ -16,6 +16,7 @@
 
 package org.javabits.yar.guice;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.*;
 import org.javabits.yar.BlockingSupplierRegistry;
@@ -27,10 +28,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 import static org.javabits.yar.Registry.DEFAULT_TIMEOUT;
 import static org.javabits.yar.Registry.DEFAULT_TIME_UNIT;
-import static org.javabits.yar.guice.ExecutionStrategy.PARALLEL;
-import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
+import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
+import static org.javabits.yar.guice.ExecutionStrategy.Type;
+import static org.javabits.yar.guice.ExecutionStrategy.Type.PARALLEL;
+import static org.javabits.yar.guice.ExecutionStrategy.Type.SERIALIZED;
 
 /**
  * TODO comment
@@ -134,7 +139,7 @@ public final class YarGuices {
     }
 
     public static class Builder {
-        private ExecutionStrategy executionStrategy = SERIALIZED;
+        private ExecutionStrategy executionStrategy;
         private long timeout = DEFAULT_TIMEOUT;
         private TimeUnit unit = DEFAULT_TIME_UNIT;
         private BlockingSupplierFactory blockingSupplierFactory = new DefaultBlockingSupplierFactory();
@@ -174,8 +179,7 @@ public final class YarGuices {
          * @return this {@code Builder}
          */
         public Builder serializedListenerUpdate() {
-            executionStrategy = SERIALIZED;
-            return this;
+            return listenerUpdateExecutionStrategy(SERIALIZED);
         }
 
         /**
@@ -189,8 +193,7 @@ public final class YarGuices {
          * @return this {@code Builder}
          */
         public Builder parallelListenerUpdate() {
-            executionStrategy = PARALLEL;
-            return this;
+            return listenerUpdateExecutionStrategy(PARALLEL);
         }
 
         /**
@@ -203,9 +206,15 @@ public final class YarGuices {
          * @see #parallelListenerUpdate()
          * @see #serializedListenerUpdate()
          */
-        public Builder listenerUpdateExecutionStrategy(ExecutionStrategy executionStrategy) {
-            this.executionStrategy = executionStrategy;
+        public Builder listenerUpdateExecutionStrategy(Type executionStrategy) {
+            checkExecutionStrategy();
+            checkNotNull(executionStrategy, "executionStrategy");
+            this.executionStrategy = newExecutionStrategy(executionStrategy);
             return this;
+        }
+
+        private void checkExecutionStrategy() {
+            checkState(this.executionStrategy == null, "Execution strategy already define");
         }
 
         /**

@@ -8,8 +8,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
+import java.lang.InterruptedException;
+import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -32,7 +37,8 @@ public class RegistryHookTest {
     }
 
     @Test
-    public void testInvalidate() {
+    public void testInvalidate() throws Exception {
+        final CyclicBarrier barrier = new CyclicBarrier(2);
         final Id<MyService> id = Ids.newId(MyService.class);
         Registration<MyService> myServiceRegistration = registry.put(id, new Supplier<MyService>() {
             @Nullable
@@ -41,7 +47,7 @@ public class RegistryHookTest {
                 return new MyServiceImpl();
             }
         });
-        MyServiceWatcher watcher = new MyServiceWatcher();
+        MyServiceWatcher watcher = new MyServiceWatcher(barrier);
         Registration<MyService> myServiceWatcherRegistration = registry.addWatcher(new IdMatcher<MyService>() {
             @Override
             public boolean matches(Id<MyService> otherId) {
@@ -56,9 +62,13 @@ public class RegistryHookTest {
         );
         assertThat(myServiceRegistration, is(not(nullValue())));
         assertThat(myServiceWatcherRegistration, is(not(nullValue())));
+        barrier.await(5, MILLISECONDS);
+        barrier.reset();
         assertThat(watcher.counter.get(), is(1));
         assertThat(registry.ids(), hasItem(id));
         registryHook.invalidate(MyService.class);
+        barrier.await(5, MILLISECONDS);
+        barrier.reset();
         assertThat(watcher.counter.get(), is(0));
         assertThat(registry.ids(), not(hasItem(id)));
         registry.remove(myServiceRegistration);
@@ -73,17 +83,36 @@ public class RegistryHookTest {
 
     private static class MyServiceWatcher implements Watcher<MyService> {
         final AtomicInteger counter = new AtomicInteger(0);
+        final CyclicBarrier barrier;
+
+        private MyServiceWatcher(CyclicBarrier barrier) {
+            this.barrier = barrier;
+        }
 
         @Nullable
         @Override
         public org.javabits.yar.Supplier<MyService> add(org.javabits.yar.Supplier<MyService> element) {
             counter.incrementAndGet();
+            try {
+                barrier.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
             return element;
         }
 
         @Override
         public void remove(org.javabits.yar.Supplier<MyService> element) {
             counter.decrementAndGet();
+            try {
+                barrier.await();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (BrokenBarrierException e) {
+                e.printStackTrace();
+            }
         }
     }
 

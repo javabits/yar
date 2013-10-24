@@ -20,7 +20,6 @@ import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Registry;
 import org.javabits.yar.RegistryHook;
 import org.javabits.yar.guice.BlockingSupplierFactory;
-import org.javabits.yar.guice.ExecutionStrategy;
 import org.javabits.yar.guice.NoWaitBlockingSupplierFactory;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -29,8 +28,7 @@ import java.util.logging.Logger;
 
 import static java.lang.Boolean.parseBoolean;
 import static org.javabits.yar.guice.BlockingSupplierFactory.DEFAULT_BLOCKING_SUPPLIER;
-import static org.javabits.yar.guice.ExecutionStrategy.PARALLEL;
-import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
+import static org.javabits.yar.guice.ExecutionStrategy.Type;
 import static org.javabits.yar.guice.YarGuices.Builder;
 import static org.javabits.yar.guice.YarGuices.builder;
 
@@ -99,12 +97,12 @@ public class Activator implements BundleActivator {
         return DEFAULT_BLOCKING_SUPPLIER;
     }
 
-    private ExecutionStrategy getExecutionStrategy(BundleContext bundleContext) {
+    private Type getExecutionStrategy(BundleContext bundleContext) {
         String synchronously = bundleContext.getProperty(YAR_PARALLEL_EXECUTION_MODE);
         if (synchronously != null && parseBoolean(synchronously)) {
-            return PARALLEL;
+            return Type.PARALLEL;
         } else {
-            return SERIALIZED;
+            return Type.SERIALIZED;
         }
     }
 

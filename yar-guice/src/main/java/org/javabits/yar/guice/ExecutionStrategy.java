@@ -1,11 +1,11 @@
 /*
  * Copyright 2013 Romain Gilles
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -14,92 +14,27 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.util.concurrent.*;
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.List;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
 
 /**
- * TODO comment Date: 4/19/13 Time: 9:00 PM
+ * This class is responsible to provide different execution strategies
+ * for the watchers / listeners of supplier events.
  *
  * @author Romain Gilles
  */
-public enum ExecutionStrategy {
+public interface ExecutionStrategy {
 
-    SAME_THREAD {
-        private final ExecutorService executorService = MoreExecutors.sameThreadExecutor();
-
-        @Override
-        ExecutorService executorService() {
-            return executorService;
-        }
-    },
-    PARALLEL {
-        private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors
-                .newSingleThreadExecutor(new DaemonThreadFactory("parallel-listener-handler")));
-
-        @Override
-        ExecutorService executorService() {
-            return executorService;
-        }
-    },
-
-    SERIALIZED {
-        private final ExecutorService executorService = MoreExecutors.listeningDecorator(Executors
-                .newCachedThreadPool(new DaemonThreadFactory("serialized-listener-handler")));
-        @Override
-        ExecutorService executorService() {
-            return executorService;
-        }
-    }
-    ;
-
-    private static final Logger LOG = Logger.getLogger(ExecutionStrategy.class.getName());
-
-    abstract ExecutorService executorService();
-
-    void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) throws InterruptedException {
-        List<Future<Void>> futures = executorService().invokeAll(tasks, timeout, unit);
-        for (int i = 0; i < futures.size(); i++) {
-            final int taskNumber = i;
-            ListenableFuture<Void> future = (ListenableFuture<Void>)futures.get(taskNumber);
-            Futures.addCallback(future, new FutureCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {
-                    LOG.log(Level.FINE, String.format("Listener task succeeded : %s", tasks.get(taskNumber)));
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    LOG.log(Level.SEVERE, String.format("Listener task failed (timeout=%d, unit=%s): %s", timeout, unit, tasks.get(taskNumber)), t);
-                }
-            });
-        }
+    enum Type {
+        @VisibleForTesting
+        SAME_THREAD,
+        PARALLEL,
+        SERIALIZED
     }
 
-    private static class DaemonThreadFactory implements ThreadFactory {
-        final ThreadGroup group;
-        final AtomicInteger threadNumber = new AtomicInteger(1);
-        final String namePrefix;
-        static final String nameSuffix = "]";
-
-        public DaemonThreadFactory(String poolName) {
-            SecurityManager s = System.getSecurityManager();
-            group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
-            namePrefix = "YAR " + poolName + " Pool [Thread-";
-        }
-
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement()
-                    + nameSuffix, 0);
-            t.setDaemon(true);
-            // if (t.getPriority() != Thread.NORM_PRIORITY)
-            // t.setPriority(Thread.NORM_PRIORITY);
-            return t;
-        }
-    }
+    void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) throws InterruptedException;
 
 }

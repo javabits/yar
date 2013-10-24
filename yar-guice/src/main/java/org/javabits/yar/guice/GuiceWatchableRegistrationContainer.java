@@ -32,7 +32,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.javabits.yar.TypeEvent.newAddTypeEvent;
 import static org.javabits.yar.TypeEvent.newRemoveTypeEvent;
-import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
+import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
+import static org.javabits.yar.guice.ExecutionStrategy.Type.*;
 
 /**
  * TODO comment
@@ -65,7 +66,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
 
     public GuiceWatchableRegistrationContainer() {
-        this(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(), SERIALIZED);
+        this(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(), newExecutionStrategy(SERIALIZED));
     }
 
     public GuiceWatchableRegistrationContainer(Container<Type, SupplierRegistration<?>> supplierRegistry
@@ -286,11 +287,11 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     static GuiceWatchableRegistrationContainer newMultimapGuiceWatchableRegistrationContainer() {
-        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer(), SERIALIZED);
+        return new GuiceWatchableRegistrationContainer(ListMultimapContainer.<Type, SupplierRegistration<?>>newSynchronizedContainer(), ListMultimapContainer.<Type, WatcherRegistration<?>>newLockFreeContainer(), newExecutionStrategy(SERIALIZED));
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer() {
-        return newLoadingCacheGuiceWatchableRegistrationContainer(SERIALIZED);
+        return newLoadingCacheGuiceWatchableRegistrationContainer(newExecutionStrategy(SERIALIZED));
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer(ExecutionStrategy executionStrategy) {

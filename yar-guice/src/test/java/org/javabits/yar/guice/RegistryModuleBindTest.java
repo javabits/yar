@@ -31,7 +31,8 @@ import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.newBlockingSupplierRegistry;
+import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
+import static org.javabits.yar.guice.ExecutionStrategy.Type.SAME_THREAD;
 import static org.javabits.yar.guice.YarGuices.*;
 
 
@@ -281,7 +282,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindBlockingSupplier2() {
-        final org.javabits.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        final org.javabits.yar.BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         putMyInterfaceSupplierToRegistry(registry);
         Injector injector = createBlockingSupplierBindingInjector(module);
@@ -297,7 +298,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindBlockingSupplierWithAnnotation() {
-        final org.javabits.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        final org.javabits.yar.BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         final Named test = Names.named("test");
         final Key<MyInterface> key = Key.get(MyInterface.class, test);
         final Key<BlockingSupplier<MyInterface>> supplierKey = Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
@@ -320,7 +321,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindListenerBasic() {
-        final org.javabits.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        final org.javabits.yar.BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         final Object[] matches = new Object[]{0, null, null};
 
@@ -362,7 +363,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindListenerSingleElement() {
-        final org.javabits.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        final org.javabits.yar.BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         final Object[] matches = new Object[]{0, null, null};
 
@@ -393,7 +394,7 @@ public class RegistryModuleBindTest {
 
     @Test
     public void testBindListener() {
-        final org.javabits.yar.BlockingSupplierRegistry registry = newLoadingCacheBlockingSupplierRegistry();
+        final org.javabits.yar.BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         Injector injector = createInjector(module, new RegistryModule() {
             @Override
@@ -497,6 +498,10 @@ public class RegistryModuleBindTest {
         });
         assertThat(injector.getInstance(Key.get(typeLiteral)), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(typeLiteral)).accept("test"), is("test"));
+    }
+
+    public static BlockingSupplierRegistryImpl newBlockingSupplierRegistry() {
+        return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(newExecutionStrategy(SAME_THREAD));
     }
 
     static interface MultiParametersGeneric<I, O> {

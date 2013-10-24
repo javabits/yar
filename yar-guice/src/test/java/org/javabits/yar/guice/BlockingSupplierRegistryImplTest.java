@@ -1,15 +1,17 @@
 /*
- * Copyright 2013 Romain Gilles
+ * Copyright (c) 10/23/13 11:26 PM Romain Gilles
  *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
- * in compliance with the License. You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software distributed under the License
- * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
- * or implied. See the License for the specific language governing permissions and limitations under
- * the License.
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package org.javabits.yar.guice;
@@ -41,7 +43,7 @@ import static org.junit.Assert.assertNull;
 public class BlockingSupplierRegistryImplTest {
 
     @Test
-    public void testNonBlockingGet() {
+    public void testNonBlockingGet() throws Exception {
         BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         BlockingSupplier<MyInterface> supplier = registry.get(MyInterface.class);
 
@@ -56,7 +58,7 @@ public class BlockingSupplierRegistryImplTest {
             }
         }));
 
-        assertThat(supplier.get(), is(myService));
+        assertThat(supplier.getSync(5, MILLISECONDS), is(myService));
     }
 
     @Test
@@ -133,7 +135,7 @@ public class BlockingSupplierRegistryImplTest {
         lock.lock();
         try {
             assertThat(listenableFuture[0], is(not(nullValue())));
-            assertThat(listenableFuture[0].get(1, MILLISECONDS), is((MyInterface) myService));
+            assertThat(listenableFuture[0].get(5, MILLISECONDS), is((MyInterface) myService));
         } finally {
             lock.unlock();
         }

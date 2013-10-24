@@ -20,7 +20,8 @@ import org.javabits.yar.*;
 
 import java.util.concurrent.TimeUnit;
 
-import static org.javabits.yar.guice.ExecutionStrategy.SERIALIZED;
+import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
+import static org.javabits.yar.guice.ExecutionStrategy.Type.*;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -65,11 +66,11 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
     }
 
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry() {
-        return newLoadingCacheBlockingSupplierRegistry(SERIALIZED);
+        return newLoadingCacheBlockingSupplierRegistry(newExecutionStrategy(SERIALIZED));
     }
 
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(long timeout, TimeUnit unit) {
-        return newLoadingCacheBlockingSupplierRegistry(SERIALIZED, timeout, unit);
+        return newLoadingCacheBlockingSupplierRegistry(newExecutionStrategy(SERIALIZED), timeout, unit);
     }
 
     static BlockingSupplierRegistryImpl newLoadingCacheBlockingSupplierRegistry(ExecutionStrategy executionStrategy, long timeout, TimeUnit unit) {
