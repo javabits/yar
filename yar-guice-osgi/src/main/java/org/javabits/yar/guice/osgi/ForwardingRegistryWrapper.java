@@ -1,5 +1,6 @@
 package org.javabits.yar.guice.osgi;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
 import org.javabits.yar.*;
@@ -15,6 +16,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
  * It must remove all the remaining suppliers and watchers/listeners. And finally invalidate
@@ -25,7 +28,7 @@ import java.util.logging.Logger;
  *
  * @author Romain Gilles
  */
-class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegistryWrapper {
+class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHook, BundleRegistryWrapper {
     private static final Logger LOG = Logger.getLogger(ForwardingRegistryWrapper.class.getName());
     /**
      * The default initial capacity for concurrent maps
@@ -48,11 +51,14 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
     private final AtomicBoolean mutable = new AtomicBoolean(true);
 
     private final BlockingSupplierRegistry delegate;
+    private final RegistryHook registryHook;
     private final ConcurrentMap<Registration<?>, Id<?>> supplierRegistrations = new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
     private final ConcurrentMap<Registration<?>, Id<?>> watcherRegistrations = new MapMaker().weakKeys().initialCapacity(DEFAULT_INITIAL_CAPACITY).concurrencyLevel(DEFAULT_CONCURRENCY_LEVEL).makeMap();
 
     ForwardingRegistryWrapper(BlockingSupplierRegistry delegate) {
+        checkArgument(delegate instanceof RegistryHook, "Wrapped registry must implement RegistryHook interface");
         this.delegate = delegate;
+        registryHook = (RegistryHook) delegate;
     }
 
     @Nullable
@@ -187,5 +193,47 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, BundleRegis
                 return id;
             }
         };
+    }
+
+    @Override
+    public void invalidate(Type type) {
+        if (!mutable.get()) {
+            return;
+        }
+        registryHook.invalidate(type);
+    }
+
+    @Override
+    public void invalidateAll(Collection<Type> types) {
+        if (!mutable.get()) {
+            return;
+        }
+        registryHook.invalidateAll(types);
+    }
+
+    @Override
+    public void addTypeListener(TypeListener typeListener) {
+        if (!mutable.get()) {
+            return;
+        }
+        registryHook.addTypeListener(typeListener);
+    }
+
+    @Override
+    public void removeTypeListener(TypeListener typeListener) {
+        if (!mutable.get()) {
+            return;
+        }
+        registryHook.removeTypeListener(typeListener);
+    }
+
+    @Override
+    public boolean hasPendingListenerUpdateTasks() {
+        return registryHook.hasPendingListenerUpdateTasks();
+    }
+
+    @Override
+    public void addEndOfListenerUpdateTasksListener(EndOfListenerUpdateTasksListener listener) {
+        registryHook.addEndOfListenerUpdateTasksListener(listener);
     }
 }
