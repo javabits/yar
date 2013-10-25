@@ -12,7 +12,6 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
-import com.google.common.base.Preconditions;
 import org.javabits.yar.*;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -115,8 +114,10 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
 
     @Override
     public String toString() {
+        SettableFuture<Supplier<T>> delegateSupplier = supplierRef.get();
         return "BlockingSupplierImpl{" +
-                "delegate=" + get() +
+                "id=" + id +
+                ", delegate=" + (delegateSupplier != null? delegateSupplier.getClass().getName():"null") +
                 '}';
     }
 }
