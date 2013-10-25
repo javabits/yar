@@ -1,6 +1,5 @@
 package org.javabits.yar.guice.osgi;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
 import org.javabits.yar.*;
