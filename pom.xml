@@ -8,7 +8,7 @@
     <properties>
         <java.compliance>1.7</java.compliance>
         <maven-release-plugin.version>2.4.1</maven-release-plugin.version>
-        <maven-bundle-plugin.version>2.3.7</maven-bundle-plugin.version>
+        <maven-bundle-plugin.version>2.4.0</maven-bundle-plugin.version>
         <maven-compiler-plugin.version>3.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.14</maven-surefire-plugin.version>
         <jarjar-maven-plugin.version>1.7</jarjar-maven-plugin.version>
