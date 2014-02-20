@@ -67,6 +67,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>org.javabits.yar.guice.osgi.internal.Activator</Bundle-Activator>
+                        <Import-Package>com.google.common.*;version=${guava.version},*</Import-Package>
                     </instructions>
                 </configuration>
             </plugin>
