@@ -123,13 +123,13 @@ public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryA
     }
 
     static void checkParameterizedType(Type type) {
-        if (!isParameterizedType(type)) {
+        if (isNotParameterizedType(type)) {
             throw new IllegalArgumentException("Supplier type must be parameterized: " + type);
         }
     }
 
-    static boolean isParameterizedType(Type type) {
-        return type instanceof ParameterizedType;
+    static boolean isNotParameterizedType(Type type) {
+        return !(type instanceof ParameterizedType);
     }
 
 }

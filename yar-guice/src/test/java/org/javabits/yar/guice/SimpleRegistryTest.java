@@ -22,6 +22,7 @@ import static org.javabits.yar.guice.SimpleRegistry.newLoadingCacheRegistry;
  *
  * @author Romain Gilles
  */
+@SuppressWarnings("ConstantConditions")
 public class SimpleRegistryTest {
     private Registry registry;
 
@@ -73,22 +74,22 @@ public class SimpleRegistryTest {
         assertThat(registry.get(id).get(), is("test"));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetClassNullPointerException() throws Exception {
         registry.get((Class) null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetAllClassNullPointerException() throws Exception {
         registry.getAll((Class) null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetIdNullPointerException() throws Exception {
         registry.get((Id) null);
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetAllIdNullPointerException() throws Exception {
         registry.getAll((Id) null);
     }
@@ -110,7 +111,7 @@ public class SimpleRegistryTest {
         assertThat(registry.get(type).get(), is((List) emptyList()));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetTypeTokenNullPointerException() throws Exception {
         registry.get((TypeToken) null);
     }
@@ -133,7 +134,7 @@ public class SimpleRegistryTest {
         assertThat(registry.getAll(type).get(0).get(), is("test"));
     }
 
-    @Test(expected = NullPointerException.class)
+    @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetAllTypeTokenNullPointerException() throws Exception {
         registry.getAll((TypeToken) null);
     }

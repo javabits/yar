@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.addCallback;
 
 /**
@@ -49,7 +50,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
     }
 
     public void addEndOfListenerUpdateTasksListener(final RegistryHook.EndOfListenerUpdateTasksListener pendingTaskLister) {
-        final Map<ListenableFuture<Void>, Callable<Void>> pendingTaskSnapshot = new ConcurrentHashMap(pendingTasks);
+        final Map<ListenableFuture<Void>, Callable<Void>> pendingTaskSnapshot = new ConcurrentHashMap<>(pendingTasks);
         if (pendingTaskSnapshot.isEmpty()) {
             pendingTaskLister.completed();
             return;
@@ -105,8 +106,10 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
             namePrefix = "YAR " + poolName + " Pool [Thread-";
         }
 
-        public Thread newThread(Runnable r) {
-            Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement()
+        @Override
+        public Thread newThread(@SuppressWarnings("NullableProblems") Runnable runnable) {
+            checkNotNull(runnable, "runnable");
+            Thread t = new Thread(group, runnable, namePrefix + threadNumber.getAndIncrement()
                     + nameSuffix, 0);
             t.setDaemon(true);
             // if (t.getPriority() != Thread.NORM_PRIORITY)

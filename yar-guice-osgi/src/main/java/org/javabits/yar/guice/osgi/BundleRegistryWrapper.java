@@ -3,7 +3,6 @@ package org.javabits.yar.guice.osgi;
 import org.javabits.yar.Id;
 
 import java.util.Collection;
-import java.util.Set;
 
 /**
  * This interface provide access to specific action from and to the registry
@@ -11,6 +10,7 @@ import java.util.Set;
  *
  * @author Romain Gilles
  */
+@SuppressWarnings("WeakerAccess")
 public interface BundleRegistryWrapper {
 
     /**

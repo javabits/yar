@@ -193,7 +193,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
             @Nullable
             @Override
             public Callable<Void> apply(@Nullable SupplierRegistration<T> supplierRegistration) {
-                return new AddToNewWatcher<>(watcherRegistration, supplierRegistration, Action.ADD);
+                return new AddToNewWatcher<>(watcherRegistration, supplierRegistration);
             }
         });
     }
@@ -260,8 +260,8 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     static class AddToNewWatcher<T> extends ActionAdapter<T> {
-        AddToNewWatcher(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration, Action action) {
-            super(watcherRegistration, supplierRegistration, action);
+        AddToNewWatcher(WatcherRegistration<T> watcherRegistration, SupplierRegistration<T> supplierRegistration) {
+            super(watcherRegistration, supplierRegistration, Action.ADD);
         }
     }
 
@@ -283,14 +283,13 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     @Override
-    public boolean removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException {
+    public void removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException {
         List<SupplierRegistration<?>> all = getAll(type);
         for (SupplierRegistration<?> supplierRegistration: all) {
             remove(supplierRegistration,timeout, unit);
         }
         watcherRegistry.invalidate(type);
         supplierRegistry.invalidate(type);
-        return true;
     }
 
     private Type getRegistryKey(Registration<?> watcherRegistration) {

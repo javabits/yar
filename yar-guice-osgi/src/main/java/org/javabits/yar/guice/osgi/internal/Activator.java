@@ -45,6 +45,7 @@ import static org.javabits.yar.guice.YarGuices.builder;
  *
  * @author Romain Gilles
  */
+@SuppressWarnings("WeakerAccess")
 public class Activator implements BundleActivator {
     private static final Logger LOG = Logger.getLogger(Activator.class.getName());
     /**

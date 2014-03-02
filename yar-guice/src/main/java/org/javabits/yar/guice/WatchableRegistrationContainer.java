@@ -55,7 +55,7 @@ interface WatchableRegistrationContainer {
 
     boolean remove(WatcherRegistration<?> watcherRegistration);
 
-    boolean removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException;
+    void removeAll(Type type, long timeout, TimeUnit unit) throws InterruptedException;
 
     void addTypeListener(TypeListener typeListener);
 

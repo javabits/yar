@@ -17,7 +17,6 @@
 package org.javabits.yar;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Date: 3/5/13

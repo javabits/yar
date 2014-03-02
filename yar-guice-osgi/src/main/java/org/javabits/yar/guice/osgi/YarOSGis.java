@@ -233,7 +233,7 @@ public final class YarOSGis {
 
         @Override
         public void bundleChanged(BundleEvent bundleEvent) {
-            if (!isStopping(bundleEvent)) {
+            if (isNotStopping(bundleEvent)) {
                 return;
             }
             clearSupplierRegistration();
@@ -241,8 +241,8 @@ public final class YarOSGis {
             clearMissingRegistrations();
         }
 
-        private boolean isStopping(BundleEvent bundleEvent) {
-            return BundleEvent.STOPPING == bundleEvent.getType() && bundleEvent.getBundle().getBundleId() == bundleId;
+        private boolean isNotStopping(BundleEvent bundleEvent) {
+            return BundleEvent.STOPPING != bundleEvent.getType() || bundleEvent.getBundle().getBundleId() != bundleId;
         }
 
         private void clearSupplierRegistration() {

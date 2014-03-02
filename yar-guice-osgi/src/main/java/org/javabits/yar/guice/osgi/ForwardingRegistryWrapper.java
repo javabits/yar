@@ -57,6 +57,7 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
     ForwardingRegistryWrapper(BlockingSupplierRegistry delegate) {
         checkArgument(delegate instanceof RegistryHook, "Wrapped registry must implement RegistryHook interface");
         this.delegate = delegate;
+        //noinspection ConstantConditions
         registryHook = (RegistryHook) delegate;
     }
 

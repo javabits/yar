@@ -20,7 +20,8 @@ import com.google.common.util.concurrent.SettableFuture;
 class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
     private final Id<T> id;
-    @SuppressWarnings("unused")
+    // preserve a reference to the registration to avoid garbage collection.
+    @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Registration<T> selfRegistration;
 
     BlockingSupplierImpl(Id<T> id, Supplier<T> supplier) {

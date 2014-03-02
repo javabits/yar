@@ -22,9 +22,7 @@ import static java.util.Objects.requireNonNull;
 public class TimeoutException extends ConcurrentException {
     private static final long serialVersionUID = 1L;
 
-    @Nullable
     private final Long timeout;
-    @Nullable
     private final TimeUnit unit;
 
     /**

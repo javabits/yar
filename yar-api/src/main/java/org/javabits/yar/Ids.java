@@ -198,8 +198,7 @@ public final class Ids {
 
             IdImpl id = (IdImpl) o;
 
-            if (!annotationStrategy.equals(id.annotationStrategy)) return false;
-            return typeToken.equals(id.typeToken);
+            return annotationStrategy.equals(id.annotationStrategy) && typeToken.equals(id.typeToken);
         }
 
         @Override

@@ -18,7 +18,6 @@ package org.javabits.yar.guice;
 
 
 import javax.annotation.Nullable;
-import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;

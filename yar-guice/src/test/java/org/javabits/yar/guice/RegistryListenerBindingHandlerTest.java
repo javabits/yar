@@ -54,7 +54,7 @@ public class RegistryListenerBindingHandlerTest {
     @Mock
     Injector injector;
     @Mock
-    Registry registry = null;
+    Registry registry;
     @Mock
     Binding<GuiceWatcherRegistration> guiceWatcherRegistrationBinding;
 

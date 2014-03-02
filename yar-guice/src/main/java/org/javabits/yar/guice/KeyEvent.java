@@ -1,6 +1,5 @@
 package org.javabits.yar.guice;
 
-import java.lang.reflect.Type;
 import java.util.EventObject;
 
 /**

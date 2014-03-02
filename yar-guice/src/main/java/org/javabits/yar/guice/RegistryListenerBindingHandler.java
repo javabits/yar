@@ -44,7 +44,6 @@ import static com.google.common.collect.Lists.newArrayList;
  */
 @Singleton
 public class RegistryListenerBindingHandler implements RegistryListenerHandler {
-    private static final Logger LOG = Logger.getLogger(RegistryListenerBindingHandler.class.getName());
 
     private final Injector injector;
     private final Registry registry;
@@ -57,7 +56,6 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
     public RegistryListenerBindingHandler(Injector injector, Registry registry) {
         this.injector = injector;
         this.registry = registry;
-
     }
 
     @Override
@@ -97,6 +95,7 @@ public class RegistryListenerBindingHandler implements RegistryListenerHandler {
             @Override
             public Id<?> apply(@Nullable ListenerRegistration listenerRegistration) {
                 checkNotNull(listenerRegistration, "listenerRegistration");
+                @SuppressWarnings("ConstantConditions")
                 IdMatcher<?> idMatcher = checkNotNull(listenerRegistration.idMatcher, "idMatcher");
                 return idMatcher.id();
             }

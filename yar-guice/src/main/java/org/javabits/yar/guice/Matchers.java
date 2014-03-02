@@ -42,6 +42,7 @@ public final class Matchers {
     private static final String KEY_MATCHER_SIGNATURE = "Matcher<Key<T>>";
     private static final String MATCHER_PARAMETER_TYPE_ERROR = "The matcher type must be implementation of " + KEY_MATCHER_SIGNATURE;
 
+    @SuppressWarnings("unchecked")
     public static <T> Id<T> getId(Matcher<Key<T>> matcher) {
         return (Id<T>)Ids.newId(getTargetType(matcher));
     }

@@ -74,6 +74,7 @@ public final class Reflections {
             Type rawType = parameterizedType.getRawType();
             checkArgument(rawType instanceof Class,
                     "Expected a Class, but <%s> is of type %s", type, type.getClass().getName());
+            //noinspection ConstantConditions
             return (Class<?>) rawType;
 
         } else if (type instanceof GenericArrayType) {

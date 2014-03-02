@@ -21,7 +21,6 @@ import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.common.reflect.TypeToken;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.*;
@@ -39,7 +38,6 @@ import java.util.logging.Logger;
 
 import static com.google.common.collect.Lists.transform;
 import static com.google.common.util.concurrent.Futures.getUnchecked;
-import static java.lang.Boolean.TRUE;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.Objects.requireNonNull;
@@ -58,7 +56,6 @@ import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
  * @author Romain Gilles
  */
 public class SimpleRegistry implements Registry, RegistryHook {
-    private static final Logger LOG = Logger.getLogger(SimpleRegistry.class.getName());
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
     private final FinalizableReferenceQueue referenceQueue;
@@ -76,6 +73,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
     SimpleRegistry(WatchableRegistrationContainer registrationContainer, long timeout, TimeUnit unit) {
         referenceQueue = new FinalizableReferenceQueue();
         this.registrationContainer = registrationContainer;
+        //TODO test performance of the linked vs. array or any other blocking. may provide a new builder feature to setup the size of the queue
         registryActionQueue = new LinkedBlockingQueue<>();
         Thread registryActionThread = new Thread(new RegistryActionHandler(registryActionQueue), "yar-action-handler");
         registryActionThread.setDaemon(true);
@@ -99,6 +97,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
                 @Override
                 public Id<?> apply(@Nullable Supplier<?> supplier) {
                     requireNonNull(supplier, "supplier");
+                    //noinspection ConstantConditions
                     return supplier.id();
                 }
             }));
