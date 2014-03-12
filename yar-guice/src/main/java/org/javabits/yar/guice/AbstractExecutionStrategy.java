@@ -143,7 +143,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
 
     private static class Parallel extends AbstractExecutionStrategy {
         private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors
-                .newSingleThreadExecutor(new DaemonThreadFactory("parallel-listener-handler")));
+                .newCachedThreadPool(new DaemonThreadFactory("parallel-listener-handler")));
 
         @Override
         ListeningExecutorService executorService() {
@@ -153,7 +153,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
 
     private static class Serialized extends AbstractExecutionStrategy {
         private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors
-                .newCachedThreadPool(new DaemonThreadFactory("serialized-listener-handler")));
+                .newSingleThreadExecutor(new DaemonThreadFactory("serialized-listener-handler")));
 
         @Override
         ListeningExecutorService executorService() {
