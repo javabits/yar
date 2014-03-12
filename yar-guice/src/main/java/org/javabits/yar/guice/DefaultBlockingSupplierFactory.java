@@ -4,7 +4,7 @@ import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
 
-import static org.javabits.yar.IdMatchers.newKeyMatcher;
+import static org.javabits.yar.IdMatchers.newIdMatcher;
 
 /**
  * @author Romain Gilles
@@ -19,7 +19,7 @@ public class DefaultBlockingSupplierFactory implements BlockingSupplierFactory {
         // If an instance of the requested service has been registered, this call will trigger the
         // listener's supplierChanged event with the current value of the service.
         // This is how the supplier instance obtains the initial value of the service.
-        Registration<T> registration = registry.addSupplierListener(newKeyMatcher(id), supplier);
+        Registration<T> registration = registry.addSupplierListener(newIdMatcher(id), supplier);
         // preserve a reference to the registration to avoid gc and let the caller decides when listener can be gc.
         supplier.setSelfRegistration(registration);
         return supplier;

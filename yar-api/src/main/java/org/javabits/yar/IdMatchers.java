@@ -31,10 +31,10 @@ public final class IdMatchers {
     }
 
     public static <T> Matcher<Id<T>> newMatcher(final Id<T> id) {
-        return newKeyMatcher(id);
+        return newIdMatcher(id);
     }
 
-    public static <T> IdMatcher<T> newKeyMatcher(final Id<T> id) {
+    public static <T> IdMatcher<T> newIdMatcher(final Id<T> id) {
         requireNonNull(id, "id");
         return new IdMatcher<T>() {
 

@@ -197,7 +197,7 @@ public class RegistryHookTest {
                 return "test";
             }
         });
-        registry.addWatcher(IdMatchers.newKeyMatcher(stringId), new Watcher<String>() {
+        registry.addWatcher(IdMatchers.newIdMatcher(stringId), new Watcher<String>() {
             @Nullable
             @Override
             public org.javabits.yar.Supplier<String> add(org.javabits.yar.Supplier<String> element) {
