@@ -6,18 +6,18 @@
     <version>1.0-SNAPSHOT</version>
     <properties>
         <java.compliance>1.7</java.compliance>
-        <maven-release-plugin.version>2.4.1</maven-release-plugin.version>
+        <maven-release-plugin.version>2.4.2</maven-release-plugin.version>
         <maven-bundle-plugin.version>2.4.0</maven-bundle-plugin.version>
-        <maven-compiler-plugin.version>3.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>2.14</maven-surefire-plugin.version>
-        <jarjar-maven-plugin.version>1.7</jarjar-maven-plugin.version>
-        <maven-javadoc-plugin.version>2.9</maven-javadoc-plugin.version>
+        <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>2.16</maven-surefire-plugin.version>
+        <jarjar-maven-plugin.version>1.8</jarjar-maven-plugin.version>
+        <maven-javadoc-plugin.version>2.9.1</maven-javadoc-plugin.version>
         <maven-source-plugin.version>2.2.1</maven-source-plugin.version>
-        <maven-install-plugin.version>2.4</maven-install-plugin.version>
+        <maven-install-plugin.version>2.5.1</maven-install-plugin.version>
         <maven-gpg-plugin.version>1.4</maven-gpg-plugin.version>
         <maven-remote-resources-plugin.version>1.4</maven-remote-resources-plugin.version>
-        <maven-deploy-plugin.version>2.7</maven-deploy-plugin.version>
-        <jacoco-maven-plugin.version>0.6.3.201306030806</jacoco-maven-plugin.version>
+        <maven-deploy-plugin.version>2.8.1</maven-deploy-plugin.version>
+        <jacoco-maven-plugin.version>0.6.4.201312101107</jacoco-maven-plugin.version>
         <gpg.skip>true</gpg.skip>
     </properties>
     <packaging>pom</packaging>
