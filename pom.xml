@@ -183,7 +183,7 @@
                     <mavenExecutorId>forked-path</mavenExecutorId>
                     <preparationGoals>clean install</preparationGoals>
                     <useReleaseProfile>false</useReleaseProfile>
-                    <arguments>-Psonatype-oss</arguments>
+                    <arguments>-Psonatype-oss,attachment -Dgpg.skip=false</arguments>
                 </configuration>
             </plugin>
             <plugin>
