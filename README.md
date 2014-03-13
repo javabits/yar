@@ -92,3 +92,11 @@ transitivity the Yar default scope.
 This project provide a bundle with an activator that will create and register the Guice registry into the OSGi registry.
 This component will take care of your bundle life-cycle to cleanup the registry and avoid any memory leaks
 as ClassLoader leak.
+
+Release the project
+-------------------
+Run the following command:
+
+```
+mvn release:prepare -DautoVersionSubmodules=true -DscmCommentPrefix="[maven-release-plugin] #XX: " -DreleaseVersion=1.0.0.MX -DdevelopmentVersion=1.0-SNAPSHOT
+```
