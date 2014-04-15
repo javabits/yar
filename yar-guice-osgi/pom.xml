@@ -22,7 +22,7 @@
     <parent>
         <groupId>org.javabits.yar</groupId>
         <artifactId>yar-parent</artifactId>
-        <version>1.0.0.M6</version>
+        <version>1.0-SNAPSHOT</version>
         <relativePath>../yar-parent/pom.xml</relativePath>
     </parent>
 
