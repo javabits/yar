@@ -62,10 +62,6 @@ public class SimpleRegistry implements Registry, RegistryHook {
     private final long defaultTimeOut;
     private final TimeUnit defaultTimeoutUnit;
 
-    public SimpleRegistry() {
-        this(new GuiceWatchableRegistrationContainer());
-    }
-
     SimpleRegistry(WatchableRegistrationContainer registrationContainer) {
         this(registrationContainer, Registry.DEFAULT_TIMEOUT, Registry.DEFAULT_TIME_UNIT);
     }
@@ -82,6 +78,14 @@ public class SimpleRegistry implements Registry, RegistryHook {
         this.defaultTimeoutUnit = unit;
     }
 
+
+    long defaultTimeout() {
+        return defaultTimeOut;
+    }
+
+    TimeUnit defaultTimeUnit() {
+        return defaultTimeoutUnit;
+    }
 
     @Override
     public Set<Type> types() {

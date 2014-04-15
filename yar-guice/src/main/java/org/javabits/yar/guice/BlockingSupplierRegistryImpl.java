@@ -41,10 +41,6 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
         this.blockingSupplierFactory = new DefaultBlockingSupplierFactory();
     }
 
-    private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long timeout, TimeUnit unit) {
-        this(registrationContainer, timeout, unit, new DefaultBlockingSupplierFactory());
-    }
-
     private BlockingSupplierRegistryImpl(WatchableRegistrationContainer registrationContainer, long timeout, TimeUnit unit, BlockingSupplierFactory blockingSupplierFactory) {
         super(registrationContainer, timeout, unit);
         this.blockingSupplierFactory = blockingSupplierFactory;
@@ -60,6 +56,15 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
         return blockingSupplierFactory.create(this, id);
     }
 
+    @Override
+    public long defaultTimeout() {
+        return super.defaultTimeout();
+    }
+
+    @Override
+    public TimeUnit defaultTimeUnit() {
+        return super.defaultTimeUnit();
+    }
 
     static BlockingSupplierRegistryImpl newMultimapBlockingSupplierRegistry() {
         return new BlockingSupplierRegistryImpl(newMultimapGuiceWatchableRegistrationContainer());

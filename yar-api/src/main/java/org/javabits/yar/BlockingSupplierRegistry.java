@@ -17,6 +17,7 @@
 package org.javabits.yar;
 
 import javax.annotation.Nullable;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Date: 3/5/13
@@ -34,4 +35,20 @@ public interface BlockingSupplierRegistry extends Registry {
     @Nullable
     @Override
     <T> BlockingSupplier<T> get(Id<T> id);
+
+    /**
+     * Returns the default timeout used for blocking operations.
+     * The associated time unit is provided by {@link #defaultTimeUnit()}.
+     * @return default timeout used for blocking operations.
+     * @see #defaultTimeUnit()
+     */
+    long defaultTimeout();
+
+    /**
+     * Returns the default time unit used for blocking operations.
+     * The associated timeout is provided by {@link #defaultTimeout()}.
+     * @return default timeout used for blocking operations.
+     * @see #defaultTimeout()
+     */
+    TimeUnit defaultTimeUnit();
 }

@@ -53,4 +53,21 @@ public interface BlockingSupplier<T> extends Supplier<T> {
      * @return an instance of future result.
      */
     ListenableFuture<T> getAsync();
+
+    /**
+     * Returns the default timeout used for blocking operations.
+     * The associated time unit is provided by {@link #defaultTimeUnit()}.
+     * @return default timeout used for blocking operations.
+     * @see #defaultTimeUnit()
+     */
+    long defaultTimeout();
+
+    /**
+     * Returns the default time unit used for blocking operations.
+     * The associated timeout is provided by {@link #defaultTimeout()}.
+     * @return default timeout used for blocking operations.
+     * @see #defaultTimeout()
+     */
+    TimeUnit defaultTimeUnit();
+
 }

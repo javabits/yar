@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,6 +60,16 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
         this.delegate = delegate;
         //noinspection ConstantConditions
         registryHook = (RegistryHook) delegate;
+    }
+
+    @Override
+    public long defaultTimeout() {
+        return delegate.defaultTimeout();
+    }
+
+    @Override
+    public TimeUnit defaultTimeUnit() {
+        return delegate.defaultTimeUnit();
     }
 
     @Nullable

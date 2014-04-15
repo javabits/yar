@@ -20,17 +20,33 @@ import com.google.common.util.concurrent.SettableFuture;
 class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
     private final Id<T> id;
+    private final long defaultTimeOut;
+    private final TimeUnit defaultTimeoutUnit;
+
+
     // preserve a reference to the registration to avoid garbage collection.
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Registration<T> selfRegistration;
 
-    BlockingSupplierImpl(Id<T> id, Supplier<T> supplier) {
+    BlockingSupplierImpl(Id<T> id, Supplier<T> supplier, long defaultTimeOut, TimeUnit defaultTimeoutUnit) {
+        this.defaultTimeOut = defaultTimeOut;
+        this.defaultTimeoutUnit = defaultTimeoutUnit;
         this.id = checkNotNull(id, "id");
         SettableFuture<Supplier<T>> settableFuture = SettableFuture.create();
         if (supplier != null) {
             settableFuture.set(supplier);
         }
         this.supplierRef = new AtomicReference<>(settableFuture);
+    }
+
+    @Override
+    public long defaultTimeout() {
+        return defaultTimeOut;
+    }
+
+    @Override
+    public TimeUnit defaultTimeUnit() {
+        return defaultTimeoutUnit;
     }
 
 

@@ -1,6 +1,7 @@
 package org.javabits.yar.guice;
 
 import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import org.javabits.yar.BlockingSupplier;
@@ -37,14 +38,17 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
     private final TimeUnit timeUnit;
 
     RegistryProviderImpl(Key<T> key) {
-        this(key, DEFAULT_TIMEOUT, DEFAULT_TIME_UNIT);
+        this.key = key;
+        this.timeout = DEFAULT_TIMEOUT;
+        this.timeUnit = DEFAULT_TIME_UNIT;
+        supplierGetStrategy = new DefaultSynchronousStrategy();
     }
 
     RegistryProviderImpl(Key<T> key, long timeout, TimeUnit timeUnit) {
         this.key = key;
         this.timeout = timeout;
         this.timeUnit = timeUnit;
-        supplierGetStrategy = new SynchronousStrategy();
+        supplierGetStrategy = new SynchronousStrategy(timeout, timeUnit);
     }
 
     Key<T> key() {
@@ -58,7 +62,7 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
 
     @Inject
     public void setRegistry(BlockingSupplierRegistry registry) {
-        //directly provision the targeted blocking supplier
+        // directly provision the targeted blocking supplier
         blockingSupplier = registry.get(GuiceId.of(key));
     }
 
@@ -76,7 +80,34 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
         }
     }
 
+    private class DefaultSynchronousStrategy implements Function<BlockingSupplier<T>, T> {
+
+        @Nullable
+        @Override
+        public T apply(BlockingSupplier<T> supplier) {
+            try {
+                Preconditions.checkNotNull(blockingSupplier, "blockingSupplier");
+                return supplier.getSync(blockingSupplier.defaultTimeout()
+                        , blockingSupplier.defaultTimeUnit());
+            } catch (InterruptedException e) {
+                throw newInterruptedException(e);
+            } catch (TimeoutException e) {
+                throw newTimeoutException(timeout, timeUnit, e);
+            }
+        }
+    }
+
     private class SynchronousStrategy implements Function<BlockingSupplier<T>, T> {
+
+        private final long timeout;
+        private final TimeUnit timeUnit;
+
+        private SynchronousStrategy(long timeout, TimeUnit timeUnit) {
+            this.timeout = timeout;
+            this.timeUnit = timeUnit;
+        }
+
+        @Nullable
         @Override
         public T apply(BlockingSupplier<T> supplier) {
             try {

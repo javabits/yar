@@ -6,6 +6,9 @@ import java.lang.InterruptedException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import static org.javabits.yar.Registry.DEFAULT_TIMEOUT;
+import static org.javabits.yar.Registry.DEFAULT_TIME_UNIT;
+
 /**
  * @author Romain Gilles
  *         Date: 5/31/13
@@ -14,7 +17,7 @@ import java.util.concurrent.TimeoutException;
 public class NoWaitBlockingSupplier<T> extends BlockingSupplierImpl<T> {
 
     public NoWaitBlockingSupplier(Id<T> id, Supplier<T> supplier) {
-        super(id, supplier);
+        super(id, supplier, DEFAULT_TIMEOUT, DEFAULT_TIME_UNIT);
     }
 
     @Override

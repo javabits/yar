@@ -15,7 +15,7 @@ public class DefaultBlockingSupplierFactory implements BlockingSupplierFactory {
     @Override
     public <T> BlockingSupplier<T> create(SimpleRegistry registry, Id<T> id) {
         //maybe a weakmap as guava cache with weak values can help in performance but not sure... to test
-        BlockingSupplierImpl<T> supplier = new BlockingSupplierImpl<>(id, registry.getDirectly(id));
+        BlockingSupplierImpl<T> supplier = new BlockingSupplierImpl<>(id, registry.getDirectly(id), registry.defaultTimeout(), registry.defaultTimeUnit());
         // If an instance of the requested service has been registered, this call will trigger the
         // listener's supplierChanged event with the current value of the service.
         // This is how the supplier instance obtains the initial value of the service.
