@@ -213,7 +213,7 @@ public final class YarOSGis {
     private static ForwardingRegistryWrapper getBlockingSupplierRegistry(BundleContext bundleContext) {
         ServiceReference<BlockingSupplierRegistry> serviceReference = checkNotNull(bundleContext.getServiceReference(BlockingSupplierRegistry.class)
                 , SERVICE_REGISTRY_ERROR_MESSAGE);
-        return new ForwardingRegistryWrapper(checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available"));
+        return new ForwardingRegistryWrapper(checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available"), bundleContext.getBundle());
     }
 
     @Singleton

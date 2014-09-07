@@ -1,7 +1,10 @@
 package org.javabits.yar.guice.osgi;
 
+import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 
 /**
@@ -11,7 +14,7 @@ import java.util.Collection;
  * @author Romain Gilles
  */
 @SuppressWarnings("WeakerAccess")
-public interface BundleRegistryWrapper {
+public interface BundleRegistryWrapper extends BlockingSupplierRegistry {
 
     /**
      * Returns all the watchers registered into the registry from this bundle.
@@ -27,4 +30,12 @@ public interface BundleRegistryWrapper {
      * Remove all the suppliers and the watchers that this bundle as registered.
      */
     void clear();
+
+    @Nullable
+    @Override
+    <T> OSGiBlockingSupplier<T> get(Class<T> type);
+
+    @Nullable
+    @Override
+    <T> OSGiBlockingSupplier<T> get(Id<T> id);
 }

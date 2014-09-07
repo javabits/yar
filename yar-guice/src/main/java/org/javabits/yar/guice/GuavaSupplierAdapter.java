@@ -40,4 +40,10 @@ class GuavaSupplierAdapter<T> implements Supplier<T> {
                 "delegate=" + delegate +
                 '}';
     }
+
+    @Nullable
+    @Override
+    public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+        return delegate;
+    }
 }

@@ -12,10 +12,12 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
+import com.google.common.base.*;
 import org.javabits.yar.*;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
+import org.javabits.yar.Supplier;
 
 class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
     private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
@@ -124,6 +126,18 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
             throw new IllegalStateException("Unknown supplier event: " + supplierEvent);
         }
     }
+
+    @Nullable
+    @Override
+    public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+        Future<Supplier<T>> future = supplierRef.get();
+        // Do not block on Future.get() here. Just check if the future is done.
+        if (future.isDone())
+            return future.isCancelled() ? null : getUnchecked(future);
+        return null;
+
+    }
+
     //preserve a strong reference on the registration listener registration
     void setSelfRegistration(Registration<T> selfRegistration) {
         this.selfRegistration = selfRegistration;

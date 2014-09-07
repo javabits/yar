@@ -28,9 +28,32 @@ import javax.annotation.Nullable;
  */
 public interface Supplier<T> extends com.google.common.base.Supplier<T> {
 
+    /**
+     * Returns the {@link Id} under which this supplier has been registered
+     * through the <t>put(..)</t> methods.
+     * @return
+     */
     Id<T> id();
 
+    /**
+     * Retrieves an instance of the appropriate type. The returned object may or
+     * may not be a new instance, depending on the implementation.
+     * <p>Implementation can return <t>null</t> if it can not produce the instance.
+     * </p>
+     * <p>Instance of this class must be thread safe and sharable.</p>
+     *
+     * @return an instance of the appropriate type. It can be <t>null</t> if the underlying implementation
+     * can not produce instance.
+     */
     @Override
     @Nullable
     T get();
+
+    /**
+     * Returns the original / native supplier provided to this registry through a call to one of the <t>pull(..)</t>.
+     *
+     * @return <t>null</t> if the underlying native supplier is not yet set.
+     */
+    @Nullable
+    com.google.common.base.Supplier<? extends T> getNativeSupplier();
 }

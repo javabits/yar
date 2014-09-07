@@ -1,8 +1,10 @@
 package org.javabits.yar.guice;
 
+import com.google.common.base.*;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.javabits.yar.*;
+import org.javabits.yar.Supplier;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -53,6 +55,12 @@ public class NoWaitBlockingSupplierTest {
             public MyInterface get() {
                 return new MyInterfaceImpl();
             }
+
+            @Nullable
+            @Override
+            public com.google.common.base.Supplier<? extends MyInterface> getNativeSupplier() {
+                return this;
+            }
         }));
         assertThat(set[0], is(not(nullValue())));
     }
@@ -71,6 +79,12 @@ public class NoWaitBlockingSupplierTest {
             @Override
             public MyInterface get() {
                 return myInterface;
+            }
+
+            @Nullable
+            @Override
+            public com.google.common.base.Supplier<? extends MyInterface> getNativeSupplier() {
+                return this;
             }
         });
         assertThat(supplier.get(), is((MyInterface) myInterface));

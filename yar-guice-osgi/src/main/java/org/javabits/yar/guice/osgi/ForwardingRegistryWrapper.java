@@ -2,21 +2,24 @@ package org.javabits.yar.guice.osgi;
 
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.ListenableFuture;
 import org.javabits.yar.*;
+import org.javabits.yar.Supplier;
+import org.osgi.framework.Bundle;
 
 import javax.annotation.Nullable;
+import java.lang.InterruptedException;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
@@ -51,13 +54,15 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
     private final AtomicBoolean mutable = new AtomicBoolean(true);
 
     private final BlockingSupplierRegistry delegate;
+    private final Bundle bundle;
     private final RegistryHook registryHook;
     private final ConcurrentMap<Registration<?>, Id<?>> supplierRegistrations = new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
     private final ConcurrentMap<Registration<?>, Id<?>> watcherRegistrations = new MapMaker().weakKeys().initialCapacity(DEFAULT_INITIAL_CAPACITY).concurrencyLevel(DEFAULT_CONCURRENCY_LEVEL).makeMap();
 
-    ForwardingRegistryWrapper(BlockingSupplierRegistry delegate) {
+    ForwardingRegistryWrapper(BlockingSupplierRegistry delegate, Bundle bundle) {
         checkArgument(delegate instanceof RegistryHook, "Wrapped registry must implement RegistryHook interface");
         this.delegate = delegate;
+        this.bundle = checkNotNull(bundle, "bundle");
         //noinspection ConstantConditions
         registryHook = (RegistryHook) delegate;
     }
@@ -74,14 +79,14 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
 
     @Nullable
     @Override
-    public <T> BlockingSupplier<T> get(Class<T> type) {
-        return delegate.get(type);
+    public <T> OSGiBlockingSupplier<T> get(Class<T> type) {
+        return newDecorator(delegate.get(type));
     }
 
     @Nullable
     @Override
-    public <T> BlockingSupplier<T> get(Id<T> id) {
-        return delegate.get(id);
+    public <T> OSGiBlockingSupplier<T> get(Id<T> id) {
+        return newDecorator(delegate.get(id));
     }
 
     @Nullable
@@ -246,5 +251,66 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
     @Override
     public void addEndOfListenerUpdateTasksListener(EndOfListenerUpdateTasksListener listener) {
         registryHook.addEndOfListenerUpdateTasksListener(listener);
+    }
+
+    private <T> OSGiBlockingSupplier<T> newDecorator(BlockingSupplier<T> blockingSupplier) {
+        return blockingSupplier == null ? null : new BlockingSupplierDecorator<>(blockingSupplier, bundle);
+    }
+
+    private static final class BlockingSupplierDecorator<T> implements OSGiBlockingSupplier<T> {
+        private final BlockingSupplier<T> delegate;
+        private final Bundle bundle;
+
+        private BlockingSupplierDecorator(BlockingSupplier<T> delegate, Bundle bundle) {
+            this.delegate = delegate;
+            this.bundle = bundle;
+        }
+
+        @Nullable
+        @Override
+        public T get() {
+            return delegate.get();
+        }
+
+        @Override
+        public T getSync() throws InterruptedException {
+            return delegate.getSync();
+        }
+
+        @Override
+        public T getSync(long timeout, TimeUnit unit) throws InterruptedException, java.util.concurrent.TimeoutException {
+            return delegate.getSync(timeout, unit);
+        }
+
+        @Override
+        public ListenableFuture<T> getAsync() {
+            return delegate.getAsync();
+        }
+
+        @Override
+        public long defaultTimeout() {
+            return delegate.defaultTimeout();
+        }
+
+        @Override
+        public TimeUnit defaultTimeUnit() {
+            return delegate.defaultTimeUnit();
+        }
+
+        @Override
+        public Id<T> id() {
+            return delegate.id();
+        }
+
+        @Override
+        @Nullable
+        public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+            return delegate.getNativeSupplier();
+        }
+
+        @Override
+        public Bundle getBundle() {
+            return bundle;
+        }
     }
 }
