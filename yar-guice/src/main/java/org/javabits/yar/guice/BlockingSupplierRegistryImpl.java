@@ -16,8 +16,10 @@
 
 package org.javabits.yar.guice;
 
+import com.google.common.reflect.TypeToken;
 import org.javabits.yar.*;
 
+import javax.annotation.Nullable;
 import java.util.concurrent.TimeUnit;
 
 import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
@@ -51,19 +53,16 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
         return get(Ids.newId(type));
     }
 
+
+    @Nullable
+    @Override
+    public <T> BlockingSupplier<T> get(TypeToken<T> type) {
+        return get(Ids.newId(type));
+    }
+
     @Override
     public <T> BlockingSupplier<T> get(Id<T> id) {
         return blockingSupplierFactory.create(this, id);
-    }
-
-    @Override
-    public long defaultTimeout() {
-        return super.defaultTimeout();
-    }
-
-    @Override
-    public TimeUnit defaultTimeUnit() {
-        return super.defaultTimeUnit();
     }
 
     static BlockingSupplierRegistryImpl newMultimapBlockingSupplierRegistry() {

@@ -12,43 +12,36 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 
-import com.google.common.base.*;
 import org.javabits.yar.*;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.Supplier;
 
-class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
+class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, SupplierWrapper<T> {
     private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
     private final Id<T> id;
-    private final long defaultTimeOut;
-    private final TimeUnit defaultTimeoutUnit;
-
+    private final InternalRegistry registry;
 
     // preserve a reference to the registration to avoid garbage collection.
     @SuppressWarnings({"unused", "FieldCanBeLocal"})
     private Registration<T> selfRegistration;
 
-    BlockingSupplierImpl(Id<T> id, Supplier<T> supplier, long defaultTimeOut, TimeUnit defaultTimeoutUnit) {
-        this.defaultTimeOut = defaultTimeOut;
-        this.defaultTimeoutUnit = defaultTimeoutUnit;
+    BlockingSupplierImpl(Id<T> id, InternalRegistry registry) {
         this.id = checkNotNull(id, "id");
-        SettableFuture<Supplier<T>> settableFuture = SettableFuture.create();
-        if (supplier != null) {
-            settableFuture.set(supplier);
-        }
-        this.supplierRef = new AtomicReference<>(settableFuture);
+        this.registry = registry;
+        this.supplierRef = new AtomicReference<>();
+        initSupplierRef();
     }
 
     @Override
     public long defaultTimeout() {
-        return defaultTimeOut;
+        return registry.defaultTimeout();
     }
 
     @Override
     public TimeUnit defaultTimeUnit() {
-        return defaultTimeoutUnit;
+        return registry.defaultTimeUnit();
     }
 
 
@@ -120,7 +113,17 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
             supplierRef.get().set(supplier);
             break;
         case REMOVE:
-            supplierRef.set(SettableFuture.<Supplier<T>> create());
+            Future<Supplier<T>> future = supplierRef.get();
+            // Do not block on Future.get() here. Just check if the future is done.
+            if (future.isDone() && !future.isCancelled()) {
+                Supplier<T> currentSupplier = getUnchecked(future);
+                if (supplier.equals(currentSupplier)) {
+                    initSupplierRef();
+                }
+            } else if (future.isCancelled()) {
+                supplierRef.set(SettableFuture.<Supplier<T>>create());
+            }
+            // else nothing to do we preserve the previous one
             break;
         default:
             throw new IllegalStateException("Unknown supplier event: " + supplierEvent);
@@ -129,13 +132,18 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
 
     @Nullable
     @Override
-    public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+    public com.google.common.base.Supplier<T> getNativeSupplier() {
         Future<Supplier<T>> future = supplierRef.get();
         // Do not block on Future.get() here. Just check if the future is done.
         if (future.isDone())
             return future.isCancelled() ? null : getUnchecked(future);
         return null;
 
+    }
+
+    @Override
+    public com.google.common.base.Supplier<T> getWrapped() {
+        return getNativeSupplier();
     }
 
     //preserve a strong reference on the registration listener registration
@@ -150,5 +158,14 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener {
                 "id=" + id +
                 ", delegate=" + (delegateSupplier != null? delegateSupplier.getClass().getName():"null") +
                 '}';
+    }
+
+    private void initSupplierRef() {
+        SettableFuture<Supplier<T>> settableFuture = SettableFuture.create();
+        supplierRef.set(settableFuture);
+        Supplier<T> supplier = registry.getDirectly(id);
+        if (supplier != null) {
+            settableFuture.set(supplier);
+        }
     }
 }

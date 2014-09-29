@@ -2,15 +2,18 @@ package org.javabits.yar.guice.osgi;
 
 import org.javabits.yar.BlockingSupplier;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleReference;
+
+import javax.annotation.Nullable;
 
 /**
  * OSGi oriented extension of the {@link BlockingSupplier}.
  * This interface provide access to {@code Bundle}.
  */
-public interface OSGiBlockingSupplier<T> extends BlockingSupplier<T> {
+public interface OSGiSupplier<T> extends BlockingSupplier<T>, BundleSupplier<T> {
     /**
      * Returns the bundle that registered the Supplier referenced by this
-     * {@code OSGiBlockingSupplier} object.
+     * {@code OSGiSupplier} object.
      *
      * <p>
      * This method must return <t>null</t> when the Supplier has been
@@ -20,5 +23,6 @@ public interface OSGiBlockingSupplier<T> extends BlockingSupplier<T> {
      *         {@code BlockingSupplier} object; {@code null} if that
      *         supplier has already been unregistered.
      */
+    @Nullable
     Bundle getBundle();
 }

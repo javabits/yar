@@ -1,10 +1,13 @@
 package org.javabits.yar.guice.osgi;
 
+import com.google.common.base.Function;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ListenableFuture;
 import org.javabits.yar.*;
 import org.javabits.yar.Supplier;
+import org.javabits.yar.guice.SupplierWrapper;
 import org.osgi.framework.Bundle;
 
 import javax.annotation.Nullable;
@@ -31,8 +34,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  *
  * @author Romain Gilles
  */
-class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHook, BundleRegistryWrapper {
-    private static final Logger LOG = Logger.getLogger(ForwardingRegistryWrapper.class.getName());
+class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegistry {
+    private static final Logger LOG = Logger.getLogger(BundleRegistry.class.getName());
     /**
      * The default initial capacity for concurrent maps
      */
@@ -59,7 +62,7 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
     private final ConcurrentMap<Registration<?>, Id<?>> supplierRegistrations = new ConcurrentHashMap<>(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR, DEFAULT_CONCURRENCY_LEVEL);
     private final ConcurrentMap<Registration<?>, Id<?>> watcherRegistrations = new MapMaker().weakKeys().initialCapacity(DEFAULT_INITIAL_CAPACITY).concurrencyLevel(DEFAULT_CONCURRENCY_LEVEL).makeMap();
 
-    ForwardingRegistryWrapper(BlockingSupplierRegistry delegate, Bundle bundle) {
+    BundleRegistry(BlockingSupplierRegistry delegate, Bundle bundle) {
         checkArgument(delegate instanceof RegistryHook, "Wrapped registry must implement RegistryHook interface");
         this.delegate = delegate;
         this.bundle = checkNotNull(bundle, "bundle");
@@ -79,20 +82,20 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
 
     @Nullable
     @Override
-    public <T> OSGiBlockingSupplier<T> get(Class<T> type) {
+    public <T> OSGiSupplier<T> get(Class<T> type) {
         return newDecorator(delegate.get(type));
     }
 
     @Nullable
     @Override
-    public <T> OSGiBlockingSupplier<T> get(Id<T> id) {
+    public <T> OSGiSupplier<T> get(Id<T> id) {
         return newDecorator(delegate.get(id));
     }
 
     @Nullable
     @Override
-    public <T> Supplier<T> get(TypeToken<T> type) {
-        return delegate.get(type);
+    public <T> OSGiSupplier<T> get(TypeToken<T> type) {
+        return newDecorator(delegate.get(type));
     }
 
     @Override
@@ -107,17 +110,17 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
 
     @Override
     public <T> List<Supplier<T>> getAll(Class<T> type) {
-        return delegate.getAll(type);
+        return transformToBundleSuppliers(delegate.getAll(type));
     }
 
     @Override
     public <T> List<Supplier<T>> getAll(Id<T> id) {
-        return delegate.getAll(id);
+        return transformToBundleSuppliers(delegate.getAll(id));
     }
 
     @Override
     public <T> List<Supplier<T>> getAll(TypeToken<T> type) {
-        return delegate.getAll(type);
+        return transformToBundleSuppliers(delegate.getAll(type));
     }
 
     @Override
@@ -125,7 +128,7 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
         if (!mutable.get()) {
             return newNullRegistration(id);
         }
-        Registration<T> registration = delegate.put(id, supplier);
+        Registration<T> registration = delegate.put(id, newGuavaWrapper(supplier));
         trackRegistration(id, "Supplier", registration, supplierRegistrations);
         return registration;
     }
@@ -253,17 +256,115 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
         registryHook.addEndOfListenerUpdateTasksListener(listener);
     }
 
-    private <T> OSGiBlockingSupplier<T> newDecorator(BlockingSupplier<T> blockingSupplier) {
-        return blockingSupplier == null ? null : new BlockingSupplierDecorator<>(blockingSupplier, bundle);
+    private <T> OSGiSupplier<T> newDecorator(BlockingSupplier<T> blockingSupplier) {
+        return blockingSupplier == null ? null : new BlockingSupplierDecorator<>(blockingSupplier);
     }
 
-    private static final class BlockingSupplierDecorator<T> implements OSGiBlockingSupplier<T> {
-        private final BlockingSupplier<T> delegate;
+    private <T> OSGiGuavaWrapper<T> newGuavaWrapper(com.google.common.base.Supplier<T> nativeSupplier) {
+        return new OSGiGuavaWrapper<>(nativeSupplier, bundle);
+    }
+
+    private static <T> List<Supplier<T>> transformToBundleSuppliers(List<Supplier<T>> suppliers) {
+        return Lists.transform(suppliers, new Function<Supplier<T>, Supplier<T>>() {
+            @Nullable
+            @Override
+            public Supplier<T> apply(@Nullable Supplier<T> supplier) {
+                return new BundleSupplierWrapper<>(supplier);
+            }
+        });
+    }
+
+    private static <T> com.google.common.base.Supplier<? extends T> nativeSupplier(Supplier<T> delegate) {
+        com.google.common.base.Supplier<? extends T> nativeSupplier = delegate.getNativeSupplier();
+        while (nativeSupplier instanceof SupplierWrapper) {
+            nativeSupplier = getWrapped(nativeSupplier);
+        }
+        return nativeSupplier;
+    }
+
+    private static <T> Bundle bundle(Supplier<T> delegate) {
+        com.google.common.base.Supplier<? extends T> nativeSupplier = delegate.getNativeSupplier();
+        while (nativeSupplier instanceof SupplierWrapper && !(nativeSupplier instanceof OSGiGuavaWrapper)) {
+            nativeSupplier = getWrapped(nativeSupplier);
+        }
+
+        if (nativeSupplier instanceof OSGiGuavaWrapper) {
+            return ((OSGiGuavaWrapper) nativeSupplier).getBundle();
+        } else {
+            return null;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> com.google.common.base.Supplier<T> getWrapped(com.google.common.base.Supplier<? extends T> supplier) {
+        return ((SupplierWrapper<T>) supplier).getWrapped();
+    }
+
+    /**
+     * This class is used to wrap the suppliers returned by the getAll(...) methods of the registry
+     * in order to provide access to the underlying bundle for where the supplier as been registered.
+     * @param <T>
+     */
+    private static final class BundleSupplierWrapper<T> implements BundleSupplier<T> {
+        private final Supplier<T> delegate;
+
+        private BundleSupplierWrapper(Supplier<T> delegate) {
+            this.delegate = delegate;
+        }
+
+        @Nullable
+        @Override
+        public Bundle getBundle() {
+            return bundle(delegate);
+        }
+
+        @Override
+        public Id<T> id() {
+            return delegate.id();
+        }
+
+        @Nullable
+        @Override
+        public T get() {
+            return delegate.get();
+        }
+
+        @Nullable
+        @Override
+        public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+            return nativeSupplier(delegate);
+        }
+    }
+
+    private static final class OSGiGuavaWrapper<T> implements com.google.common.base.Supplier<T>, org.javabits.yar.guice.SupplierWrapper<T> {
+        private final com.google.common.base.Supplier<T> delegate;
         private final Bundle bundle;
 
-        private BlockingSupplierDecorator(BlockingSupplier<T> delegate, Bundle bundle) {
+        private OSGiGuavaWrapper(com.google.common.base.Supplier<T> delegate, Bundle bundle) {
             this.delegate = delegate;
             this.bundle = bundle;
+        }
+
+        @Override
+        public T get() {
+            return delegate.get();
+        }
+
+        Bundle getBundle() {
+            return bundle;
+        }
+
+        @Override
+        public com.google.common.base.Supplier<T> getWrapped() {
+            return delegate;
+        }
+    }
+
+    private static final class BlockingSupplierDecorator<T> implements OSGiSupplier<T> {
+        private final BlockingSupplier<T> delegate;
+
+        private BlockingSupplierDecorator(BlockingSupplier<T> delegate) {
+            this.delegate = delegate;
         }
 
         @Nullable
@@ -305,12 +406,12 @@ class ForwardingRegistryWrapper implements BlockingSupplierRegistry, RegistryHoo
         @Override
         @Nullable
         public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
-            return delegate.getNativeSupplier();
+            return nativeSupplier(delegate);
         }
 
         @Override
         public Bundle getBundle() {
-            return bundle;
+            return bundle(delegate);
         }
     }
 }

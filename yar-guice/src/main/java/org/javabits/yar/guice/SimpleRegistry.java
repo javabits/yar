@@ -16,14 +16,13 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.base.FinalizableReferenceQueue;
-import com.google.common.base.Function;
-import com.google.common.base.Preconditions;
+import com.google.common.base.*;
 import com.google.common.collect.*;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.*;
+import org.javabits.yar.Supplier;
 
 import javax.annotation.Nullable;
 import java.lang.InterruptedException;
@@ -55,7 +54,7 @@ import static org.javabits.yar.guice.WatcherRegistration.newWatcherRegistration;
  *
  * @author Romain Gilles
  */
-public class SimpleRegistry implements Registry, RegistryHook {
+class SimpleRegistry implements Registry, RegistryHook, InternalRegistry {
     private final LinkedBlockingQueue<RegistryAction> registryActionQueue;
     private final WatchableRegistrationContainer registrationContainer;
     private final FinalizableReferenceQueue referenceQueue;
@@ -83,11 +82,11 @@ public class SimpleRegistry implements Registry, RegistryHook {
     }
 
 
-    long defaultTimeout() {
+    public long defaultTimeout() {
         return defaultTimeOut;
     }
 
-    TimeUnit defaultTimeUnit() {
+    public TimeUnit defaultTimeUnit() {
         return defaultTimeoutUnit;
     }
 
@@ -183,7 +182,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         return getDirectly(id);
     }
 
-    final <T> Supplier<T> getDirectly(Id<T> id) {
+    public final <T> Supplier<T> getDirectly(Id<T> id) {
         SupplierRegistration<T> registration = registrationContainer.getFirst(id);
         if (registration == null) {
             return null;
@@ -201,7 +200,11 @@ public class SimpleRegistry implements Registry, RegistryHook {
 
     @Override
     public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
-        return put(id, requireNonNull(new GuavaSupplierAdapter<>(id, supplier), "supplier"));
+        return put(id, requireNonNull(newSupplierAdapter(id, supplier), "supplier"));
+    }
+
+    private <T> GuavaSupplierAdapter<T> newSupplierAdapter(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
+        return new GuavaSupplierAdapter<>(id, supplier);
     }
 
     private <T> Id<T> checkKey(Id<T> watchedId, String attribute) {
@@ -264,7 +267,7 @@ public class SimpleRegistry implements Registry, RegistryHook {
         return executeActionOnRegistry(new AddWatcher<>(watcherRegistration));
     }
 
-    <T> Registration<T> addSupplierListener(IdMatcher<T> idMatcher, SupplierListener supplierListener) {
+    public <T> Registration<T> addSupplierListener(IdMatcher<T> idMatcher, SupplierListener supplierListener) {
         checkKeyMatcher(idMatcher, "idMatcher");
         requireNonNull(supplierListener, "supplierListener");
         WatcherRegistration<T> watcherRegistration = newWatcherRegistration(idMatcher, supplierListener, referenceQueue, this);

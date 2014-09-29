@@ -1,6 +1,5 @@
 package org.javabits.yar.guice.osgi;
 
-import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
 
@@ -9,12 +8,12 @@ import java.util.Collection;
 
 /**
  * This interface provide access to specific action from and to the registry
- * its associated has done against the registry.
+ * do by a bundle. For each bundle you can
  *
  * @author Romain Gilles
  */
 @SuppressWarnings("WeakerAccess")
-public interface BundleRegistryWrapper extends BlockingSupplierRegistry {
+public interface OSGiRegistry extends BlockingSupplierRegistry {
 
     /**
      * Returns all the watchers registered into the registry from this bundle.
@@ -33,9 +32,9 @@ public interface BundleRegistryWrapper extends BlockingSupplierRegistry {
 
     @Nullable
     @Override
-    <T> OSGiBlockingSupplier<T> get(Class<T> type);
+    <T> OSGiSupplier<T> get(Class<T> type);
 
     @Nullable
     @Override
-    <T> OSGiBlockingSupplier<T> get(Id<T> id);
+    <T> OSGiSupplier<T> get(Id<T> id);
 }

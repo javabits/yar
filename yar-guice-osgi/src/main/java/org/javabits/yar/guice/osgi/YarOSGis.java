@@ -121,8 +121,8 @@ public final class YarOSGis {
         return injector;
     }
 
-    private static BundleRegistryWrapper getBundleRegistryWrapper(Injector injector) {
-        return injector.getInstance(BundleRegistryWrapper.class);
+    private static OSGiRegistry getBundleRegistryWrapper(Injector injector) {
+        return injector.getInstance(OSGiRegistry.class);
     }
 
     private static void initHandlers(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
@@ -186,13 +186,13 @@ public final class YarOSGis {
      * @return A module that binds all the {@code Registry} interfaces + the {@code Bundle} and the {@code BundleContext}
      */
     public static Module newYarOSGiModule(final BundleContext bundleContext) {
-        final ForwardingRegistryWrapper blockingSupplierRegistry = getBlockingSupplierRegistry(bundleContext);
+        final BundleRegistry blockingSupplierRegistry = getBlockingSupplierRegistry(bundleContext);
         return new AbstractModule() {
             @Override
             protected void configure() {
-                Key<ForwardingRegistryWrapper> registryKey = Key.get(ForwardingRegistryWrapper.class);
+                Key<BundleRegistry> registryKey = Key.get(BundleRegistry.class);
                 bind(registryKey).toInstance(blockingSupplierRegistry);
-                bind(BundleRegistryWrapper.class).to(registryKey);
+                bind(OSGiRegistry.class).to(registryKey);
                 bind(CLEANUP_BUNDLE_LISTENER).to(BundleStoppingListener.class);
                 install(newRegistryDeclarationModule(registryKey));
                 install(newOSGiModule(bundleContext));
@@ -210,10 +210,10 @@ public final class YarOSGis {
         };
     }
 
-    private static ForwardingRegistryWrapper getBlockingSupplierRegistry(BundleContext bundleContext) {
+    private static BundleRegistry getBlockingSupplierRegistry(BundleContext bundleContext) {
         ServiceReference<BlockingSupplierRegistry> serviceReference = checkNotNull(bundleContext.getServiceReference(BlockingSupplierRegistry.class)
                 , SERVICE_REGISTRY_ERROR_MESSAGE);
-        return new ForwardingRegistryWrapper(checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available"), bundleContext.getBundle());
+        return new BundleRegistry(checkNotNull(bundleContext.getService(serviceReference), "BlockingSupplierRegistry service not available"), bundleContext.getBundle());
     }
 
     @Singleton
@@ -221,10 +221,10 @@ public final class YarOSGis {
         private final RegistrationHandler registrationHandler;
         private final RegistryListenerHandler registryListenerHandler;
         private final long bundleId;
-        private final BundleRegistryWrapper forwardingRegistryWrapper;
+        private final OSGiRegistry forwardingRegistryWrapper;
 
         @Inject
-        BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, BundleRegistryWrapper forwardingRegistryWrapper, Bundle bundle) {
+        BundleStoppingListener(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler, OSGiRegistry forwardingRegistryWrapper, Bundle bundle) {
             this.registrationHandler = registrationHandler;
             this.registryListenerHandler = registryListenerHandler;
             this.forwardingRegistryWrapper = forwardingRegistryWrapper;

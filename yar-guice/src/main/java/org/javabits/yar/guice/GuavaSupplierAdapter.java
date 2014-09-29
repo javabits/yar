@@ -14,13 +14,13 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Romain Gilles
  */
-class GuavaSupplierAdapter<T> implements Supplier<T> {
-    private final com.google.common.base.Supplier<? extends T> delegate;
+class GuavaSupplierAdapter<T> implements Supplier<T>, SupplierWrapper<T> {
+    private final com.google.common.base.Supplier<T> delegate;
     private final Id<T> id;
 
     GuavaSupplierAdapter(Id<T> id, com.google.common.base.Supplier<? extends T> delegate) {
         this.id = requireNonNull(id, "id");
-        this.delegate = requireNonNull(delegate, "delegate");
+        this.delegate = (com.google.common.base.Supplier<T>) requireNonNull(delegate, "delegate");
     }
 
     @Override
@@ -43,7 +43,12 @@ class GuavaSupplierAdapter<T> implements Supplier<T> {
 
     @Nullable
     @Override
-    public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+    public com.google.common.base.Supplier<T> getNativeSupplier() {
         return delegate;
+    }
+
+    @Override
+    public com.google.common.base.Supplier<T> getWrapped() {
+        return getNativeSupplier();
     }
 }

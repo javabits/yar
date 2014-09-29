@@ -11,5 +11,5 @@ import org.javabits.yar.Id;
 public interface BlockingSupplierFactory {
     BlockingSupplierFactory DEFAULT_BLOCKING_SUPPLIER = new DefaultBlockingSupplierFactory();
 
-    <T> BlockingSupplier<T> create(SimpleRegistry registry, Id<T> id);
+    <T> BlockingSupplier<T> create(InternalRegistry registry, Id<T> id);
 }

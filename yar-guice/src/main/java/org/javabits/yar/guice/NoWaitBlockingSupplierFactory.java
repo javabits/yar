@@ -10,7 +10,7 @@ import org.javabits.yar.Id;
  */
 public class NoWaitBlockingSupplierFactory implements BlockingSupplierFactory {
     @Override
-    public <T> BlockingSupplier<T> create(SimpleRegistry registry, Id<T> id) {
+    public <T> BlockingSupplier<T> create(InternalRegistry registry, Id<T> id) {
         return new NoWaitBlockingSupplier<>(id, registry.getDirectly(id));
     }
 }
