@@ -4,7 +4,9 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.*;
 import org.javabits.yar.Supplier;
 import org.javabits.yar.guice.SupplierWrapper;
@@ -23,6 +25,7 @@ import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.util.concurrent.Futures.addCallback;
 
 /**
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
@@ -264,7 +267,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         return new OSGiGuavaWrapper<>(nativeSupplier, bundle);
     }
 
-    private static <T> List<Supplier<T>> transformToBundleSuppliers(List<Supplier<T>> suppliers) {
+    private <T> List<Supplier<T>> transformToBundleSuppliers(List<Supplier<T>> suppliers) {
         return Lists.transform(suppliers, new Function<Supplier<T>, Supplier<T>>() {
             @Nullable
             @Override
@@ -300,12 +303,31 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         return ((SupplierWrapper<T>) supplier).getWrapped();
     }
 
+    <T> T injectAware(@Nullable T instance) {
+        if (instance instanceof Aware) {
+            if (instance instanceof BundleAware) {
+                ((BundleAware) instance).setBundle(bundle);
+            }
+            if (instance instanceof OSGiRegistryAware) {
+                ((OSGiRegistryAware) instance).setOSGiRegistry(this);
+            }
+            if (instance instanceof BlockingSupplierRegistryAware) {
+                ((BlockingSupplierRegistryAware) instance).setBlockingSupplierRegistry(this);
+            }
+            if (instance instanceof RegistryAware) {
+                ((RegistryAware) instance).setRegistry(this);
+            }
+        }
+        return instance;
+    }
+
     /**
      * This class is used to wrap the suppliers returned by the getAll(...) methods of the registry
      * in order to provide access to the underlying bundle for where the supplier as been registered.
+     *
      * @param <T>
      */
-    private static final class BundleSupplierWrapper<T> implements BundleSupplier<T> {
+    private final class BundleSupplierWrapper<T> implements BundleSupplier<T> {
         private final Supplier<T> delegate;
 
         private BundleSupplierWrapper(Supplier<T> delegate) {
@@ -326,7 +348,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         @Nullable
         @Override
         public T get() {
-            return delegate.get();
+            return injectAware(delegate.get());
         }
 
         @Nullable
@@ -360,7 +382,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         }
     }
 
-    private static final class BlockingSupplierDecorator<T> implements OSGiSupplier<T> {
+    private final class BlockingSupplierDecorator<T> implements OSGiSupplier<T> {
         private final BlockingSupplier<T> delegate;
 
         private BlockingSupplierDecorator(BlockingSupplier<T> delegate) {
@@ -370,22 +392,37 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         @Nullable
         @Override
         public T get() {
-            return delegate.get();
+            return injectAware(delegate.get());
         }
 
         @Override
         public T getSync() throws InterruptedException {
-            return delegate.getSync();
+            return injectAware(delegate.getSync());
         }
 
         @Override
         public T getSync(long timeout, TimeUnit unit) throws InterruptedException, java.util.concurrent.TimeoutException {
-            return delegate.getSync(timeout, unit);
+            return injectAware(delegate.getSync(timeout, unit));
         }
 
         @Override
         public ListenableFuture<T> getAsync() {
-            return delegate.getAsync();
+            final SettableFuture<T> future = SettableFuture.create();
+
+            // The future callback will be executed either on the current thread (if the future is
+            // already completed) or on the registry's action handler thread.
+            addCallback(delegate.getAsync(), new FutureCallback<T>() {
+                @Override
+                public void onSuccess(T instance) {
+                    future.set(injectAware(instance));
+                }
+
+                @Override
+                public void onFailure(Throwable t) {
+                }
+            });
+
+            return future;
         }
 
         @Override
