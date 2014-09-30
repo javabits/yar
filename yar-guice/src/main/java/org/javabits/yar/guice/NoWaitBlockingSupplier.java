@@ -95,6 +95,10 @@ public class NoWaitBlockingSupplier<T> implements BlockingSupplier<T>, SupplierL
         return supplierReference.get();
     }
 
+    /**
+     * there no thread safety issue because the supplierFutureRef is only used for the
+     * asynchronous approach. The risk is small enough to avoid to introduce more complexity.
+     */
     @Override
     public void supplierChanged(SupplierEvent supplierEvent) {
         SupplierEvent.Type type = supplierEvent.type();
