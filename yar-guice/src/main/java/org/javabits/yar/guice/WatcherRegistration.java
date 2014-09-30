@@ -158,7 +158,10 @@ class WatcherRegistration<T> extends FinalizableWeakReference<Object> implements
 
         @Override
         public void remove(Supplier<T> supplier) {
-            delegate.get().supplierChanged(new SupplierEvent(REMOVE, supplier));
+            SupplierListener supplierListener = delegate.get();
+            if (supplierListener != null) {
+                supplierListener.supplierChanged(new SupplierEvent(REMOVE, supplier));
+            }
         }
 
         @Override
