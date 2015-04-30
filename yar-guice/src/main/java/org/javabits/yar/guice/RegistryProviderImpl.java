@@ -34,20 +34,14 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
     private final Key<T> key;
     private BlockingSupplier<T> blockingSupplier;
     private Function<BlockingSupplier<T>, T> supplierGetStrategy;
-    private final long timeout;
-    private final TimeUnit timeUnit;
 
     RegistryProviderImpl(Key<T> key) {
         this.key = key;
-        this.timeout = DEFAULT_TIMEOUT;
-        this.timeUnit = DEFAULT_TIME_UNIT;
         supplierGetStrategy = new DefaultSynchronousStrategy();
     }
 
     RegistryProviderImpl(Key<T> key, long timeout, TimeUnit timeUnit) {
         this.key = key;
-        this.timeout = timeout;
-        this.timeUnit = timeUnit;
         supplierGetStrategy = new SynchronousStrategy(timeout, timeUnit);
     }
 
@@ -92,7 +86,8 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
             } catch (InterruptedException e) {
                 throw newInterruptedException(e);
             } catch (TimeoutException e) {
-                throw newTimeoutException(timeout, timeUnit, e);
+                throw newTimeoutException(blockingSupplier.defaultTimeout()
+                        , blockingSupplier.defaultTimeUnit(), e);
             }
         }
     }
