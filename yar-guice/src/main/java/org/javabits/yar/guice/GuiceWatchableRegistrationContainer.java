@@ -17,8 +17,10 @@
 package org.javabits.yar.guice;
 
 import com.google.common.base.Function;
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registration;
 import org.javabits.yar.RegistryHook;
@@ -30,11 +32,15 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.javabits.yar.TypeEvent.newAddTypeEvent;
 import static org.javabits.yar.TypeEvent.newRemoveTypeEvent;
 import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
+import static org.javabits.yar.guice.CacheContainer.KeyConversionStrategies.TYPE_ERASURE;
 import static org.javabits.yar.guice.ExecutionStrategy.Type.*;
+import static org.javabits.yar.guice.Reflections.getRawType;
 
 /**
  * TODO comment
@@ -44,7 +50,7 @@ import static org.javabits.yar.guice.ExecutionStrategy.Type.*;
  * @author Romain Gilles
  */
 public class GuiceWatchableRegistrationContainer implements WatchableRegistrationContainer {
-
+    private static final Logger LOG = Logger.getLogger(GuiceWatchableRegistrationContainer.class.getName());
     private enum Action {
         ADD() {
             @Override
@@ -67,7 +73,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
 
 
     public GuiceWatchableRegistrationContainer() {
-        this(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(), newExecutionStrategy(SERIALIZED));
+        this(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(TYPE_ERASURE), newExecutionStrategy(SERIALIZED));
     }
 
     public GuiceWatchableRegistrationContainer(Container<Type, SupplierRegistration<?>> supplierRegistry
@@ -141,6 +147,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     private <T> void updateWatcher(final SupplierRegistration<T> supplierRegistration, final Action action, long timeout, TimeUnit unit) throws InterruptedException {
         Id<T> id = supplierRegistration.id();
         final List<WatcherRegistration<T>> watcherRegistrations = getWatcherRegistrations(id);
+        LOG.log(Level.FINE, "Execute {0} on watchers: {1}, for given supplier {2}", new Object[]{ action, watcherRegistrations, supplierRegistration});
         executor.execute(getUpdateActionsToExistingWatcherOnSupplierEvent(supplierRegistration, action, watcherRegistrations),timeout, unit);
     }
 
@@ -157,13 +164,7 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     //returns all the watchers associated to the type of the given id.
     @SuppressWarnings("unchecked")
     private <T> List<WatcherRegistration<T>> getWatcherRegistrations(Id<T> id) {
-        ImmutableList.Builder<WatcherRegistration<T>> resultBuilder = ImmutableList.builder();
-        List<WatcherRegistration<?>> watchers = watcherRegistry.getAll(id.type());
-        for (WatcherRegistration<?> watcher : watchers) {
-            resultBuilder.add((WatcherRegistration<T>) watcher);
-        }
-
-        return resultBuilder.build();
+        return (List<WatcherRegistration<T>>)((Container)watcherRegistry).getAll(id.type());
     }
 
     private <T extends Registration<?>> boolean putToRegistry(Container<Type, T> container, T registration) {
@@ -187,8 +188,20 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         return putToRegistry(watcherRegistry, watcherRegistration);
     }
 
+    @SuppressWarnings("unchecked")
     private <T> List<Callable<Void>> getAddSupplierActionsToNewWatcher(final WatcherRegistration<T> watcherRegistration) {
-        List<SupplierRegistration<T>> supplierRegistrations = getAll(watcherRegistration.id());
+        final Class<?> watcherRawType = getRawType(watcherRegistration.id().type());
+        Set<Type> watcherCompatiblesTypes = Sets.filter(types(), new Predicate<Type>() {
+            @Override
+            public boolean apply(Type type) {
+                return watcherRawType.equals(getRawType(type));
+            }
+        });
+        ImmutableList.Builder<SupplierRegistration<T>> resultBuilder = ImmutableList.builder();
+        for (Type watcherCompatiblesType : watcherCompatiblesTypes) {
+            resultBuilder.addAll((List)getAll(watcherCompatiblesType));
+        }
+        List < SupplierRegistration < T >> supplierRegistrations = resultBuilder.build();
         return Lists.transform(supplierRegistrations, new Function<SupplierRegistration<T>, Callable<Void>>() {
             @Nullable
             @Override
@@ -252,9 +265,9 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
         @Override
         public String toString() {
             return this.getClass().getSimpleName() + "{" +
-                    "watcherRegistration=" + watcherRegistration +
+                    "action=" + action +
+                    ", watcherRegistration=" + watcherRegistration +
                     ", supplierRegistration=" + supplierRegistration +
-                    ", action=" + action +
                     '}';
         }
     }
@@ -305,6 +318,6 @@ public class GuiceWatchableRegistrationContainer implements WatchableRegistratio
     }
 
     static GuiceWatchableRegistrationContainer newLoadingCacheGuiceWatchableRegistrationContainer(ExecutionStrategy executionStrategy) {
-        return new GuiceWatchableRegistrationContainer(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(), executionStrategy);
+        return new GuiceWatchableRegistrationContainer(CacheContainer.<SupplierRegistration<?>>newConcurrentContainer(), CacheContainer.<WatcherRegistration<?>>newNonConcurrentContainer(TYPE_ERASURE), executionStrategy);
     }
 }

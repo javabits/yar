@@ -38,6 +38,7 @@ class GuavaSupplierAdapter<T> implements Supplier<T>, SupplierWrapper<T> {
     public String toString() {
         return "GuavaSupplierAdapter{" +
                 "delegate=" + delegate +
+                ", id=" + id +
                 '}';
     }
 

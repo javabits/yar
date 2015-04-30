@@ -185,7 +185,9 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         if (!mutable.get()) {
             return;
         }
-        watcherRegistrations.removeAll(watcherRegistrations);
+        for (Registration<?> watcherRegistration : watcherRegistrations) {
+            this.watcherRegistrations.remove(watcherRegistration);
+        }
         delegate.removeAllWatchers(watcherRegistrations);
     }
 
@@ -379,6 +381,14 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         @Override
         public com.google.common.base.Supplier<T> getWrapped() {
             return delegate;
+        }
+
+        @Override
+        public String toString() {
+            return "OSGiGuavaWrapper{" +
+                    "delegate=" + delegate +
+                    ", bundle=" + bundle +
+                    '}';
         }
     }
 

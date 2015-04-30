@@ -214,10 +214,10 @@ public final class Ids {
 
         @Override
         public String toString() {
-            return "Key[type=" + typeToken + ", annotation=" + annotationStrategy + "]";
+            return "Id[type=" + typeToken + ", annotation=" + annotationStrategy + "]";
         }
 
-        static interface AnnotationStrategy {
+        interface AnnotationStrategy {
             @Nullable
             Annotation getAnnotation();
 
@@ -225,10 +225,10 @@ public final class Ids {
             Class<? extends Annotation> getAnnotationType();
 
             @Override
-            public int hashCode();
+            int hashCode();
 
             @Override
-            public boolean equals(Object o);
+            boolean equals(Object o);
         }
 
         static abstract class AbstractAnnotationStrategy implements AnnotationStrategy {

@@ -50,9 +50,7 @@ Then following query on the registry will produce:
     public void testRetriveAllDataSourcesIdAndName(Registry registry) {
         List<DataSource> dataSources = registry.getAll(GuiceId.of(DataSource.class, named("DB2")));
         assertThat(dataSources.size(), is(1));
-        assertThat(dataSources.get(0)..getClass().<annotations(Named.class)>.value(), is("DB2"));
     }
-
 ```
 
 ### Implementation detail
@@ -74,6 +72,10 @@ new RegistryModule() {
         bind(MyInterface.class).toRegistry();
         //register an implementation to the registry
         register(MyInterface2.class).to(MyImpl2.class);
+        // listen to a specific service implementations
+        bindRegistryListener( new AbstractMatcher<Key<Hello>>() {...}, , new RegistryListener<Hello>() {..});
+        // listen to a wildcard of generic service implementations
+        bindRegistryListener( new AbstractMatcher<Key<MyGenericInterface<?>>>() {...}, , new RegistryListener<MyGenericInterface<?>>() {..});
     }
 }
 ```

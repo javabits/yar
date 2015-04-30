@@ -16,6 +16,7 @@
 
 package org.javabits.yar.guice;
 
+import com.google.common.reflect.TypeToken;
 import com.google.inject.*;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Named;
@@ -484,6 +485,66 @@ public class RegistryModuleBindTest {
     }
 
     @Test
+    public void testBindWildcardsStyleListener() {
+        final org.javabits.yar.BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        final Object[] matches = new Object[]{0, null, null};
+
+        Injector injector = createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bindRegistryListener(
+                        new AbstractMatcher<Key<MyGenericInterface<?>>>() {
+                            @Override
+                            public boolean matches(Key<MyGenericInterface<?>> item) {
+                                boolean equals = MyGenericInterface.class.equals(item.getTypeLiteral().getRawType());
+                                matches[0] = (Integer) matches[0] + (equals ? 1 : 0);
+                                return equals;
+                            }
+                        }, new RegistryListener<MyGenericInterface<?>>() {
+                            @Nullable
+                            @Override
+                            public Supplier<MyGenericInterface<?>> add(Supplier<MyGenericInterface<?>> element) {
+                                matches[1] = element;
+                                return element;
+                            }
+
+                            @Override
+                            public void remove(Supplier<MyGenericInterface<?>> element) {
+                                matches[2] = element;
+                            }
+                        }
+                );
+            }
+        });
+        assertThat(injector, is(not(nullValue())));
+        Id<MyGenericInterface<String>> id = Ids.newId(new TypeToken<MyGenericInterface<String>>() {});
+        Registration<MyGenericInterface<String>> myInterfaceRegistration = registry.put(id, GuiceSupplier.of(new Provider<MyGenericInterface<String>>() {
+            @Override
+            public MyGenericInterface<String> get() {
+                return new MyGenericInterface<String>() {
+                };
+            }
+        }));
+        registry.remove(myInterfaceRegistration);
+        assertThat(((Integer) matches[0]), is(2));
+        assertThat((matches[1]), is(notNullValue()));
+        assertThat((matches[2]), is(matches[1]));
+        Id<MyGenericInterface<Double>> idDouble = Ids.newId(new TypeToken<MyGenericInterface<Double>>() {});
+        Registration<MyGenericInterface<Double>> myInterfaceRegistrationDouble = registry.put(idDouble, GuiceSupplier.of(new Provider<MyGenericInterface<Double>>() {
+            @Override
+            public MyGenericInterface<Double> get() {
+                return new MyGenericInterface<Double>() {
+                };
+            }
+        }));
+        registry.remove(myInterfaceRegistrationDouble);
+        assertThat(((Integer) matches[0]), is(4));
+        assertThat((matches[1]), is(notNullValue()));
+        assertThat((matches[2]), is(matches[1]));
+    }
+
+    @Test
     public void testMultiParametersGeneric() {
         final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
@@ -504,7 +565,7 @@ public class RegistryModuleBindTest {
         return BlockingSupplierRegistryImpl.newLoadingCacheBlockingSupplierRegistry(newExecutionStrategy(SAME_THREAD));
     }
 
-    static interface MultiParametersGeneric<I, O> {
+    interface MultiParametersGeneric<I, O> {
         O accept(I input);
     }
 
@@ -515,7 +576,11 @@ public class RegistryModuleBindTest {
         }
     }
 
-    static interface MyInterface {
+    interface MyGenericInterface<T> {
+
+    }
+
+    interface MyInterface {
 
     }
 
