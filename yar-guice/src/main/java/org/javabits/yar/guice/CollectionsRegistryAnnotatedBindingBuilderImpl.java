@@ -30,9 +30,11 @@ import org.javabits.yar.Supplier;
 import javax.annotation.Nullable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -51,12 +53,23 @@ public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryA
         super(binder, typeLiteral);
     }
 
+
     @Override
+    public void toRegistry(long timeout, TimeUnit unit) {
+        linkedBindingBuilder().toProvider(newRegistryProvider(timeout, unit));
+    }
+
+    @Override
+    Iterable<RegistryProvider<?>> doToRegistry() {
+        RegistryProvider<T> registryProvider = newRegistryProvider();
+        linkedBindingBuilder().toProvider(registryProvider);
+        return Collections.<RegistryProvider<?>>singleton(registryProvider);
+    }
+
     RegistryProvider<T> newRegistryProvider() {
         return new CollectionsRegistryProvider<>(key(), isLaxTypeBinding());
     }
 
-    @Override
     RegistryProvider<? extends T> newRegistryProvider(long timeout, TimeUnit unit) {
         return newRegistryProvider();
     }

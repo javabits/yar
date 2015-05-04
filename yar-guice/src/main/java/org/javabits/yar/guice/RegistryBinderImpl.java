@@ -87,7 +87,7 @@ class RegistryBinderImpl implements RegistryBinder {
 
     @Override
     public <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
-        return new RegistryAnnotatedBindingBuilderImpl<>(binder, clazz);
+        return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, clazz);
     }
 
     //Guice Binder delegation ------------------------------------------------
@@ -247,12 +247,12 @@ class RegistryBinderImpl implements RegistryBinder {
     private class SimpleRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
         @Override
         public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new RegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral);
+            return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral);
         }
 
         @Override
         public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new RegistryAnnotatedBindingBuilderImpl<>(binder, key);
+            return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, key);
         }
     }
 

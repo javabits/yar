@@ -22,7 +22,6 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import org.javabits.yar.*;
-import org.javabits.yar.BlockingSupplierRegistry;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
@@ -34,7 +33,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
 import static org.javabits.yar.guice.ExecutionStrategy.Type.SAME_THREAD;
-import static org.javabits.yar.guice.YarGuices.*;
+import static org.javabits.yar.guice.YarGuices.newLoadingCacheBasedRegistry;
+import static org.javabits.yar.guice.YarGuices.newRegistryDeclarationModule;
 
 
 /**
@@ -58,8 +58,55 @@ public class RegistryModuleBindTest {
         });
         assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
         assertThat(injector.getInstance(MyInterface.class), is(not(injector.getInstance(MyInterface.class))));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        })), is(not(nullValue())));
     }
 
+//    @Test
+    public void testBindSupplierAndThenType() {
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        putMyInterfaceSupplierToRegistry(registry);
+        Injector injector = Guice.createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(new TypeLiteral<BlockingSupplier<MyInterface>>(){}).toRegistry();
+                bind(MyInterface.class).toRegistry();
+            }
+        });
+        assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        })), is(not(nullValue())));
+    }
+
+//    @Test
+    public void testBindTypeAndThenSupplier() {
+        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        putMyInterfaceSupplierToRegistry(registry);
+        Injector injector = Guice.createInjector(module, new RegistryModule() {
+            @Override
+            protected void configureRegistry() {
+                bind(MyInterface.class).toRegistry();
+                bind(new TypeLiteral<BlockingSupplier<MyInterface>>(){}).toRegistry();
+            }
+        });
+        assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
+        })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        })), is(not(nullValue())));
+    }
 
     @Test
     public void testBindNoWait() {
@@ -431,7 +478,8 @@ public class RegistryModuleBindTest {
 
                     }
                 };
-                Key<RegistryListener<Object>> listenerKey = Key.get(new TypeLiteral<RegistryListener<Object>>() {});
+                Key<RegistryListener<Object>> listenerKey = Key.get(new TypeLiteral<RegistryListener<Object>>() {
+                });
                 bind(listenerKey).toInstance(listener);
                 bindRegistryListener(new AbstractMatcher<Key<MyInterface>>() {
                                          @Override
@@ -518,7 +566,8 @@ public class RegistryModuleBindTest {
             }
         });
         assertThat(injector, is(not(nullValue())));
-        Id<MyGenericInterface<String>> id = Ids.newId(new TypeToken<MyGenericInterface<String>>() {});
+        Id<MyGenericInterface<String>> id = Ids.newId(new TypeToken<MyGenericInterface<String>>() {
+        });
         Registration<MyGenericInterface<String>> myInterfaceRegistration = registry.put(id, GuiceSupplier.of(new Provider<MyGenericInterface<String>>() {
             @Override
             public MyGenericInterface<String> get() {
@@ -530,7 +579,8 @@ public class RegistryModuleBindTest {
         assertThat(((Integer) matches[0]), is(2));
         assertThat((matches[1]), is(notNullValue()));
         assertThat((matches[2]), is(matches[1]));
-        Id<MyGenericInterface<Double>> idDouble = Ids.newId(new TypeToken<MyGenericInterface<Double>>() {});
+        Id<MyGenericInterface<Double>> idDouble = Ids.newId(new TypeToken<MyGenericInterface<Double>>() {
+        });
         Registration<MyGenericInterface<Double>> myInterfaceRegistrationDouble = registry.put(idDouble, GuiceSupplier.of(new Provider<MyGenericInterface<Double>>() {
             @Override
             public MyGenericInterface<Double> get() {

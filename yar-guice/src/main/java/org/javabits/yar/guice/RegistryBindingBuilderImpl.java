@@ -7,16 +7,18 @@ package org.javabits.yar.guice;
  *
  * @author Romain Gilles
  */
-class RegistryBindingBuilderImpl implements RegistryBindingBuilder {
+class RegistryBindingBuilderImpl<T> implements RegistryBindingBuilder {
 
-    private final RegistryProvider<?> registryProvider;
+    private final Iterable<RegistryProvider<?>> registryProviders;
 
-    public RegistryBindingBuilderImpl(RegistryProvider<?> registryProvider) {
-        this.registryProvider = registryProvider;
+    public RegistryBindingBuilderImpl(Iterable<RegistryProvider<?>> registryProviders) {
+        this.registryProviders = registryProviders;
     }
 
     @Override
     public void noWait() {
-        registryProvider.noWait();
+        for (RegistryProvider<?> registryProvider : registryProviders) {
+            registryProvider.noWait();
+        }
     }
 }
