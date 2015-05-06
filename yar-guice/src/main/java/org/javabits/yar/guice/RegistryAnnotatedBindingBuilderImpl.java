@@ -1,7 +1,8 @@
 package org.javabits.yar.guice;
 
 import com.google.inject.*;
-import com.google.inject.binder.AnnotatedBindingBuilder;
+import com.google.inject.Provider;
+import com.google.inject.Scope;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
 
@@ -99,6 +100,12 @@ abstract class RegistryAnnotatedBindingBuilderImpl<T> implements RegistryAnnotat
 
     @Override
     public ScopedBindingBuilder toProvider(Provider<? extends T> provider) {
+        linkedBindingBuilder().toProvider(provider);
+        return this;
+    }
+
+    @Override
+    public ScopedBindingBuilder toProvider(javax.inject.Provider<? extends T> provider) {
         linkedBindingBuilder().toProvider(provider);
         return this;
     }

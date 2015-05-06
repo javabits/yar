@@ -17,6 +17,8 @@
 package org.javabits.yar.guice;
 
 import com.google.inject.*;
+import com.google.inject.Provider;
+import com.google.inject.Scope;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
@@ -130,6 +132,13 @@ class RegistrationBindingBuilderImpl<T> implements RegistrationAnnotatedBindingB
         bindRegistration();
         return linkedBindingBuilder.toProvider(providerKey);
     }
+
+    @Override
+    public ScopedBindingBuilder toProvider(javax.inject.Provider<? extends T> provider) {
+        bindRegistration();
+        return linkedBindingBuilder.toProvider(provider);
+    }
+
 
     @Override
     public <S extends T> ScopedBindingBuilder toConstructor(Constructor<S> constructor) {

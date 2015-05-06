@@ -4,9 +4,7 @@ import com.google.common.annotations.Beta;
 import com.google.inject.*;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
 import com.google.inject.matcher.Matcher;
-import com.google.inject.spi.Message;
-import com.google.inject.spi.TypeConverter;
-import com.google.inject.spi.TypeListener;
+import com.google.inject.spi.*;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Supplier;
@@ -200,6 +198,31 @@ class RegistryBinderImpl implements RegistryBinder {
     @Override
     public void disableCircularProxies() {
         binder.disableCircularProxies();
+    }
+
+    @Override
+    public <T> Provider<T> getProvider(Dependency<T> dependency) {
+        return binder.getProvider(dependency);
+    }
+
+    @Override
+    public void bindListener(Matcher<? super Binding<?>> matcher, ProvisionListener... provisionListeners) {
+        binder.bindListener(matcher, provisionListeners);
+    }
+
+    @Override
+    public void requireAtInjectOnConstructors() {
+        binder.requireAtInjectOnConstructors();
+    }
+
+    @Override
+    public void requireExactBindingAnnotations() {
+        binder.requireExactBindingAnnotations();
+    }
+
+    @Override
+    public void scanModulesForAnnotatedMethods(ModuleAnnotatedMethodScanner moduleAnnotatedMethodScanner) {
+        binder.scanModulesForAnnotatedMethods(moduleAnnotatedMethodScanner);
     }
 
     //------------------------------------------------------------------------

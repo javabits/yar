@@ -34,7 +34,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
 
 /**

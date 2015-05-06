@@ -23,8 +23,6 @@ import com.google.inject.TypeLiteral;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import static java.util.Collections.singleton;
-
 /**
  * TODO comment
  * Date: 3/4/13
