@@ -100,5 +100,5 @@ Release the project
 Run the following command:
 
 ```
-mvn release:prepare -DautoVersionSubmodules=true -DscmCommentPrefix="[maven-release-plugin] #XX: " -DreleaseVersion=1.0.0.MX -DdevelopmentVersion=1.0-SNAPSHOT
+mvn release:prepare -DautoVersionSubmodules=true -DscmCommentPrefix="[maven-release-plugin] #XX: " -DreleaseVersion=2.0.0.MX -DdevelopmentVersion=2.0-SNAPSHOT
 ```
