@@ -248,6 +248,7 @@ class RegistryBinderImpl implements RegistryBinder {
 
     private  <T> boolean isSupplier(TypeLiteral<T> typeLiteral) {
         return Supplier.class.isAssignableFrom(typeLiteral.getRawType())
+                || java.util.function.Supplier.class.isAssignableFrom(typeLiteral.getRawType())
                 || com.google.common.base.Supplier.class.isAssignableFrom(typeLiteral.getRawType());
     }
 
