@@ -68,9 +68,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
     }
 
     public void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) throws InterruptedException {
-        for (int i = 0; i < tasks.size(); i++) {
-            final int taskNumber = i;
-            Callable<Void> task = tasks.get(i);
+        for (final Callable<Void> task : tasks) {
             final ListenableFuture<Void> future = executorService().submit(task);
             pendingTasks.put(future, task);
             future.addListener(new Runnable() {
@@ -83,12 +81,12 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
             addCallback(future, new FutureCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {
-                    LOG.log(Level.FINE, String.format("Listener task succeeded : %s", tasks.get(taskNumber)));
+                    LOG.log(Level.FINE, String.format("Listener task succeeded : %s", task));
                 }
 
                 @Override
                 public void onFailure(Throwable t) {
-                    LOG.log(Level.SEVERE, String.format("Listener task failed: %s", tasks.get(taskNumber)), t);
+                    LOG.log(Level.SEVERE, String.format("Listener task failed: %s", task), t);
                 }
             });
         }
