@@ -26,12 +26,12 @@ import javax.annotation.Nullable;
  * @author Romain Gilles
  * @since 1.0
  */
-public interface Supplier<T> extends com.google.common.base.Supplier<T> {
+public interface Supplier<T> extends com.google.common.base.Supplier<T>, java.util.function.Supplier<T> {
 
     /**
      * Returns the {@link Id} under which this supplier has been registered
      * through the <t>put(..)</t> methods.
-     * @return
+     * @return the Id of this supplier under which it has been registered.
      */
     Id<T> id();
 

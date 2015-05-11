@@ -80,13 +80,18 @@ class DefaultRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBin
         binder().bind(blockingSupplierKey).toProvider(blockingSupplierRegistryProvider);
         Key<Supplier<T>> yarSupplierKey = newYarSupplierKey();
         binder().bind(yarSupplierKey).to(blockingSupplierKey);
-        Key<Supplier<T>> guavaSupplierKey = newGuavaSupplierKey();
-        binder().bind(guavaSupplierKey).to(yarSupplierKey);
+        binder().bind(newGuavaSupplierKey()).to(yarSupplierKey);
+        binder().bind(newJavaSupplierKey()).to(yarSupplierKey);
         return blockingSupplierRegistryProvider;
     }
 
-    private Key<Supplier<T>> newGuavaSupplierKey() {
+    private Key<com.google.common.base.Supplier<T>> newGuavaSupplierKey() {
         ParameterizedType guavaSupplierType = Types.newParameterizedType(com.google.common.base.Supplier.class, key().getTypeLiteral().getType());
+        return Keys.of(guavaSupplierType, key());
+    }
+
+    private Key<java.util.function.Supplier<T>> newJavaSupplierKey() {
+        ParameterizedType guavaSupplierType = Types.newParameterizedType(java.util.function.Supplier.class, key().getTypeLiteral().getType());
         return Keys.of(guavaSupplierType, key());
     }
 
