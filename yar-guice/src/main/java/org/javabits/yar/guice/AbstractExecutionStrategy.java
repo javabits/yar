@@ -56,13 +56,10 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
             return;
         }
         for (final ListenableFuture<Void> future : pendingTaskSnapshot.keySet()) {
-            future.addListener(new Runnable() {
-                @Override
-                public void run() {
-                    pendingTaskSnapshot.remove(future);
-                    if (pendingTaskSnapshot.isEmpty())
-                        pendingTaskLister.completed();
-                }
+            future.addListener(() -> {
+                pendingTaskSnapshot.remove(future);
+                if (pendingTaskSnapshot.isEmpty())
+                    pendingTaskLister.completed();
             }, executorService());
         }
     }
@@ -71,12 +68,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
         for (final Callable<Void> task : tasks) {
             final ListenableFuture<Void> future = executorService().submit(task);
             pendingTasks.put(future, task);
-            future.addListener(new Runnable() {
-                @Override
-                public void run() {
-                    pendingTasks.remove(future);
-                }
-            }, executorService());
+            future.addListener(() -> pendingTasks.remove(future), executorService());
 
             addCallback(future, new FutureCallback<Void>() {
                 @Override
@@ -131,7 +123,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
 
     @VisibleForTesting
     private static class SameThread extends AbstractExecutionStrategy {
-        private final ListeningExecutorService executorService = MoreExecutors.sameThreadExecutor();
+        private final ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
 
         @Override
         ListeningExecutorService executorService() {
