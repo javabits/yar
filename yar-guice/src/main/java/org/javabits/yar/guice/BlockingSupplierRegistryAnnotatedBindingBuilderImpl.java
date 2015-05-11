@@ -20,6 +20,7 @@ import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Id;
 
 import java.lang.reflect.ParameterizedType;
@@ -57,6 +58,8 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
 
         private final Key<T> key;
         private org.javabits.yar.BlockingSupplierRegistry registry;
+        // use no fence to avoid monitor usage
+        private BlockingSupplier blockingSupplier;
 
         private BlockingSupplierRegistryProvider(Key<T> key) {
             this.key = key;
@@ -65,7 +68,14 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
         @Override
         @SuppressWarnings("unchecked")
         public T get() {
-            return (T) registry.get(getSupplierTypeParameter());
+            if (blockingSupplier == null) {
+                init();
+            }
+            return (T)blockingSupplier;
+        }
+
+        private void init() {
+            blockingSupplier = registry.get(getSupplierTypeParameter());
         }
 
         @SuppressWarnings("unchecked")
@@ -85,6 +95,7 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
         @Inject
         public void setRegistry(org.javabits.yar.BlockingSupplierRegistry registry) {
             this.registry = registry;
+            init();
         }
 
         @Override

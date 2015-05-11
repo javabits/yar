@@ -292,6 +292,19 @@ public class RegistryModuleBindTest {
         assertThat(supplier.get(), is(not(nullValue())));
     }
 
+    @Test
+    public void testBindBlockingSupplierSingleInstance() {
+        final org.javabits.yar.BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
+        Module module = newRegistryDeclarationModule(registry);
+        putMyInterfaceSupplierToRegistry(registry);
+        Injector injector = createBlockingSupplierBindingInjector(module);
+        Supplier<MyInterface> supplier1 = injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        }));
+        Supplier<MyInterface> supplier2 = injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        }));
+        assertThat(supplier1, is(supplier2));
+    }
+
     private Injector createBlockingSupplierBindingInjector(Module module) {
         return createInjector(module, createBlockingSupplierBindingRegistryModule());
     }
