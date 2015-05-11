@@ -87,7 +87,6 @@
         <connection>scm:git:ssh://github.com/javabits/yar.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/javabits/yar.git</developerConnection>
         <url>https://github.com/javabits/yar</url>
-        <tag>yar-1.0.0.M8</tag>
     </scm>
 
     <build>
