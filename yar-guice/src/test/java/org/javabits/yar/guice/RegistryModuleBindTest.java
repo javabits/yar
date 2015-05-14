@@ -60,58 +60,20 @@ public class RegistryModuleBindTest {
         assertThat(injector.getInstance(MyInterface.class), is(not(injector.getInstance(MyInterface.class))));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<java.util.function.Supplier<MyInterface>>() {
         })), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
-        })), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
-        })), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
-        })), is(not(nullValue())));
-    }
-
-//    @Test
-    public void testBindSupplierAndThenType() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
-        Module module = newRegistryDeclarationModule(registry);
-        putMyInterfaceSupplierToRegistry(registry);
-        Injector injector = Guice.createInjector(module, new RegistryModule() {
-            @Override
-            protected void configureRegistry() {
-                bind(new TypeLiteral<BlockingSupplier<MyInterface>>(){}).toRegistry();
-                bind(MyInterface.class).toRegistry();
-            }
-        });
-        assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
-        })), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<java.util.function.Supplier<MyInterface>>() {
-        })), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
-        })), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
-        })), is(not(nullValue())));
-    }
-
-    //    @Test
-    public void testBindTypeAndThenSupplier() {
-        final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
-        Module module = newRegistryDeclarationModule(registry);
-        putMyInterfaceSupplierToRegistry(registry);
-        Injector injector = Guice.createInjector(module, new RegistryModule() {
-            @Override
-            protected void configureRegistry() {
-                bind(MyInterface.class).toRegistry();
-                bind(new TypeLiteral<BlockingSupplier<MyInterface>>(){}).toRegistry();
-            }
-        });
-        assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
+        })).get(), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
         })), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<java.util.function.Supplier<MyInterface>>() {
-        })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
+        })).get(), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
         })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
+        })).get(), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
         })), is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>() {
+        })).get(), is(not(nullValue())));
     }
 
     @Test

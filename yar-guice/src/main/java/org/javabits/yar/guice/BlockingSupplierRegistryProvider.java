@@ -18,6 +18,7 @@ package org.javabits.yar.guice;
 
 import com.google.inject.Inject;
 import com.google.inject.Key;
+import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Id;
 
 import java.lang.reflect.ParameterizedType;
@@ -26,7 +27,7 @@ import java.lang.reflect.Type;
 /**
  * Implementation of the noWait provider.
  */
-class BlockingSupplierRegistryProvider<T> implements RegistryProvider<T> {
+class BlockingSupplierRegistryProvider<T> implements RegistryProvider<BlockingSupplier<T>> {
 
     private final Id<T> id;
     private org.javabits.yar.BlockingSupplierRegistry registry;
@@ -35,7 +36,7 @@ class BlockingSupplierRegistryProvider<T> implements RegistryProvider<T> {
         this.id = id;
     }
 
-    static <T> BlockingSupplierRegistryProvider<T> newProvider(Key<T> key) {
+    static <T> BlockingSupplierRegistryProvider<T> newProvider(Key<BlockingSupplier<T>> key) {
         return new BlockingSupplierRegistryProvider<>(getSupplierTypeParameter(key));
     }
 
@@ -46,12 +47,12 @@ class BlockingSupplierRegistryProvider<T> implements RegistryProvider<T> {
 
     @Override
     @SuppressWarnings("unchecked")
-    public T get() {
-        return (T) registry.get(id);
+    public BlockingSupplier<T> get() {
+        return registry.get(id);
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> Id<T> getSupplierTypeParameter(Key<T> key) {
+    private static <T> Id<T> getSupplierTypeParameter(Key<BlockingSupplier<T>> key) {
         Type type = key.getTypeLiteral().getType();
         checkParameterizedType(type);
         ParameterizedType parameterizedType = (ParameterizedType) type;

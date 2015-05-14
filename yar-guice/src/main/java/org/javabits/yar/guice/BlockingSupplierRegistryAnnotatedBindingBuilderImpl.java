@@ -52,8 +52,9 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
         return Collections.<RegistryProvider<?>>singleton(registryProvider);
     }
 
+    @SuppressWarnings("unchecked")
     private RegistryProvider<T> newRegistryProvider() {
-        return BlockingSupplierRegistryProvider.newProvider(key());
+        return BlockingSupplierRegistryProvider.newProvider((Key)key());
     }
 
     private RegistryProvider<? extends T> newRegistryProvider(long timeout, TimeUnit unit) {

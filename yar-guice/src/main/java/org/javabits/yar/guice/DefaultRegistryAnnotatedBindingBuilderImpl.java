@@ -76,7 +76,7 @@ class DefaultRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBin
 
     private RegistryProvider<BlockingSupplier<T>> bindSuppliers() {
         Key<BlockingSupplier<T>> blockingSupplierKey = newBlockingSupplierKey();
-        BlockingSupplierRegistryProvider<BlockingSupplier<T>> blockingSupplierRegistryProvider = BlockingSupplierRegistryProvider.newProviderOf(blockingSupplierKey);
+        BlockingSupplierRegistryProvider<T> blockingSupplierRegistryProvider = BlockingSupplierRegistryProvider.newProviderOf(key());
         binder().bind(blockingSupplierKey).toProvider(blockingSupplierRegistryProvider);
         Key<Supplier<T>> yarSupplierKey = newYarSupplierKey();
         binder().bind(yarSupplierKey).to(blockingSupplierKey);

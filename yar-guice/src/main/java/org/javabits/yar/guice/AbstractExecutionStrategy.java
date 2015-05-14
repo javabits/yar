@@ -84,6 +84,19 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
         }
     }
 
+    public static ExecutionStrategy newExecutionStrategy(Type strategy) {
+        switch (strategy) {
+            case SAME_THREAD:
+                return new SameThread();
+            case PARALLEL:
+                return new Parallel();
+            case SERIALIZED:
+                return new Serialized();
+            default:
+                throw new IllegalArgumentException("Unknown strategy type: " + strategy);
+        }
+    }
+
     private static class DaemonThreadFactory implements ThreadFactory {
         final ThreadGroup group;
         final AtomicInteger threadNumber = new AtomicInteger(1);
@@ -108,18 +121,6 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
         }
     }
 
-    static ExecutionStrategy newExecutionStrategy(Type strategy) {
-        switch (strategy) {
-            case SAME_THREAD:
-                return new SameThread();
-            case PARALLEL:
-                return new Parallel();
-            case SERIALIZED:
-                return new Serialized();
-            default:
-                throw new IllegalArgumentException("Unknown strategy type: " + strategy);
-        }
-    }
 
     @VisibleForTesting
     private static class SameThread extends AbstractExecutionStrategy {
