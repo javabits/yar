@@ -51,9 +51,13 @@ class BlockingSupplierRegistryProvider<T> implements RegistryProvider<BlockingSu
     @SuppressWarnings("unchecked")
     public BlockingSupplier<T> get() {
         if (blockingSupplier == null) {
-            blockingSupplier = registry.get(id);
+            init();
         }
         return blockingSupplier;
+    }
+
+    private void init() {
+        blockingSupplier = registry.get(id);
     }
 
     @SuppressWarnings("unchecked")
@@ -73,6 +77,7 @@ class BlockingSupplierRegistryProvider<T> implements RegistryProvider<BlockingSu
     @Inject
     public void setRegistry(org.javabits.yar.BlockingSupplierRegistry registry) {
         this.registry = registry;
+        init();
     }
 
     @Override
