@@ -31,6 +31,8 @@ class BlockingSupplierRegistryProvider<T> implements RegistryProvider<BlockingSu
 
     private final Id<T> id;
     private org.javabits.yar.BlockingSupplierRegistry registry;
+    // use no fence to avoid monitor usage
+    private BlockingSupplier<T> blockingSupplier;
 
     BlockingSupplierRegistryProvider(Id<T> id) {
         this.id = id;
@@ -48,7 +50,10 @@ class BlockingSupplierRegistryProvider<T> implements RegistryProvider<BlockingSu
     @Override
     @SuppressWarnings("unchecked")
     public BlockingSupplier<T> get() {
-        return registry.get(id);
+        if (blockingSupplier == null) {
+            blockingSupplier = registry.get(id);
+        }
+        return blockingSupplier;
     }
 
     @SuppressWarnings("unchecked")
