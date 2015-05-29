@@ -19,9 +19,13 @@ package org.javabits.yar.guice;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import com.google.inject.util.Types;
+import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.Supplier;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 
 /**
  * TODO comment
@@ -41,24 +45,46 @@ public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends Regi
     }
 
     @Override
-    public void toRegistry(long timeout, TimeUnit unit) {
-        linkedBindingBuilder().toProvider(newRegistryProvider(timeout, unit));
-    }
-
-    @Override
     Iterable<RegistryProvider<?>> doToRegistry() {
         RegistryProvider<T> registryProvider = newRegistryProvider();
         linkedBindingBuilder().toProvider(registryProvider);
+        bindOtherSuppliers(registryProvider);
         return Collections.<RegistryProvider<?>>singleton(registryProvider);
     }
+
+    void bindOtherSuppliers(RegistryProvider registryProvider) {
+        bind(BlockingSupplier.class, registryProvider);
+        bind(Supplier.class, registryProvider);
+        bind(java.util.function.Supplier.class, registryProvider);
+        bind(com.google.common.base.Supplier.class, registryProvider);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void bind(Class<?> rawType, RegistryProvider registryProvider) {
+        if(!rawType.isAssignableFrom(key().getTypeLiteral().getRawType())) {
+            binder().bind(getKey(rawType)).toProvider(registryProvider);
+        }
+    }
+
+    private Key getKey(Type rawType) {
+        ParameterizedType parameterizedType = Types.newParameterizedType(rawType, getParametrizedType(key().getTypeLiteral().getType()));
+        return Keys.of(parameterizedType, key());
+    }
+
 
     @SuppressWarnings("unchecked")
     private RegistryProvider<T> newRegistryProvider() {
         return BlockingSupplierRegistryProvider.newProvider((Key)key());
     }
 
-    private RegistryProvider<? extends T> newRegistryProvider(long timeout, TimeUnit unit) {
-        return newRegistryProvider();
+    private static Type getParametrizedType(Type type) {
+        ParameterizedType parameterizedType = (ParameterizedType) type;
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+        if (actualTypeArguments.length != 1) {
+            throw new IllegalArgumentException("Supplier type must be mono parameterized: " + type);
+        }
+
+        return actualTypeArguments[0];
     }
 
 }

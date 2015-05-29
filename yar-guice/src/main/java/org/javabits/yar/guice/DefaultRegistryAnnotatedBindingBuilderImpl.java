@@ -25,7 +25,6 @@ import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Supplier;
 
 import java.lang.reflect.ParameterizedType;
-import java.util.concurrent.TimeUnit;
 
 /**
  * This binding builder will handle the classic binding to and from the registry.
@@ -58,12 +57,6 @@ class DefaultRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBin
 
     DefaultRegistryAnnotatedBindingBuilderImpl(Binder binder, Class<T> clazz) {
         super(binder, clazz);
-    }
-
-    @Override
-    public void toRegistry(long timeout, TimeUnit unit) {
-        linkedBindingBuilder().toProvider(newRegistryProvider(timeout, unit));
-        bindSuppliers();
     }
 
     @Override
@@ -103,10 +96,6 @@ class DefaultRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBin
     private Key<BlockingSupplier<T>> newBlockingSupplierKey() {
         ParameterizedType blockingSupplierType = Types.newParameterizedType(BlockingSupplier.class, key().getTypeLiteral().getType());
         return Keys.of(blockingSupplierType, key());
-    }
-
-    private RegistryProvider<? extends T> newRegistryProvider(long timeout, TimeUnit unit) {
-        return new RegistryProviderImpl<>(key(), timeout, unit);
     }
 
     private RegistryProvider<T> newRegistryProvider() {

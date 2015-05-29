@@ -32,7 +32,6 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
@@ -54,11 +53,6 @@ public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryA
 
 
     @Override
-    public void toRegistry(long timeout, TimeUnit unit) {
-        linkedBindingBuilder().toProvider(newRegistryProvider(timeout, unit));
-    }
-
-    @Override
     Iterable<RegistryProvider<?>> doToRegistry() {
         RegistryProvider<T> registryProvider = newRegistryProvider();
         linkedBindingBuilder().toProvider(registryProvider);
@@ -67,10 +61,6 @@ public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryA
 
     RegistryProvider<T> newRegistryProvider() {
         return new CollectionsRegistryProvider<>(key(), isLaxTypeBinding());
-    }
-
-    RegistryProvider<? extends T> newRegistryProvider(long timeout, TimeUnit unit) {
-        return newRegistryProvider();
     }
 
     private static class CollectionsRegistryProvider<T> implements RegistryProvider<T> {

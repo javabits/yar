@@ -8,7 +8,6 @@ import com.google.inject.binder.ScopedBindingBuilder;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.util.concurrent.TimeUnit;
 
 import static java.util.Objects.requireNonNull;
 
@@ -70,8 +69,6 @@ abstract class RegistryAnnotatedBindingBuilderImpl<T> implements RegistryAnnotat
         Iterable<RegistryProvider<?>> registryProviders = doToRegistry();
         return new RegistryBindingBuilderImpl<>(registryProviders);
     }
-
-    public abstract void toRegistry(long timeout, TimeUnit unit);
 
     abstract Iterable<RegistryProvider<?>> doToRegistry();
 

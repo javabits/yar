@@ -27,7 +27,6 @@ import org.mockito.runners.MockitoJUnitRunner;
 import java.lang.InterruptedException;
 
 import static java.util.concurrent.TimeUnit.DAYS;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -120,51 +119,4 @@ public class RegistryProviderImplTest {
             assertThat(Thread.interrupted(), is(true));        }
     }
 
-    @Test
-    public void testDefineTimeoutAtBindingTime() throws Exception {
-        //given
-        when(registry.get(GuiceId.of(STRING_KEY))).thenReturn(blockingSupplier);
-        when(blockingSupplier.getSync(2L, MINUTES)).thenReturn("test");
-        //when
-        RegistryProviderImpl<String> provider = new RegistryProviderImpl<>(STRING_KEY, 2, MINUTES);
-        provider.setRegistry(registry);
-        String value = provider.get();
-        assertThat(value, is("test"));
-    }
-
-    @Test
-    public void testExceptionWithDefineTimeoutAtBindingTime() throws Exception {
-        //given
-        when(registry.get(GuiceId.of(STRING_KEY))).thenReturn(blockingSupplier);
-        doThrow(java.util.concurrent.TimeoutException.class).when(blockingSupplier).getSync(2L, MINUTES);
-        //when
-        RegistryProviderImpl<String> provider = new RegistryProviderImpl<>(STRING_KEY, 2, MINUTES);
-        provider.setRegistry(registry);
-        try {
-            provider.get();
-            Assert.fail("Expected " + TimeoutException.class.getName() + " exception.");
-        } catch (TimeoutException e) {
-            //then
-            assertThat(e.getTimeout(), is(2l));
-            assertThat(e.getUnit(), is(MINUTES));
-            assertThat(e.getMessage(), containsString("" + 2 + " " + MINUTES));
-        }
-    }
-
-    @Test
-    public void testExceptionInterruptedWithDefineTimeoutAtBindingTime() throws Exception {
-        //given
-        when(registry.get(GuiceId.of(STRING_KEY))).thenReturn(blockingSupplier);
-        doThrow(InterruptedException.class).when(blockingSupplier).getSync(2L, MINUTES);
-        //when
-        RegistryProviderImpl<String> provider = new RegistryProviderImpl<>(STRING_KEY, 2, MINUTES);
-        provider.setRegistry(registry);
-        try {
-            provider.get();
-            Assert.fail("Expected " + org.javabits.yar.InterruptedException.class.getName() + " exception.");
-        } catch (org.javabits.yar.InterruptedException e) {
-            //then test and clear the interrupted status
-            assertThat(Thread.interrupted(), is(true));
-        }
-    }
 }

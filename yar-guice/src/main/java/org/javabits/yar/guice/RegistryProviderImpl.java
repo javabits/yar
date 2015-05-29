@@ -8,13 +8,10 @@ import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.BlockingSupplierRegistry;
 
 import javax.annotation.Nullable;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import static org.javabits.yar.InterruptedException.newInterruptedException;
 import static org.javabits.yar.TimeoutException.newTimeoutException;
-import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.DEFAULT_TIMEOUT;
-import static org.javabits.yar.guice.BlockingSupplierRegistryImpl.DEFAULT_TIME_UNIT;
 
 /**
  * This class is an adapter between the {@link BlockingSupplier} interface and
@@ -38,11 +35,6 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
     RegistryProviderImpl(Key<T> key) {
         this.key = key;
         supplierGetStrategy = new DefaultSynchronousStrategy();
-    }
-
-    RegistryProviderImpl(Key<T> key, long timeout, TimeUnit timeUnit) {
-        this.key = key;
-        supplierGetStrategy = new SynchronousStrategy(timeout, timeUnit);
     }
 
     Key<T> key() {
@@ -88,29 +80,6 @@ class RegistryProviderImpl<T> implements RegistryProvider<T> {
             } catch (TimeoutException e) {
                 throw newTimeoutException(blockingSupplier.defaultTimeout()
                         , blockingSupplier.defaultTimeUnit(), e);
-            }
-        }
-    }
-
-    private class SynchronousStrategy implements Function<BlockingSupplier<T>, T> {
-
-        private final long timeout;
-        private final TimeUnit timeUnit;
-
-        private SynchronousStrategy(long timeout, TimeUnit timeUnit) {
-            this.timeout = timeout;
-            this.timeUnit = timeUnit;
-        }
-
-        @Nullable
-        @Override
-        public T apply(BlockingSupplier<T> supplier) {
-            try {
-                return supplier.getSync(timeout, timeUnit);
-            } catch (InterruptedException e) {
-                throw newInterruptedException(e);
-            } catch (TimeoutException e) {
-                throw newTimeoutException(timeout, timeUnit, e);
             }
         }
     }

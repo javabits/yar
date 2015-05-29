@@ -18,8 +18,6 @@ package org.javabits.yar.guice;
 
 import com.google.inject.binder.LinkedBindingBuilder;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * TODO comment
  * Date: 2/9/13
@@ -38,5 +36,4 @@ public interface RegistryLinkedBindingBuilder<T> extends LinkedBindingBuilder<T>
      */
     RegistryBindingBuilder toRegistry();
 
-    void toRegistry(long timeout, TimeUnit unit);
 }

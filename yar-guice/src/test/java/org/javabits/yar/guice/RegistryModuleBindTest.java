@@ -25,9 +25,10 @@ import org.javabits.yar.*;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
+import java.lang.InterruptedException;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -53,7 +54,7 @@ public class RegistryModuleBindTest {
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(MyInterface.class).toRegistry(100, TimeUnit.MICROSECONDS);
+                bind(MyInterface.class).toRegistry();
             }
         });
         assertThat(injector.getInstance(MyInterface.class), is(not(nullValue())));
@@ -103,7 +104,7 @@ public class RegistryModuleBindTest {
     }
 
     @Test
-    public void testBindWithAnnotation() {
+    public void testBindWithAnnotation() throws Exception {
         final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         final Named test = Names.named("test");
@@ -113,9 +114,10 @@ public class RegistryModuleBindTest {
         Injector injector = Guice.createInjector(module, new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(key).toRegistry(100, TimeUnit.MICROSECONDS);
+                bind(key).toRegistry();
             }
         });
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>(){},test)).getSync(100, TimeUnit.MICROSECONDS), is(not(nullValue())));
         assertThat(injector.getInstance(key), is(not(nullValue())));
     }
 
@@ -192,7 +194,7 @@ public class RegistryModuleBindTest {
     }
 
     @Test
-    public void testBindSupplierWithAnnotation() {
+    public void testBindSupplierWithAnnotation() throws java.util.concurrent.TimeoutException, InterruptedException {
         final BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         Module module = newRegistryDeclarationModule(registry);
         final Named test = Names.named("test");
@@ -204,12 +206,13 @@ public class RegistryModuleBindTest {
         RegistryModule supplierBindingRegistryModule = new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(supplierKey).toRegistry(100, TimeUnit.MICROSECONDS);
+                bind(supplierKey).toRegistry();
             }
         };
         Injector injector = createInjector(module, supplierBindingRegistryModule);
         Supplier<MyInterface> supplier = injector.getInstance(supplierKey);
         assertThat(supplier, is(not(nullValue())));
+        assertThat(injector.getInstance(Key.get(new TypeLiteral<BlockingSupplier<MyInterface>>(){},test)).getSync(100, TimeUnit.MICROSECONDS), is(not(nullValue())));
         assertThat(supplier.get(), is(not(nullValue())));
 
     }
@@ -224,7 +227,7 @@ public class RegistryModuleBindTest {
         RegistryModule supplierBindingRegistryModule = new RegistryModule() {
             @Override
             protected void configureRegistry() {
-                bind(supplierTypeLiteral).toRegistry(100, TimeUnit.MICROSECONDS);
+                bind(supplierTypeLiteral).toRegistry();
             }
         };
         Injector injector = createInjector(module, supplierBindingRegistryModule);
