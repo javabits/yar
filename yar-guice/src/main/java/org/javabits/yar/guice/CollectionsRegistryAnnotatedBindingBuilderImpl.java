@@ -23,6 +23,8 @@ import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import com.google.inject.binder.AnnotatedBindingBuilder;
+import com.google.inject.binder.LinkedBindingBuilder;
 import org.javabits.yar.Ids;
 import org.javabits.yar.Registry;
 import org.javabits.yar.Supplier;
@@ -43,12 +45,12 @@ import static java.util.Objects.requireNonNull;
  * @author Romain Gilles
  */
 public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBindingBuilderImpl<T> {
-    public CollectionsRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key) {
-        super(binder, key);
+    public CollectionsRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key, LinkedBindingBuilder<T> bindingBuilder) {
+        super(binder, key, bindingBuilder);
     }
 
-    public CollectionsRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral) {
-        super(binder, typeLiteral);
+    public CollectionsRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder) {
+        super(binder, typeLiteral, bindingBuilder);
     }
 
 

@@ -2,7 +2,9 @@ package org.javabits.yar.guice;
 
 import com.google.common.annotations.Beta;
 import com.google.inject.*;
+import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.AnnotatedConstantBindingBuilder;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.spi.*;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -75,17 +77,20 @@ class RegistryBinderImpl implements RegistryBinder {
 
     @Override
     public <T> RegistryLinkedBindingBuilder<T> bind(Key<T> key) {
-        return getRegistryBindingBuilderFactory(key).newFrom(key);
+        LinkedBindingBuilder<T> bindingBuilder = binder.bind(key);
+        return getRegistryBindingBuilderFactory(key).newFrom(key, bindingBuilder);
     }
 
     @Override
     public <T> RegistryAnnotatedBindingBuilder<T> bind(TypeLiteral<T> typeLiteral) {
-        return getRegistryBindingBuilderFactory(typeLiteral).newFrom(typeLiteral);
+        AnnotatedBindingBuilder<T> bindingBuilder = binder.bind(typeLiteral);
+        return getRegistryBindingBuilderFactory(typeLiteral).newFrom(typeLiteral, bindingBuilder);
     }
 
     @Override
     public <T> RegistryAnnotatedBindingBuilder<T> bind(Class<T> clazz) {
-        return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, clazz);
+        AnnotatedBindingBuilder<T> bindingBuilder = binder.bind(clazz);
+        return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, clazz, bindingBuilder);
     }
 
     //Guice Binder delegation ------------------------------------------------
@@ -263,44 +268,44 @@ class RegistryBinderImpl implements RegistryBinder {
     }
 
     private interface RegistryBindingBuilderFactory {
-        <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral);
+        <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder);
 
-        <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key);
+        <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key, LinkedBindingBuilder<T> bindingBuilder);
     }
 
     private class SimpleRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
         @Override
-        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral);
+        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder) {
+            return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral, bindingBuilder);
         }
 
         @Override
-        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, key);
+        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key, LinkedBindingBuilder<T> bindingBuilder) {
+            return new DefaultRegistryAnnotatedBindingBuilderImpl<>(binder, key, bindingBuilder);
         }
     }
 
     private class BlockingSupplierRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
         @Override
-        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral);
+        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder) {
+            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral, bindingBuilder);
         }
 
         @Override
-        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder, key);
+        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key, LinkedBindingBuilder<T> bindingBuilder) {
+            return new BlockingSupplierRegistryAnnotatedBindingBuilderImpl<>(binder, key, bindingBuilder);
         }
     }
 
     private class CollectionsRegistryBindingBuilderFactory implements RegistryBindingBuilderFactory {
         @Override
-        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral) {
-            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral);
+        public <T> RegistryAnnotatedBindingBuilder<T> newFrom(TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder) {
+            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder, typeLiteral, bindingBuilder);
         }
 
         @Override
-        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key) {
-            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder, key);
+        public <T> RegistryLinkedBindingBuilder<T> newFrom(Key<T> key, LinkedBindingBuilder<T> bindingBuilder) {
+            return new CollectionsRegistryAnnotatedBindingBuilderImpl<>(binder, key, bindingBuilder);
         }
     }
 }

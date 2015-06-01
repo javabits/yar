@@ -3,6 +3,7 @@ package org.javabits.yar.guice;
 import com.google.inject.*;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
+import com.google.inject.binder.AnnotatedBindingBuilder;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.binder.ScopedBindingBuilder;
 
@@ -27,23 +28,29 @@ abstract class RegistryAnnotatedBindingBuilderImpl<T> implements RegistryAnnotat
     private LinkedBindingBuilder<T> linkedBindingBuilder;
     //Lax type binding represent qualified versus non qualified types
     private boolean laxTypeBinding = false;
+    private AnnotatedBindingBuilder<T> annotatedBindingBuilder;
 
-    RegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key) {
+
+    RegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key, LinkedBindingBuilder<T> bindingBuilder) {
         this.binder = requireNonNull(binder, "binder");
         this.key = requireNonNull(key, "key");
         laxTypeBinding = false;
+        annotatedBindingBuilder = null;
+        linkedBindingBuilder = bindingBuilder;
     }
 
-    RegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral) {
+    RegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder) {
         this.binder = requireNonNull(binder, "binder");
         key = Key.get(typeLiteral);
         laxTypeBinding = true;
+        linkedBindingBuilder = annotatedBindingBuilder = bindingBuilder;
     }
 
-    RegistryAnnotatedBindingBuilderImpl(Binder binder, Class<T> clazz) {
+    RegistryAnnotatedBindingBuilderImpl(Binder binder, Class<T> clazz, AnnotatedBindingBuilder<T> bindingBuilder) {
         this.binder = requireNonNull(binder, "binder");
         key = Key.get(clazz);
         laxTypeBinding = true;
+        linkedBindingBuilder = annotatedBindingBuilder = bindingBuilder;
     }
 
     Key<T> key() {
@@ -54,6 +61,7 @@ abstract class RegistryAnnotatedBindingBuilderImpl<T> implements RegistryAnnotat
     public RegistryLinkedBindingBuilder<T> annotatedWith(Class<? extends Annotation> annotationType) {
         key = Key.get(key.getTypeLiteral(), annotationType);
         laxTypeBinding = false;
+        linkedBindingBuilder = annotatedBindingBuilder.annotatedWith(annotationType);
         return this;
     }
 
@@ -61,6 +69,7 @@ abstract class RegistryAnnotatedBindingBuilderImpl<T> implements RegistryAnnotat
     public RegistryLinkedBindingBuilder<T> annotatedWith(Annotation annotation) {
         key = Key.get(key.getTypeLiteral(), annotation);
         laxTypeBinding = false;
+        linkedBindingBuilder = annotatedBindingBuilder.annotatedWith(annotation);
         return this;
     }
 
@@ -153,11 +162,7 @@ abstract class RegistryAnnotatedBindingBuilderImpl<T> implements RegistryAnnotat
     }
 
     LinkedBindingBuilder<T> linkedBindingBuilder() {
-        return linkedBindingBuilder = linkedBindingBuilder == null ? newLinkedBindingBuilder() : linkedBindingBuilder;
-    }
-
-    private LinkedBindingBuilder<T> newLinkedBindingBuilder() {
-        return binder().bind(key);
+        return requireNonNull(linkedBindingBuilder, "linkedBindingBuilder");
     }
 
     Binder binder() {

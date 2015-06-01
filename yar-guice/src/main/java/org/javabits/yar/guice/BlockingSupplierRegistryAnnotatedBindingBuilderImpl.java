@@ -19,6 +19,8 @@ package org.javabits.yar.guice;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import com.google.inject.binder.AnnotatedBindingBuilder;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.util.Types;
 import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Supplier;
@@ -36,12 +38,12 @@ import java.util.Collections;
  */
 public class BlockingSupplierRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBindingBuilderImpl<T> {
 
-    public BlockingSupplierRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key) {
-        super(binder, key);
+    public BlockingSupplierRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key, LinkedBindingBuilder<T> bindingBuilder) {
+        super(binder, key, bindingBuilder);
     }
 
-    public BlockingSupplierRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral) {
-        super(binder, typeLiteral);
+    public BlockingSupplierRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder) {
+        super(binder, typeLiteral, bindingBuilder);
     }
 
     @Override

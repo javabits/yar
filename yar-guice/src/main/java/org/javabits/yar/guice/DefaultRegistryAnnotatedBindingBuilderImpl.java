@@ -20,6 +20,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.Binder;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
+import com.google.inject.binder.AnnotatedBindingBuilder;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.util.Types;
 import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.Supplier;
@@ -47,21 +49,22 @@ import java.lang.reflect.ParameterizedType;
  */
 class DefaultRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBindingBuilderImpl<T> {
 
-    DefaultRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key) {
-        super(binder, key);
+    DefaultRegistryAnnotatedBindingBuilderImpl(Binder binder, Key<T> key,LinkedBindingBuilder<T> bindingBuilder) {
+        super(binder, key, bindingBuilder);
     }
 
-    DefaultRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral) {
-        super(binder, typeLiteral);
+    DefaultRegistryAnnotatedBindingBuilderImpl(Binder binder, TypeLiteral<T> typeLiteral, AnnotatedBindingBuilder<T> bindingBuilder) {
+        super(binder, typeLiteral, bindingBuilder);
     }
 
-    DefaultRegistryAnnotatedBindingBuilderImpl(Binder binder, Class<T> clazz) {
-        super(binder, clazz);
+    DefaultRegistryAnnotatedBindingBuilderImpl(Binder binder, Class<T> clazz, AnnotatedBindingBuilder<T> bindingBuilder) {
+        super(binder, clazz, bindingBuilder);
     }
 
     @Override
     Iterable<RegistryProvider<?>> doToRegistry() {
         RegistryProvider<T> registryProvider = newRegistryProvider();
+
         linkedBindingBuilder().toProvider(registryProvider);
         RegistryProvider<BlockingSupplier<T>> blockingSupplierRegistryProvider = bindSuppliers();
         return ImmutableList.of(registryProvider, blockingSupplierRegistryProvider);
