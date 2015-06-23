@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.javabits.yar</groupId>
         <artifactId>yar</artifactId>
-        <version>1.0-SNAPSHOT</version>
+        <version>1.0.0.RELEASE</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
