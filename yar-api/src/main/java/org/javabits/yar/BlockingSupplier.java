@@ -1,9 +1,8 @@
 package org.javabits.yar;
 
-import com.google.common.util.concurrent.ListenableFuture;
-
 import javax.annotation.Nullable;
 import java.lang.InterruptedException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -15,7 +14,7 @@ import java.util.concurrent.TimeoutException;
 public interface BlockingSupplier<T> extends Supplier<T> {
     /**
      * Retrieves the instance of {@code T} from the registry.
-     * <p/>
+     * <p>
      * This is a non-blocking call.
      *
      * @return the instance of {@code T}, or <code>null</code> if no corresponding registration.
@@ -52,11 +51,12 @@ public interface BlockingSupplier<T> extends Supplier<T> {
      *
      * @return an instance of future result.
      */
-    ListenableFuture<T> getAsync();
+    CompletableFuture<T> getAsync();
 
     /**
      * Returns the default timeout used for blocking operations.
      * The associated time unit is provided by {@link #defaultTimeUnit()}.
+     *
      * @return default timeout used for blocking operations.
      * @see #defaultTimeUnit()
      */
@@ -65,6 +65,7 @@ public interface BlockingSupplier<T> extends Supplier<T> {
     /**
      * Returns the default time unit used for blocking operations.
      * The associated timeout is provided by {@link #defaultTimeout()}.
+     *
      * @return default timeout used for blocking operations.
      * @see #defaultTimeout()
      */

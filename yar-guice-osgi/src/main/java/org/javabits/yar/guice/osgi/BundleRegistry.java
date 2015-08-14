@@ -4,11 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import com.google.common.reflect.TypeToken;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.*;
-import org.javabits.yar.Supplier;
 import org.javabits.yar.guice.SupplierWrapper;
 import org.osgi.framework.Bundle;
 
@@ -18,20 +14,22 @@ import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.util.concurrent.Futures.addCallback;
 
 /**
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
  * It must remove all the remaining suppliers and watchers/listeners. And finally invalidate
  * the entries associated a type whose the stopping bundle is the owner.
- * <p/>
+ * <p>
  * Date: 5/29/13
  * Time: 9:42 AM
  *
@@ -150,9 +148,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         if (!mutable.get()) {
             return;
         }
-        for (Registration<?> registration : registrations) {
-            supplierRegistrations.remove(registration);
-        }
+        registrations.forEach(supplierRegistrations::remove);
         delegate.removeAll(registrations);
     }
 
@@ -185,9 +181,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         if (!mutable.get()) {
             return;
         }
-        for (Registration<?> watcherRegistration : watcherRegistrations) {
-            this.watcherRegistrations.remove(watcherRegistration);
-        }
+        watcherRegistrations.forEach(this.watcherRegistrations::remove);
         delegate.removeAllWatchers(watcherRegistrations);
     }
 
@@ -211,12 +205,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
     }
 
     private static <T> Registration<T> newNullRegistration(final Id<T> id) {
-        return new Registration<T>() {
-            @Override
-            public Id<T> id() {
-                return id;
-            }
-        };
+        return () -> id;
     }
 
     @Override
@@ -265,8 +254,8 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         return blockingSupplier == null ? null : new BlockingSupplierDecorator<>(blockingSupplier);
     }
 
-    private <T> OSGiGuavaWrapper<T> newGuavaWrapper(com.google.common.base.Supplier<T> nativeSupplier) {
-        return new OSGiGuavaWrapper<>(nativeSupplier, bundle);
+    private <T> OSGiSupplierWrapper<T> newGuavaWrapper(com.google.common.base.Supplier<T> nativeSupplier) {
+        return new OSGiSupplierWrapper<>(nativeSupplier, bundle);
     }
 
     private <T> List<Supplier<T>> transformToBundleSuppliers(List<Supplier<T>> suppliers) {
@@ -289,12 +278,12 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
 
     private static <T> Bundle bundle(Supplier<T> delegate) {
         com.google.common.base.Supplier<? extends T> nativeSupplier = delegate.getNativeSupplier();
-        while (nativeSupplier instanceof SupplierWrapper && !(nativeSupplier instanceof OSGiGuavaWrapper)) {
+        while (nativeSupplier instanceof SupplierWrapper && !(nativeSupplier instanceof OSGiSupplierWrapper)) {
             nativeSupplier = getWrapped(nativeSupplier);
         }
 
-        if (nativeSupplier instanceof OSGiGuavaWrapper) {
-            return ((OSGiGuavaWrapper) nativeSupplier).getBundle();
+        if (nativeSupplier instanceof OSGiSupplierWrapper) {
+            return ((OSGiSupplierWrapper) nativeSupplier).getBundle();
         } else {
             return null;
         }
@@ -360,11 +349,11 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         }
     }
 
-    private static final class OSGiGuavaWrapper<T> implements com.google.common.base.Supplier<T>, org.javabits.yar.guice.SupplierWrapper<T> {
+    private static final class OSGiSupplierWrapper<T> implements com.google.common.base.Supplier<T>, org.javabits.yar.guice.SupplierWrapper<T> {
         private final com.google.common.base.Supplier<T> delegate;
         private final Bundle bundle;
 
-        private OSGiGuavaWrapper(com.google.common.base.Supplier<T> delegate, Bundle bundle) {
+        private OSGiSupplierWrapper(com.google.common.base.Supplier<T> delegate, Bundle bundle) {
             this.delegate = delegate;
             this.bundle = bundle;
         }
@@ -385,7 +374,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
 
         @Override
         public String toString() {
-            return "OSGiGuavaWrapper{" +
+            return "OSGiSupplierWrapper{" +
                     "delegate=" + delegate +
                     ", bundle=" + bundle +
                     '}';
@@ -416,23 +405,8 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         }
 
         @Override
-        public ListenableFuture<T> getAsync() {
-            final SettableFuture<T> future = SettableFuture.create();
-
-            // The future callback will be executed either on the current thread (if the future is
-            // already completed) or on the registry's action handler thread.
-            addCallback(delegate.getAsync(), new FutureCallback<T>() {
-                @Override
-                public void onSuccess(T instance) {
-                    future.set(injectAware(instance));
-                }
-
-                @Override
-                public void onFailure(Throwable t) {
-                }
-            });
-
-            return future;
+        public CompletableFuture<T> getAsync() {
+            return delegate.getAsync().thenApply(BundleRegistry.this::injectAware);
         }
 
         @Override

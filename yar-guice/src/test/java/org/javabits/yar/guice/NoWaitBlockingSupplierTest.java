@@ -1,18 +1,12 @@
 package org.javabits.yar.guice;
 
-import com.google.common.base.*;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import org.javabits.yar.*;
-import org.javabits.yar.Supplier;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.not;
-import static org.hamcrest.Matchers.nullValue;
+import static org.hamcrest.Matchers.*;
 import static org.javabits.yar.SupplierEvent.Type.ADD;
 
 /**
@@ -33,15 +27,9 @@ public class NoWaitBlockingSupplierTest {
     @Test
     public void testDirectInitNullAndThenSet() throws Exception {
         final Boolean[] set = {null};
-        ListeningExecutorService listeningExecutorService = MoreExecutors.sameThreadExecutor();
         final NoWaitBlockingSupplier<MyInterface> supplier = new NoWaitBlockingSupplier<>(id, null);
         assertThat(supplier.get(), is(nullValue()));
-        supplier.getAsync().addListener(new Runnable() {
-            @Override
-            public void run() {
-                set[0] = supplier.get() != null;
-            }
-        }, listeningExecutorService);
+        supplier.getAsync().thenRun(() -> set[0] = supplier.get() != null);
         assertThat(set[0], is(nullValue()));
         supplier.supplierChanged(new SupplierEvent(ADD, new Supplier<MyInterface>() {
 

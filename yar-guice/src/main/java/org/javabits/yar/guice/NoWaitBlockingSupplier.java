@@ -1,23 +1,17 @@
 package org.javabits.yar.guice;
 
-import static com.google.common.util.concurrent.Futures.addCallback;
-import static org.javabits.yar.Registry.DEFAULT_TIMEOUT;
-import static org.javabits.yar.Registry.DEFAULT_TIME_UNIT;
+import com.google.common.util.concurrent.SettableFuture;
+import org.javabits.yar.*;
 
+import javax.annotation.Nullable;
 import java.lang.InterruptedException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 
-import javax.annotation.Nullable;
-
-import com.google.common.base.*;
-import org.javabits.yar.*;
-
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import org.javabits.yar.Supplier;
+import static org.javabits.yar.Registry.DEFAULT_TIMEOUT;
+import static org.javabits.yar.Registry.DEFAULT_TIME_UNIT;
 
 /**
  * @author Romain Gilles Date: 5/31/13 Time: 2:08 PM
@@ -26,16 +20,16 @@ public class NoWaitBlockingSupplier<T> implements BlockingSupplier<T>, SupplierL
 
     private final Id<T> id;
     private final AtomicReference<Supplier<T>> supplierReference;
-    private final AtomicReference<SettableFuture<Supplier<T>>> supplierFutureRef;
+    private final AtomicReference<CompletableFuture<Supplier<T>>> supplierFutureRef;
 
     public NoWaitBlockingSupplier(Id<T> id, final Supplier<T> supplier) {
         this.id = id;
         supplierReference = new AtomicReference<>(supplier);
         supplierFutureRef = new AtomicReference<>();
-        SettableFuture<Supplier<T>> settableFuture = SettableFuture.create();
-        supplierFutureRef.set(settableFuture);
         if (supplier != null) {
-            settableFuture.set(supplier);
+            supplierFutureRef.set(CompletableFuture.completedFuture(supplier));
+        } else {
+            supplierFutureRef.set(new CompletableFuture<>());
         }
     }
 
@@ -57,21 +51,8 @@ public class NoWaitBlockingSupplier<T> implements BlockingSupplier<T>, SupplierL
     }
 
     @Override
-    public ListenableFuture<T> getAsync() {
-        final SettableFuture<T> future = SettableFuture.create();
-        // The future callback will be executed either on the current thread (if the future is
-        // already completed) or on the registry's action handler thread.
-        addCallback(supplierFutureRef.get(), new FutureCallback<Supplier<T>>() {
-            @Override
-            public void onSuccess(Supplier<T> supplier) {
-                future.set(supplier.get());
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-            }
-        });
-        return future;
+    public CompletableFuture<T> getAsync() {
+        return supplierFutureRef.get().thenApply(Supplier::get);
     }
 
     @Override
@@ -102,20 +83,21 @@ public class NoWaitBlockingSupplier<T> implements BlockingSupplier<T>, SupplierL
     @Override
     public void supplierChanged(SupplierEvent supplierEvent) {
         SupplierEvent.Type type = supplierEvent.type();
+        @SuppressWarnings("unchecked")
         Supplier<T> supplier = (Supplier<T>) supplierEvent.supplier();
         switch (type) {
-        case ADD:
-            if (supplierReference.compareAndSet(null, supplier)) {
-                supplierFutureRef.get().set(supplier);
-            }
-            break;
-        case REMOVE:
-            if (supplierReference.compareAndSet(supplier, null)) {
-                supplierFutureRef.set(SettableFuture.<Supplier<T>> create());
-            }
-            break;
-        default:
-            throw new IllegalStateException("Unknown supplier event: " + supplierEvent);
+            case ADD:
+                if (supplierReference.compareAndSet(null, supplier)) {
+                    supplierFutureRef.get().complete(supplier);
+                }
+                break;
+            case REMOVE:
+                if (supplierReference.compareAndSet(supplier, null)) {
+                    supplierFutureRef.set(new CompletableFuture<>());
+                }
+                break;
+            default:
+                throw new IllegalStateException("Unknown supplier event: " + supplierEvent);
         }
     }
 

@@ -1,25 +1,19 @@
 package org.javabits.yar.guice;
 
-import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.util.concurrent.Futures.addCallback;
-import static com.google.common.util.concurrent.Futures.getUnchecked;
+import org.javabits.yar.*;
 
+import javax.annotation.Nullable;
 import java.lang.InterruptedException;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-import javax.annotation.Nullable;
 
-import org.javabits.yar.*;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.SettableFuture;
-import org.javabits.yar.Supplier;
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.util.concurrent.Futures.getUnchecked;
+import static java.util.concurrent.CompletableFuture.completedFuture;
 
 class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, SupplierWrapper<T> {
-    private final AtomicReference<SettableFuture<Supplier<T>>> supplierRef;
+    private final AtomicReference<CompletableFuture<Supplier<T>>> supplierRef;
     private final Id<T> id;
     private final InternalRegistry registry;
 
@@ -84,23 +78,8 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, 
     }
 
     @Override
-    public ListenableFuture<T> getAsync() {
-        final SettableFuture<T> future = SettableFuture.create();
-
-        // The future callback will be executed either on the current thread (if the future is
-        // already completed) or on the registry's action handler thread.
-        addCallback(supplierRef.get(), new FutureCallback<Supplier<T>>() {
-            @Override
-            public void onSuccess(Supplier<T> supplier) {
-                future.set(supplier.get());
-            }
-
-            @Override
-            public void onFailure(Throwable t) {
-            }
-        });
-
-        return future;
+    public CompletableFuture<T> getAsync() {
+        return supplierRef.get().thenApply(Supplier::get);
     }
 
     @SuppressWarnings("unchecked")
@@ -109,24 +88,27 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, 
         SupplierEvent.Type type = supplierEvent.type();
         Supplier<T> supplier = (Supplier<T>) supplierEvent.supplier();
         switch (type) {
-        case ADD:
-            supplierRef.get().set(supplier);
-            break;
-        case REMOVE:
-            Future<Supplier<T>> future = supplierRef.get();
-            // Do not block on Future.get() here. Just check if the future is done.
-            if (future.isDone() && !future.isCancelled()) {
-                Supplier<T> currentSupplier = getUnchecked(future);
-                if (supplier.equals(currentSupplier)) {
-                    initSupplierRef();
+            case ADD:
+                CompletableFuture<Supplier<T>> completableFuture = supplierRef.get();
+                if (!completableFuture.isDone()) {
+                    completableFuture.complete(supplier);
                 }
-            } else if (future.isCancelled()) {
-                supplierRef.set(SettableFuture.<Supplier<T>>create());
-            }
-            // else nothing to do we preserve the previous one
-            break;
-        default:
-            throw new IllegalStateException("Unknown supplier event: " + supplierEvent);
+                break;
+            case REMOVE:
+                Future<Supplier<T>> future = supplierRef.get();
+                // Do not block on Future.get() here. Just check if the future is done.
+                if (future.isDone() && !future.isCancelled()) {
+                    Supplier<T> currentSupplier = getUnchecked(future);
+                    if (supplier.equals(currentSupplier)) {
+                        initSupplierRef();
+                    }
+                } else if (future.isCancelled()) {
+                    supplierRef.set(new CompletableFuture<>());
+                }
+                // else nothing to do we preserve the previous one
+                break;
+            default:
+                throw new IllegalStateException("Unknown supplier event: " + supplierEvent);
         }
     }
 
@@ -153,19 +135,23 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, 
 
     @Override
     public String toString() {
-        SettableFuture<Supplier<T>> delegateSupplier = supplierRef.get();
+        CompletableFuture<Supplier<T>> delegateSupplier = supplierRef.get();
         return "BlockingSupplierImpl{" +
                 "id=" + id +
-                ", delegate=" + (delegateSupplier != null? delegateSupplier.getClass().getName():"null") +
+                ", delegate=" + (delegateSupplier != null ? delegateSupplier.getClass().getName() : "null") +
                 '}';
     }
 
     private void initSupplierRef() {
-        SettableFuture<Supplier<T>> settableFuture = SettableFuture.create();
-        supplierRef.set(settableFuture);
         Supplier<T> supplier = registry.getDirectly(id);
+        initSupplierRef(supplier);
+    }
+
+    private void initSupplierRef(@Nullable Supplier<T> supplier) {
         if (supplier != null) {
-            settableFuture.set(supplier);
+            supplierRef.set(completedFuture(supplier));
+        } else {
+            supplierRef.set(new CompletableFuture<>());
         }
     }
 }

@@ -16,19 +16,17 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import org.javabits.yar.BlockingSupplier;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
 import org.javabits.yar.Ids;
 import org.junit.Test;
 
-import javax.inject.Provider;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -97,7 +95,7 @@ public class BlockingSupplierRegistryImplTest {
         final MyInterfaceImpl myService = new MyInterfaceImpl();
         final Lock lock = new ReentrantLock();
         @SuppressWarnings("unchecked")
-        final ListenableFuture<MyInterface>[] listenableFuture = new ListenableFuture[1];
+        final CompletableFuture<MyInterface>[] listenableFuture = new CompletableFuture[1];
         Thread thread = new Thread(() -> {
             lock.lock();
             try {
