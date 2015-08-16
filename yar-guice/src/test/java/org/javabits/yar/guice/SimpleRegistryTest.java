@@ -1,6 +1,7 @@
 package org.javabits.yar.guice;
 
-import com.google.common.base.Supplier;
+import java.util.Collections;
+import java.util.function.Supplier;
 import com.google.common.reflect.TypeToken;
 import org.javabits.yar.Id;
 import org.javabits.yar.Ids;
@@ -35,12 +36,7 @@ public class SimpleRegistryTest {
     public void testPutIdGuavaSupplier() {
         Id<String> id = Ids.newId(String.class);
         assertThat(registry.get(id), is(nullValue()));
-        registry.put(id, new Supplier<String>() {
-            @Override
-            public String get() {
-                return "test";
-            }
-        });
+        registry.put(id, () -> "test");
         assertThat(registry.get(id), is(not(nullValue())));
         assertThat(registry.get(id).get(), is("test"));
     }
@@ -49,12 +45,7 @@ public class SimpleRegistryTest {
     public void testPutIdYarSupplier() {
         final Id<String> id = Ids.newId(String.class);
         assertThat(registry.get(id), is(nullValue()));
-        registry.put(id, new Supplier<String>() {
-            @Override
-            public String get() {
-                return "test";
-            }
-        });
+        registry.put(id, () -> "test");
         assertThat(registry.get(id), is(not(nullValue())));
         assertThat(registry.get(id).get(), is("test"));
     }
@@ -64,12 +55,7 @@ public class SimpleRegistryTest {
         final Id<String> id = Ids.newId(String.class);
         assertThat(registry.get(id), is(nullValue()));
 
-        registry.put(id, GuiceSupplier.of(new Provider<String>() {
-            @Override
-            public String get() {
-                return "test";
-            }
-        }));
+        registry.put(id, GuiceSupplier.of(() -> "test"));
         assertThat(registry.get(id), is(not(nullValue())));
         assertThat(registry.get(id).get(), is("test"));
     }
@@ -101,12 +87,7 @@ public class SimpleRegistryTest {
         final Id<List<String>> id = GuiceId.of(type.getType(), null);
         assertThat(registry.get(id), is(nullValue()));
 
-        registry.put(id, GuiceSupplier.of(new Provider<List<String>>() {
-            @Override
-            public List<String> get() {
-                return emptyList();
-            }
-        }));
+        registry.put(id, GuiceSupplier.of(Collections::emptyList));
         assertThat(registry.get(type), is(not(nullValue())));
         assertThat(registry.get(type).get(), is((List) emptyList()));
     }
@@ -123,12 +104,7 @@ public class SimpleRegistryTest {
         final Id<String> id = GuiceId.of(type.getType(), null);
         assertThat(registry.get(id), is(nullValue()));
 
-        registry.put(id, GuiceSupplier.of(new Provider<String>() {
-            @Override
-            public String get() {
-                return "test";
-            }
-        }));
+        registry.put(id, GuiceSupplier.of(() -> "test"));
         assertThat(registry.getAll(type), is(not(nullValue())));
         assertThat(registry.getAll(type).size(), is(1));
         assertThat(registry.getAll(type).get(0).get(), is("test"));

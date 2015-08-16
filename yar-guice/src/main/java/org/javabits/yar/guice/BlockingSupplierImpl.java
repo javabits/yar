@@ -114,7 +114,7 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, 
 
     @Nullable
     @Override
-    public com.google.common.base.Supplier<T> getNativeSupplier() {
+    public java.util.function.Supplier<T> getNativeSupplier() {
         Future<Supplier<T>> future = supplierRef.get();
         // Do not block on Future.get() here. Just check if the future is done.
         if (future.isDone())
@@ -124,7 +124,7 @@ class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, 
     }
 
     @Override
-    public com.google.common.base.Supplier<T> getWrapped() {
+    public java.util.function.Supplier<T> getWrapped() {
         return getNativeSupplier();
     }
 

@@ -72,7 +72,7 @@ public class NoWaitBlockingSupplier<T> implements BlockingSupplier<T>, SupplierL
 
     @Nullable
     @Override
-    public com.google.common.base.Supplier<T> getNativeSupplier() {
+    public java.util.function.Supplier<T> getNativeSupplier() {
         return supplierReference.get();
     }
 
@@ -102,7 +102,7 @@ public class NoWaitBlockingSupplier<T> implements BlockingSupplier<T>, SupplierL
     }
 
     @Override
-    public com.google.common.base.Supplier<T> getWrapped() {
+    public java.util.function.Supplier<T> getWrapped() {
         return getNativeSupplier();
     }
 }

@@ -40,7 +40,7 @@ import java.lang.reflect.ParameterizedType;
  * This binding will automatically amply the following available injections:
  * <ul>
  *     <li>@Inject Hello hello;</li>
- *     <li>@Inject com.google.common.base.Supplier&gt;Hello&lt; hello;</li>
+ *     <li>@Inject java.util.function.Supplier&gt;Hello&lt; hello;</li>
  *     <li>@Inject org.javabits.yar.Supplier&gt;Hello&lt; hello;</li>
  *     <li>@Inject org.javabits.yar.BlockingSupplier&gt;Hello&lt; hello;</li>
  * </ul>
@@ -76,14 +76,8 @@ class DefaultRegistryAnnotatedBindingBuilderImpl<T> extends RegistryAnnotatedBin
         binder().bind(blockingSupplierKey).toProvider(blockingSupplierRegistryProvider);
         Key<Supplier<T>> yarSupplierKey = newYarSupplierKey();
         binder().bind(yarSupplierKey).to(blockingSupplierKey);
-        binder().bind(newGuavaSupplierKey()).to(yarSupplierKey);
         binder().bind(newJavaSupplierKey()).to(yarSupplierKey);
         return blockingSupplierRegistryProvider;
-    }
-
-    private Key<com.google.common.base.Supplier<T>> newGuavaSupplierKey() {
-        ParameterizedType guavaSupplierType = Types.newParameterizedType(com.google.common.base.Supplier.class, key().getTypeLiteral().getType());
-        return Keys.of(guavaSupplierType, key());
     }
 
     private Key<java.util.function.Supplier<T>> newJavaSupplierKey() {

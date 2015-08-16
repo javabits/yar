@@ -29,7 +29,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * This class is responsible to handle the cleanup of the registry when a bundle is shutdown.
  * It must remove all the remaining suppliers and watchers/listeners. And finally invalidate
  * the entries associated a type whose the stopping bundle is the owner.
- * <p>
+ * <p/>
  * Date: 5/29/13
  * Time: 9:42 AM
  *
@@ -125,7 +125,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
     }
 
     @Override
-    public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
+    public <T> Registration<T> put(Id<T> id, java.util.function.Supplier<? extends T> supplier) {
         if (!mutable.get()) {
             return newNullRegistration(id);
         }
@@ -254,7 +254,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         return blockingSupplier == null ? null : new BlockingSupplierDecorator<>(blockingSupplier);
     }
 
-    private <T> OSGiSupplierWrapper<T> newGuavaWrapper(com.google.common.base.Supplier<T> nativeSupplier) {
+    private <T> OSGiSupplierWrapper<T> newGuavaWrapper(java.util.function.Supplier<T> nativeSupplier) {
         return new OSGiSupplierWrapper<>(nativeSupplier, bundle);
     }
 
@@ -268,8 +268,8 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         });
     }
 
-    private static <T> com.google.common.base.Supplier<? extends T> nativeSupplier(Supplier<T> delegate) {
-        com.google.common.base.Supplier<? extends T> nativeSupplier = delegate.getNativeSupplier();
+    private static <T> java.util.function.Supplier<? extends T> nativeSupplier(Supplier<T> delegate) {
+        java.util.function.Supplier<? extends T> nativeSupplier = delegate.getNativeSupplier();
         while (nativeSupplier instanceof SupplierWrapper) {
             nativeSupplier = getWrapped(nativeSupplier);
         }
@@ -277,7 +277,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
     }
 
     private static <T> Bundle bundle(Supplier<T> delegate) {
-        com.google.common.base.Supplier<? extends T> nativeSupplier = delegate.getNativeSupplier();
+        java.util.function.Supplier<? extends T> nativeSupplier = delegate.getNativeSupplier();
         while (nativeSupplier instanceof SupplierWrapper && !(nativeSupplier instanceof OSGiSupplierWrapper)) {
             nativeSupplier = getWrapped(nativeSupplier);
         }
@@ -290,7 +290,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> com.google.common.base.Supplier<T> getWrapped(com.google.common.base.Supplier<? extends T> supplier) {
+    private static <T> java.util.function.Supplier<T> getWrapped(java.util.function.Supplier<? extends T> supplier) {
         return ((SupplierWrapper<T>) supplier).getWrapped();
     }
 
@@ -344,16 +344,16 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
 
         @Nullable
         @Override
-        public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+        public java.util.function.Supplier<? extends T> getNativeSupplier() {
             return nativeSupplier(delegate);
         }
     }
 
-    private static final class OSGiSupplierWrapper<T> implements com.google.common.base.Supplier<T>, org.javabits.yar.guice.SupplierWrapper<T> {
-        private final com.google.common.base.Supplier<T> delegate;
+    private static final class OSGiSupplierWrapper<T> implements java.util.function.Supplier<T>, org.javabits.yar.guice.SupplierWrapper<T> {
+        private final java.util.function.Supplier<T> delegate;
         private final Bundle bundle;
 
-        private OSGiSupplierWrapper(com.google.common.base.Supplier<T> delegate, Bundle bundle) {
+        private OSGiSupplierWrapper(java.util.function.Supplier<T> delegate, Bundle bundle) {
             this.delegate = delegate;
             this.bundle = bundle;
         }
@@ -368,7 +368,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         }
 
         @Override
-        public com.google.common.base.Supplier<T> getWrapped() {
+        public java.util.function.Supplier<T> getWrapped() {
             return delegate;
         }
 
@@ -426,7 +426,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
 
         @Override
         @Nullable
-        public com.google.common.base.Supplier<? extends T> getNativeSupplier() {
+        public java.util.function.Supplier<? extends T> getNativeSupplier() {
             return nativeSupplier(delegate);
         }
 

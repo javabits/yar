@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Romain Gilles
  * @since 1.0
+ * //TODO add contains method
  */
 @ThreadSafe
 public interface Registry {
@@ -205,7 +206,7 @@ public interface Registry {
      * @see Registration
      * @see #remove(Registration)
      */
-    <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier);
+    <T> Registration<T> put(Id<T> id, java.util.function.Supplier<? extends T> supplier);
 
     /**
      * Removes the supplier referenced by the specified

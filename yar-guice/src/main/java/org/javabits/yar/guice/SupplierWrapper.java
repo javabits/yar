@@ -16,10 +16,10 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 /**
- * Created by rogilles on 29/09/14.
+ * Supplier wrapper interface can be used to recursively retrieve the original supplier.
  */
 public interface SupplierWrapper<T> {
     Supplier<T> getWrapped();

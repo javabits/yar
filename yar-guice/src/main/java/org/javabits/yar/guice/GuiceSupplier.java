@@ -16,7 +16,7 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 import javax.inject.Provider;
 

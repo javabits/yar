@@ -1,6 +1,6 @@
 package org.javabits.yar.guice;
 
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
 import org.javabits.yar.*;
@@ -76,7 +76,7 @@ public class RegistryHookTest {
         registry.removeWatcher(myServiceWatcherRegistration);
     }
 
-    static interface MyService {
+    interface MyService {
     }
 
     static class MyServiceImpl implements MyService {
@@ -115,41 +115,28 @@ public class RegistryHookTest {
 
     @Test
     public void testTypeListener() throws Exception {
-        registryHook.addTypeListener(new TypeListener() {
-            @Override
-            public void typeChanged(TypeEvent typeEvent) {
-                synchronized (count) {
-                    switch (typeEvent.eventType()) {
-                        case ADDED:
-                            count[0] = count[0] + 1;
-                            break;
-                        case REMOVED:
-                            count[0] = count[0] - 1;
-                            break;
-                        default:
-                            throw new UnsupportedOperationException("un supported event type: " + typeEvent);
-                    }
+        registryHook.addTypeListener(typeEvent -> {
+            synchronized (count) {
+                switch (typeEvent.eventType()) {
+                    case ADDED:
+                        count[0] = count[0] + 1;
+                        break;
+                    case REMOVED:
+                        count[0] = count[0] - 1;
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("un supported event type: " + typeEvent);
                 }
             }
         });
         //when register first service
-        Registration<MyService> serviceRegistration = registry.put(Ids.newId(MyService.class), new Supplier<MyService>() {
-            @Override
-            public MyService get() {
-                return new MyServiceImpl();
-            }
-        });
+        Registration<MyService> serviceRegistration = registry.put(Ids.newId(MyService.class), MyServiceImpl::new);
         // then type count must be 1
         synchronized (count) {
             assertThat(count[0], is(1));
         }
         // when register second service on the same type
-        Registration<MyService> serviceRegistration2 = registry.put(Ids.newId(MyService.class, Names.named("test")), new Supplier<MyService>() {
-            @Override
-            public MyService get() {
-                return new MyServiceImpl();
-            }
-        });
+        Registration<MyService> serviceRegistration2 = registry.put(Ids.newId(MyService.class, Names.named("test")), MyServiceImpl::new);
         // then type count must still be 1
         synchronized (count) {
             assertThat(count[0], is(1));
@@ -174,12 +161,7 @@ public class RegistryHookTest {
             assertThat(count[0], is(0));
         }
         // when re-register a service on type MyService
-        registry.put(GuiceId.of(Key.get(MyService.class, Names.named("test"))), new Supplier<MyService>() {
-            @Override
-            public MyService get() {
-                return new MyServiceImpl();
-            }
-        });
+        registry.put(GuiceId.of(Key.get(MyService.class, Names.named("test"))), MyServiceImpl::new);
         // then count must be 1 again
         synchronized (count) {
             assertThat(count[0], is(1));
@@ -191,12 +173,7 @@ public class RegistryHookTest {
         Id<String> stringId = Ids.newId(String.class);
         final CountDownLatch countDownLatch = new CountDownLatch(1);
 
-        registry.put(stringId, new Supplier<String>() {
-            @Override
-            public String get() {
-                return "test";
-            }
-        });
+        registry.put(stringId, () -> "test");
         registry.addWatcher(IdMatchers.newIdMatcher(stringId), new Watcher<String>() {
             @Nullable
             @Override
@@ -218,12 +195,7 @@ public class RegistryHookTest {
         assertThat(registryHook.hasPendingListenerUpdateTasks(), is(true));
         countDownLatch.countDown();
         final CountDownLatch endOfTaskBarrier = new CountDownLatch(1);
-        registryHook.addEndOfListenerUpdateTasksListener(new RegistryHook.EndOfListenerUpdateTasksListener() {
-            @Override
-            public void completed() {
-                endOfTaskBarrier.countDown();
-            }
-        });
+        registryHook.addEndOfListenerUpdateTasksListener(endOfTaskBarrier::countDown);
         countDownLatch.countDown();
         assertThat(endOfTaskBarrier.await(5, MILLISECONDS), is(true));
     }

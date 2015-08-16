@@ -14,12 +14,10 @@
 
 package org.javabits.yar.guice.osgi;
 
-import static com.google.common.base.Suppliers.ofInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.javabits.yar.guice.YarGuices.builder;
 
-import com.google.common.base.Suppliers;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
 import org.javabits.yar.Ids;
@@ -33,15 +31,15 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.osgi.framework.Bundle;
 
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BundleRegistryTest {
     public static final Id<MyInterface> ID = Ids.newId(MyInterface.class);
-    public static final Supplier INSTANCE_SUPPLIER = ofInstance(new MyInterface() {
-    });
+    public static final Supplier<MyInterface> INSTANCE_SUPPLIER = ()-> new MyInterface() {
+    };
     @Mock
     private Bundle bundle;
 
@@ -61,6 +59,7 @@ public class BundleRegistryTest {
     public void testGetNativeSupplier() {
         registry.put(ID, INSTANCE_SUPPLIER);
         OSGiSupplier<MyInterface> supplier = registry.get(ID);
+        assert supplier != null;
         assertThat(supplier.getNativeSupplier(), is(INSTANCE_SUPPLIER));
     }
 
@@ -68,6 +67,7 @@ public class BundleRegistryTest {
     public void testGetBundle() {
         registry.put(ID, INSTANCE_SUPPLIER);
         OSGiSupplier<MyInterface> supplier = registry.get(ID);
+        assert supplier != null;
         assertThat(supplier.getBundle(), is(bundle));
     }
 
@@ -89,26 +89,31 @@ public class BundleRegistryTest {
     @Test
     public void testGetAllAware() {
         MyImplRegistryAware aware = new MyImplRegistryAware();
-        registry.put(ID, ofInstance(aware));
+        registry.put(ID, () -> aware);
         List<org.javabits.yar.Supplier<MyInterface>> suppliers = registry.getAll(ID);
-        assertThat(((MyImplRegistryAware) suppliers.get(0).get()).getBundle(), is(bundle));
-        assertThat(((MyImplRegistryAware) suppliers.get(0).get()).getRegistry(), is((Registry) registry));
-        assertThat(((MyImplRegistryAware) suppliers.get(0).get()).getBlockingSupplierRegistry(), is((BlockingSupplierRegistry) registry));
-        assertThat(((MyImplRegistryAware) suppliers.get(0).get()).getOsgiRegistry(), is((OSGiRegistry) registry));
+        MyImplRegistryAware myImplRegistryAware = (MyImplRegistryAware) suppliers.get(0).get();
+        assert myImplRegistryAware != null;
+        assertThat(myImplRegistryAware.getBundle(), is(bundle));
+        assertThat(myImplRegistryAware.getRegistry(), is((Registry) registry));
+        assertThat(myImplRegistryAware.getBlockingSupplierRegistry(), is((BlockingSupplierRegistry) registry));
+        assertThat(myImplRegistryAware.getOsgiRegistry(), is((OSGiRegistry) registry));
     }
 
     @Test
     public void testGetSingleAware() {
         MyImplRegistryAware aware = new MyImplRegistryAware();
-        registry.put(ID, ofInstance(aware));
+        registry.put(ID, () -> aware);
         org.javabits.yar.Supplier<MyInterface> supplier = registry.get(ID);
-        assertThat(((MyImplRegistryAware) supplier.get()).getBundle(), is(bundle));
-        assertThat(((MyImplRegistryAware) supplier.get()).getRegistry(), is((Registry) registry));
-        assertThat(((MyImplRegistryAware) supplier.get()).getBlockingSupplierRegistry(), is((BlockingSupplierRegistry) registry));
-        assertThat(((MyImplRegistryAware) supplier.get()).getOsgiRegistry(), is((OSGiRegistry) registry));
+        assert supplier != null;
+        MyImplRegistryAware myImplRegistryAware = (MyImplRegistryAware) supplier.get();
+        assert myImplRegistryAware != null;
+        assertThat(myImplRegistryAware.getBundle(), is(bundle));
+        assertThat(myImplRegistryAware.getRegistry(), is((Registry) registry));
+        assertThat(myImplRegistryAware.getBlockingSupplierRegistry(), is((BlockingSupplierRegistry) registry));
+        assertThat(myImplRegistryAware.getOsgiRegistry(), is((OSGiRegistry) registry));
     }
 
-    static interface MyInterface {
+    interface MyInterface {
     }
 
     static class MyImplRegistryAware implements MyInterface, BundleAware, RegistryAware, BlockingSupplierRegistryAware, OSGiRegistryAware {

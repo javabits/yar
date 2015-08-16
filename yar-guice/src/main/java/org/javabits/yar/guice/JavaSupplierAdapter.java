@@ -14,13 +14,14 @@ import static java.util.Objects.requireNonNull;
  *
  * @author Romain Gilles
  */
-class GuavaSupplierAdapter<T> implements Supplier<T>, SupplierWrapper<T> {
-    private final com.google.common.base.Supplier<T> delegate;
+class JavaSupplierAdapter<T> implements Supplier<T>, SupplierWrapper<T> {
+    private final java.util.function.Supplier<T> delegate;
     private final Id<T> id;
 
-    GuavaSupplierAdapter(Id<T> id, com.google.common.base.Supplier<? extends T> delegate) {
+    @SuppressWarnings("unchecked")
+    JavaSupplierAdapter(Id<T> id, java.util.function.Supplier<? extends T> delegate) {
         this.id = requireNonNull(id, "id");
-        this.delegate = (com.google.common.base.Supplier<T>) requireNonNull(delegate, "delegate");
+        this.delegate = (java.util.function.Supplier<T>) requireNonNull(delegate, "delegate");
     }
 
     @Override
@@ -36,7 +37,7 @@ class GuavaSupplierAdapter<T> implements Supplier<T>, SupplierWrapper<T> {
 
     @Override
     public String toString() {
-        return "GuavaSupplierAdapter{" +
+        return "JavaSupplierAdapter{" +
                 "delegate=" + delegate +
                 ", id=" + id +
                 '}';
@@ -44,12 +45,12 @@ class GuavaSupplierAdapter<T> implements Supplier<T>, SupplierWrapper<T> {
 
     @Nullable
     @Override
-    public com.google.common.base.Supplier<T> getNativeSupplier() {
+    public java.util.function.Supplier<T> getNativeSupplier() {
         return delegate;
     }
 
     @Override
-    public com.google.common.base.Supplier<T> getWrapped() {
+    public java.util.function.Supplier<T> getWrapped() {
         return getNativeSupplier();
     }
 }

@@ -1,6 +1,6 @@
 package org.javabits.yar.guice;
 
-import com.google.common.base.Supplier;
+import java.util.function.Supplier;
 import com.google.inject.*;
 import com.google.inject.name.Names;
 import org.javabits.yar.BlockingSupplierRegistry;

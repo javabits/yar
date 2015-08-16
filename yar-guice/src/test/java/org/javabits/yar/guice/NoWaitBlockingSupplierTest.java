@@ -46,7 +46,7 @@ public class NoWaitBlockingSupplierTest {
 
             @Nullable
             @Override
-            public com.google.common.base.Supplier<? extends MyInterface> getNativeSupplier() {
+            public java.util.function.Supplier<? extends MyInterface> getNativeSupplier() {
                 return this;
             }
         }));
@@ -71,7 +71,7 @@ public class NoWaitBlockingSupplierTest {
 
             @Nullable
             @Override
-            public com.google.common.base.Supplier<? extends MyInterface> getNativeSupplier() {
+            public java.util.function.Supplier<? extends MyInterface> getNativeSupplier() {
                 return this;
             }
         });

@@ -199,12 +199,12 @@ class SimpleRegistry implements Registry, RegistryHook, InternalRegistry {
     }
 
     @Override
-    public <T> Registration<T> put(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
+    public <T> Registration<T> put(Id<T> id, java.util.function.Supplier<? extends T> supplier) {
         return put(id, requireNonNull(newSupplierAdapter(id, supplier), "supplier"));
     }
 
-    private <T> GuavaSupplierAdapter<T> newSupplierAdapter(Id<T> id, com.google.common.base.Supplier<? extends T> supplier) {
-        return new GuavaSupplierAdapter<>(id, supplier);
+    private <T> JavaSupplierAdapter<T> newSupplierAdapter(Id<T> id, java.util.function.Supplier<? extends T> supplier) {
+        return new JavaSupplierAdapter<>(id, supplier);
     }
 
     private <T> Id<T> checkKey(Id<T> watchedId, String attribute) {
@@ -327,7 +327,7 @@ class SimpleRegistry implements Registry, RegistryHook, InternalRegistry {
         registrationContainer.addEndOfListenerUpdateTasksListener(listener);
     }
 
-    static interface RegistryAction<T> {
+    interface RegistryAction<T> {
 
         void execute();
 

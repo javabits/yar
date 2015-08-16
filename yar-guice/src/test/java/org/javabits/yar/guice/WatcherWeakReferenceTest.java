@@ -14,7 +14,6 @@
 
 package org.javabits.yar.guice;
 
-import static com.google.common.base.Suppliers.ofInstance;
 import static java.lang.Boolean.TRUE;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -51,7 +50,7 @@ public class WatcherWeakReferenceTest {
         forceGC();
 
         sleep(MAIN_STEP_WAIT_TIME);
-        registry.put(ID, ofInstance(TRUE));
+        registry.put(ID, ()-> TRUE);
         assertThat(counter.get(), is(1));
     }
 
@@ -60,7 +59,7 @@ public class WatcherWeakReferenceTest {
         Watcher<Boolean> watcher = new BooleanWatcher(counter);
         registry.addWatcher(newIdMatcher(ID), watcher);
         assertThat(counter.get(), is(0));
-        registry.put(ID, ofInstance(TRUE));
+        registry.put(ID, ()-> TRUE);
         sleep();
         assertThat(counter.get(), is(1));
         System.out.println("End of watcher");
@@ -77,7 +76,7 @@ public class WatcherWeakReferenceTest {
 
         Registration<Boolean> registration = registry.addWatcher(newIdMatcher(id), watcher);
         assertThat(counter.get(), is(0));
-        registry.put(id, ofInstance(TRUE));
+        registry.put(id, ()-> TRUE);
         sleep();
         assertThat(counter.get(), is(1));
         System.out.println("End of watcher");
@@ -86,7 +85,7 @@ public class WatcherWeakReferenceTest {
         forceGC();
         System.out.println("End of Memory cleanup");
         sleep(MAIN_STEP_WAIT_TIME);
-        registry.put(id, ofInstance(TRUE));
+        registry.put(id, ()-> TRUE);
         List<Supplier<Boolean>> idSuppliers = registry.getAll(id);
         assertThat(idSuppliers.size(), is(2));
         assertThat(counter.get(), is(2));
@@ -135,8 +134,9 @@ public class WatcherWeakReferenceTest {
     private void getBlockingSupplierAndProvideSupplier(BlockingSupplierRegistry registry)
             throws InterruptedException {
         BlockingSupplier<Boolean> blockingSupplier = registry.get(ID);
+        assert blockingSupplier != null;
         assertThat(blockingSupplier.get(), is(nullValue()));
-        registry.put(ID, ofInstance(TRUE));
+        registry.put(ID, ()-> TRUE);
         sleep();
         assertThat(blockingSupplier.getSync(), is(TRUE));
         System.out.println("End of watcher");

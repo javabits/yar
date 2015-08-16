@@ -63,10 +63,6 @@ public class RegistryModuleBindTest {
         })), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<java.util.function.Supplier<MyInterface>>() {
         })).get(), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
-        })), is(not(nullValue())));
-        assertThat(injector.getInstance(Key.get(new TypeLiteral<com.google.common.base.Supplier<MyInterface>>() {
-        })).get(), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {
         })), is(not(nullValue())));
         assertThat(injector.getInstance(Key.get(new TypeLiteral<Supplier<MyInterface>>() {

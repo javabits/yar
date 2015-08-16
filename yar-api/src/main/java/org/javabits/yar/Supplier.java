@@ -26,7 +26,7 @@ import javax.annotation.Nullable;
  * @author Romain Gilles
  * @since 1.0
  */
-public interface Supplier<T> extends com.google.common.base.Supplier<T>, java.util.function.Supplier<T> {
+public interface Supplier<T> extends java.util.function.Supplier<T> {
 
     /**
      * Returns the {@link Id} under which this supplier has been registered
@@ -55,5 +55,5 @@ public interface Supplier<T> extends com.google.common.base.Supplier<T>, java.ut
      * @return <t>null</t> if the underlying native supplier is not yet set.
      */
     @Nullable
-    com.google.common.base.Supplier<? extends T> getNativeSupplier();
+    java.util.function.Supplier<? extends T> getNativeSupplier();
 }
