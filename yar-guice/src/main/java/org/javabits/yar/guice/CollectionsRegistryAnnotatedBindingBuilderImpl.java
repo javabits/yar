@@ -18,7 +18,6 @@ package org.javabits.yar.guice;
 
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
-import com.google.common.reflect.TypeToken;
 import com.google.inject.Binder;
 import com.google.inject.Inject;
 import com.google.inject.Key;
@@ -91,7 +90,7 @@ public class CollectionsRegistryAnnotatedBindingBuilderImpl<T> extends RegistryA
 
         private List getAll() {
             if (laxTypeBinding) {
-                return registry().getAll(TypeToken.of(getCollectionsTypeParameter()));
+                return registry().getAll(getCollectionsTypeParameter());
             } else {
                 return registry().getAll(Ids.newId(getCollectionsTypeParameter()));
             }

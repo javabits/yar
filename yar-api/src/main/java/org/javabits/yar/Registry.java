@@ -17,8 +17,6 @@
 package org.javabits.yar;
 
 
-import com.google.common.reflect.TypeToken;
-
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.ThreadSafe;
 import java.lang.reflect.Type;
@@ -33,7 +31,6 @@ import java.util.concurrent.TimeUnit;
  *
  * @author Romain Gilles
  * @since 1.0
- * //TODO add contains method
  */
 @ThreadSafe
 public interface Registry {
@@ -80,6 +77,23 @@ public interface Registry {
     Set<Type> types();
 
     /**
+     * Returns <tt>true</tt> if this registry contains a mapping for the specified
+     * id. More formally, returns <tt>true</tt> if and only if
+     * this registry contains a mapping for a id <tt>i</tt> such that
+     * <tt>id.equals(i)</tt>.  (There can be
+     * at most one such mapping.)
+     *
+     * @param id not {@code null} id whose presence in this registry is to be tested
+     * @return <tt>true</tt> if this registry contains a mapping for the specified
+     * id
+     * @throws NullPointerException if the specified id is {@code null}.
+     * @see #get(Id)
+     */
+    default boolean contains(Id<?> id) {
+        return get(id) != null;
+    }
+
+    /**
      * Returns the first {@link Supplier} to which the specified type is mapped
      * or {@code null} if the map contains no mapping for this type.
      * <p/>
@@ -90,7 +104,7 @@ public interface Registry {
      * @param type not {@code null} type whose associated {@link Supplier} is to be returned
      * @param <T>  the matching type between the class parameter and the returned {@link Supplier}
      * @return the value to which the specified type is mapped, or
-     *         {@code null} if this map contains no mapping for the key
+     * {@code null} if this map contains no mapping for the key
      * @throws NullPointerException if the given type parameter is {@code null}
      */
     @Nullable
@@ -108,7 +122,7 @@ public interface Registry {
      * @param type not {@code null} type whose associated {@link Supplier}s are to be returned
      * @param <T>  the matching type between the class parameter and the returned {@link Supplier}s
      * @return the list of {@link Supplier}s value to which the specified type is mapped, or
-     *         an empty list if this map contains no mapping for the given type.
+     * an empty list if this map contains no mapping for the given type.
      * @throws NullPointerException if the given type parameter is {@code null}.
      */
     <T> List<Supplier<T>> getAll(Class<T> type);
@@ -121,12 +135,12 @@ public interface Registry {
      * then it returns the first available mapping where for a given identifier {@code id} for all
      * ids {@code other} in the registry returns the first {@link Supplier} where {@code id.equals(other)}</p>
      * <p>This method is a strict comparison regarding the {@link #get(Class)}
-     * and {@link #get(com.google.common.reflect.TypeToken)} which are more weak.</p>
+     * and {@link #get(Type)} which are more weak.</p>
      *
      * @param id  not {@code null} {@link Id} whose associated {@link Supplier} is to be returned.
      * @param <T> the matching type between the {@link Id} parameter and the returned {@link Supplier}
      * @return the value to which the specified {@link Id} is mapped, or
-     *         {@code null} if this map contains no mapping for the given {@link Id}.
+     * {@code null} if this map contains no mapping for the given {@link Id}.
      * @throws NullPointerException if the given {@link Id} parameter is {@code null}.
      */
     @Nullable
@@ -140,12 +154,12 @@ public interface Registry {
      * then it returns all available mapping where for a given {@link Id} id
      * ids {@code otherId} in the registry {@code id.equals(otherId)}</p>
      * <p>This method is a strict comparison regarding the {@link #getAll(Class)}
-     * and {@link #getAll(com.google.common.reflect.TypeToken)} which are more weak.</p>
+     * and {@link #getAll(Type)} which are more weak.</p>
      *
      * @param id  not {@code null} {@link Id} whose associated {@link Supplier}s are to be returned
      * @param <T> the matching type between the class parameter and the returned {@link Supplier}s
      * @return the list of {@link Supplier}s value to which the specified {@link Id} is mapped, or
-     *         an empty list if this map contains no mapping for the given {@link Id}.
+     * an empty list if this map contains no mapping for the given {@link Id}.
      * @throws NullPointerException if the given {@link Id} parameter is {@code null}.
      */
     <T> List<Supplier<T>> getAll(Id<T> id);
@@ -160,14 +174,14 @@ public interface Registry {
      * <p>This implementation is lest strict that the {@link #get(Id)} because it just validate
      * the type and forget the annotation.</p>
      *
-     * @param type not {@code null} type whose associated {@link Supplier} is to be returned
      * @param <T>  the matching type between the class parameter and the returned {@link Supplier}
+     * @param type not {@code null} type whose associated {@link Supplier} is to be returned
      * @return the value to which the specified type is mapped, or
-     *         {@code null} if this map contains no mapping for the key
+     * {@code null} if this map contains no mapping for the key
      * @throws NullPointerException if the given type parameter is {@code null}
      */
     @Nullable
-    <T> Supplier<T> get(TypeToken<T> type);
+    <T> Supplier<T> get(Type type);
 
     /**
      * Returns all {@link Supplier}s to which the specified {@code TypeToken} is mapped
@@ -180,27 +194,27 @@ public interface Registry {
      * as it just validate the type and not the annotation.</p>
      * <p>This version of the getAll(...) method provide more type safety than the {@link #get(Class)}.</p>
      *
-     * @param type not {@code null} {@code TypeToken} whose associated {@link Supplier}s are to be returned.
      * @param <T>  the matching type between the type parameter and the returned {@link Supplier}s
+     * @param type not {@code null} {@code TypeToken} whose associated {@link Supplier}s are to be returned.
      * @return the list of {@link Supplier}s value to which the specified {@link Id} is mapped, or
-     *         an empty list if this map contains no mapping for the given {@link Id}.
+     * an empty list if this map contains no mapping for the given {@link Id}.
      * @throws NullPointerException if the given {@code TypeToken} parameter is {@code null}.
      */
-    <T> List<Supplier<T>> getAll(TypeToken<T> type);
+    <T> List<Supplier<T>> getAll(Type type);
 
     /**
      * Associates the specified supplier with the specified id in this registry.
      * If the map previously contained a mapping for the id, the new supplier is
      * added after the old one or an runtime exception is throw for duplicated entry,
      * This behaviour depends on the implementation.
-     * <p/>
+     * <p>
      * (A registry {@code r} is said to contain a mapping for a id {@code i} if
      * and only if {@link #contains(Id) r.contains(i)} would return {@code true}.)
      *
      * @param id       id with which the specified supplier is to be associated.
      * @param supplier supplier to be associated with the specified id
      * @return the registration handle for use by the caller to remove this
-     *         registration action. It not intents to be shared by the caller.
+     * registration action. It not intents to be shared by the caller.
      * @throws NullPointerException if the specified key or value is null
      *                              and this map does not permit null keys or values
      * @see Registration
@@ -238,8 +252,8 @@ public interface Registry {
      *                  matched by idMatcher
      * @param <T>       the supplied type
      * @return the registration that represent this action. This registration is
-     *         the only way to remove this watcher from the registry. It is not intended
-     *         to be shared by the caller
+     * the only way to remove this watcher from the registry. It is not intended
+     * to be shared by the caller
      */
     <T> Registration<T> addWatcher(IdMatcher<T> idMatcher, Watcher<T> watcher);
 

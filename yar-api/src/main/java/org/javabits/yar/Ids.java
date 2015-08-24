@@ -1,7 +1,5 @@
 package org.javabits.yar;
 
-import com.google.common.reflect.TypeToken;
-
 import javax.annotation.Nullable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
@@ -51,8 +49,9 @@ public final class Ids {
      * @param <T>  the type of the Id.
      * @return an new {@code Id} based on the given type.
      */
+    @SuppressWarnings("unchecked")
     public static <T> Id<T> newId(final Class<T> type) {
-        return newId(TypeToken.of(type));
+        return (Id<T>) newId((Type) type);
     }
 
     /**
@@ -64,8 +63,9 @@ public final class Ids {
      * @param <T>             the type of the id.
      * @return an new {@code Id} based on the given type and annotation type.
      */
+    @SuppressWarnings("unchecked")
     public static <T> Id<T> newId(final Class<T> type, final Class<? extends Annotation> annotationClass) {
-        return newId(TypeToken.of(type), annotationClass);
+        return (Id<T>) newId((Type) type, annotationClass);
     }
 
     /**
@@ -77,45 +77,9 @@ public final class Ids {
      * @param <T>        the type of the id.
      * @return an new {@code Id} based on the given type and annotation.
      */
+    @SuppressWarnings("unchecked")
     public static <T> Id<T> newId(final Class<T> type, final Annotation annotation) {
-        return newId(TypeToken.of(type), annotation);
-    }
-
-    /**
-     * Returns a new {@link Id} which represents the {@code type}.
-     *
-     * @param type the type to which the new id has to be associated.
-     * @param <T>  the type of the id.
-     * @return an new {@code Id} based on the given type.
-     */
-    public static <T> Id<T> newId(final TypeToken<T> type) {
-        return IdImpl.newId(type);
-    }
-
-    /**
-     * Returns a new {@link Id} which represents the {@code type} qualified by
-     * the {@code annotationClass}.
-     *
-     * @param type            the type to which the new id has to be associated.
-     * @param annotationClass the qualifying annotation type.
-     * @param <T>             the type of the id.
-     * @return an new {@code Id} based on the given type and annotation type.
-     */
-    public static <T> Id<T> newId(final TypeToken<T> type, final Class<? extends Annotation> annotationClass) {
-        return IdImpl.newId(type, annotationClass);
-    }
-
-    /**
-     * Returns a new {@link Id} which represents the {@code type} qualified by
-     * the {@code annotation} instance.
-     *
-     * @param type       the type to which the new id has to be associated.
-     * @param annotation the qualifying annotation.
-     * @param <T>        the type of the id.
-     * @return an new {@code Id} based on the given type and annotation.
-     */
-    public static <T> Id<T> newId(final TypeToken<T> type, final Annotation annotation) {
-        return IdImpl.newId(type, annotation);
+        return (Id<T>) newId((Type) type, annotation);
     }
 
     /**
@@ -125,7 +89,7 @@ public final class Ids {
      * @return an new {@code Id} based on the given type.
      */
     public static Id<?> newId(final Type type) {
-        return newId(TypeToken.of(type));
+        return IdImpl.newId(type);
     }
 
     /**
@@ -137,7 +101,7 @@ public final class Ids {
      * @return an new {@code Id} based on the given type and annotation type.
      */
     public static Id<?> newId(final Type type, final Class<? extends Annotation> annotationClass) {
-        return newId(TypeToken.of(type), annotationClass);
+        return IdImpl.newId(type, annotationClass);
     }
 
     /**
@@ -149,36 +113,36 @@ public final class Ids {
      * @return an new {@code Id} based on the given type and annotation.
      */
     public static Id<?> newId(final Type type, final Annotation annotation) {
-        return newId(TypeToken.of(type), annotation);
+        return IdImpl.newId(type, annotation);
     }
 
     static final class IdImpl<T> implements Id<T> {
 
-        private final TypeToken<T> typeToken;
+        private final Type type;
         private final AnnotationStrategy annotationStrategy;
         private final int hashCode;
 
-        private IdImpl(TypeToken<T> typeToken, AnnotationStrategy annotationStrategy) {
-            this.typeToken = requireNonNull(typeToken, "typeToken");
+        private IdImpl(Type type, AnnotationStrategy annotationStrategy) {
+            this.type = requireNonNull(type, "type");
             this.annotationStrategy = requireNonNull(annotationStrategy, "annotationStrategy");
-            this.hashCode = computeHashCode(typeToken, annotationStrategy);
+            this.hashCode = computeHashCode(type, annotationStrategy);
         }
 
-        private static <T> Id<T> newId(final TypeToken<T> type) {
+        private static Id<?> newId(final Type type) {
             return new IdImpl<>(type, AbstractAnnotationStrategy.NULL_STRATEGY);
         }
 
-        private static <T> Id<T> newId(final TypeToken<T> type, final Class<? extends Annotation> annotationClass) {
+        private static Id<?> newId(final Type type, final Class<? extends Annotation> annotationClass) {
             return new IdImpl<>(type, AbstractAnnotationStrategy.strategyFor(annotationClass));
         }
 
-        private static <T> Id<T> newId(final TypeToken<T> type, final Annotation annotation) {
+        private static Id<?> newId(final Type type, final Annotation annotation) {
             return new IdImpl<>(type, AbstractAnnotationStrategy.strategyFor(annotation));
         }
 
         @Override
         public Type type() {
-            return typeToken.getType();
+            return type;
         }
 
         @Override
@@ -198,7 +162,7 @@ public final class Ids {
 
             IdImpl id = (IdImpl) o;
 
-            return annotationStrategy.equals(id.annotationStrategy) && typeToken.equals(id.typeToken);
+            return annotationStrategy.equals(id.annotationStrategy) && type.equals(id.type);
         }
 
         @Override
@@ -206,16 +170,23 @@ public final class Ids {
             return hashCode;
         }
 
-        private int computeHashCode(TypeToken<T> typeToken, AnnotationStrategy annotationStrategy) {
-            int result = requireNonNull(typeToken, "typeToken").hashCode();
+        private int computeHashCode(Type type, AnnotationStrategy annotationStrategy) {
+            int result = requireNonNull(type, "type").hashCode();
             result = 31 * result + requireNonNull(annotationStrategy, "annotationStrategy").hashCode();
             return result;
         }
 
         @Override
         public String toString() {
-            return "Id[type=" + typeToken + ", annotation=" + annotationStrategy + "]";
+            return "Id[type=" + toString(type) + ", annotation=" + annotationStrategy + "]";
         }
+
+        static String toString(Type type) {
+            return (type instanceof Class)
+                    ? ((Class<?>) type).getName()
+                    : type.toString();
+        }
+
 
         interface AnnotationStrategy {
             @Nullable

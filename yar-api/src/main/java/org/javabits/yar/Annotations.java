@@ -5,8 +5,7 @@ import java.lang.annotation.Annotation;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.String.format;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static java.util.Objects.requireNonNull;
 
@@ -38,11 +37,11 @@ public final class Annotations {
      * @param message         optional message used if the annotationClass is {@code null}
      *                        otherwise "annotationClass" is used as a message.
      * @return the given {@code annotationClass} parameter if it's retained at runtime otherwise throw
-     *         an {@code IllegalArgumentException}
+     * an {@code IllegalArgumentException}
      * @see #isRetainedAtRuntime(Class)
      */
     public static Class<? extends Annotation> checkRuntimeRetention(Class<? extends Annotation> annotationClass, @Nullable String message) {
-        requireNonNull(annotationClass, firstNonNull(message, "annotationClass"));
+        requireNonNull(annotationClass, (message != null ? message : "annotationClass"));
         checkArgument(isRetainedAtRuntime(annotationClass), RUNTIME_RETENTION_ERROR, annotationClass.getName());
         return annotationClass;
     }
@@ -73,4 +72,14 @@ public final class Annotations {
     public static boolean isMarker(Annotation annotation) {
         return isMarker(annotation.annotationType());
     }
+
+    private static void checkArgument(boolean expression,
+                                      String errorMessageTemplate,
+                                      Object... errorMessageArgs) {
+        if (!expression) {
+            throw new IllegalArgumentException(
+                    format(errorMessageTemplate, errorMessageArgs));
+        }
+    }
+
 }

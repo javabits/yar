@@ -22,13 +22,14 @@ import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import org.javabits.yar.*;
+import org.javabits.yar.guava.GuavaIds;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
 import java.lang.InterruptedException;
 import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -541,7 +542,7 @@ public class RegistryModuleBindTest {
             }
         });
         assertThat(injector, is(not(nullValue())));
-        Id<MyGenericInterface<String>> id = Ids.newId(new TypeToken<MyGenericInterface<String>>() {
+        Id<MyGenericInterface<String>> id = GuavaIds.newId(new TypeToken<MyGenericInterface<String>>() {
         });
         Registration<MyGenericInterface<String>> myInterfaceRegistration = registry.put(id, GuiceSupplier.of(() -> new MyGenericInterface<String>() {
         }));
@@ -549,7 +550,7 @@ public class RegistryModuleBindTest {
         assertThat((matches[0]), is(2));
         assertThat((matches[1]), is(notNullValue()));
         assertThat((matches[2]), is(matches[1]));
-        Id<MyGenericInterface<Double>> idDouble = Ids.newId(new TypeToken<MyGenericInterface<Double>>() {
+        Id<MyGenericInterface<Double>> idDouble = GuavaIds.newId(new TypeToken<MyGenericInterface<Double>>() {
         });
         Registration<MyGenericInterface<Double>> myInterfaceRegistrationDouble = registry.put(idDouble, GuiceSupplier.of(() -> new MyGenericInterface<Double>() {
         }));

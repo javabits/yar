@@ -16,8 +16,6 @@
 
 package org.javabits.yar;
 
-import com.google.common.reflect.TypeToken;
-
 import javax.annotation.Nullable;
 import java.lang.reflect.Type;
 import java.util.concurrent.TimeUnit;
@@ -41,7 +39,7 @@ public interface BlockingSupplierRegistry extends Registry {
 
     @Nullable
     @Override
-    <T> BlockingSupplier<T> get(TypeToken<T> type);
+    <T> BlockingSupplier<T> get(Type type);
 
 
     /**

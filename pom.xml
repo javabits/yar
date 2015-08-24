@@ -58,6 +58,7 @@
     <modules>
         <module>yar-parent</module>
         <module>yar-api</module>
+        <module>yar-guava</module>
         <module>yar-guice</module>
         <module>yar-guice-osgi</module>
         <module>yar-osgi-it</module>
@@ -68,6 +69,11 @@
             <dependency>
                 <groupId>org.javabits.yar</groupId>
                 <artifactId>yar-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.javabits.yar</groupId>
+                <artifactId>yar-guava</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

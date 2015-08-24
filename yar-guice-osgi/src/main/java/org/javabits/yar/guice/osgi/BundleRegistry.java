@@ -3,7 +3,6 @@ package org.javabits.yar.guice.osgi;
 import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
-import com.google.common.reflect.TypeToken;
 import org.javabits.yar.*;
 import org.javabits.yar.guice.SupplierWrapper;
 import org.osgi.framework.Bundle;
@@ -95,7 +94,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
 
     @Nullable
     @Override
-    public <T> OSGiSupplier<T> get(TypeToken<T> type) {
+    public <T> OSGiSupplier<T> get(Type type) {
         return newDecorator(delegate.get(type));
     }
 
@@ -120,7 +119,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
     }
 
     @Override
-    public <T> List<Supplier<T>> getAll(TypeToken<T> type) {
+    public <T> List<Supplier<T>> getAll(Type type) {
         return transformToBundleSuppliers(delegate.getAll(type));
     }
 

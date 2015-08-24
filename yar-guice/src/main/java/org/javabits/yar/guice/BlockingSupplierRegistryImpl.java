@@ -16,14 +16,16 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.reflect.TypeToken;
-import org.javabits.yar.*;
+import org.javabits.yar.BlockingSupplier;
+import org.javabits.yar.Id;
+import org.javabits.yar.Ids;
 
 import javax.annotation.Nullable;
+import java.lang.reflect.Type;
 import java.util.concurrent.TimeUnit;
 
 import static org.javabits.yar.guice.AbstractExecutionStrategy.newExecutionStrategy;
-import static org.javabits.yar.guice.ExecutionStrategy.Type.*;
+import static org.javabits.yar.guice.ExecutionStrategy.Type.SERIALIZED;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newLoadingCacheGuiceWatchableRegistrationContainer;
 import static org.javabits.yar.guice.GuiceWatchableRegistrationContainer.newMultimapGuiceWatchableRegistrationContainer;
 
@@ -56,8 +58,9 @@ class BlockingSupplierRegistryImpl extends SimpleRegistry implements org.javabit
 
     @Nullable
     @Override
-    public <T> BlockingSupplier<T> get(TypeToken<T> type) {
-        return get(Ids.newId(type));
+    @SuppressWarnings("unchecked")
+    public <T> BlockingSupplier<T> get(Type type) {
+        return get((Id<T>) Ids.newId(type));
     }
 
     @Override

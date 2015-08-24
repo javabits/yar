@@ -1,7 +1,5 @@
 package org.javabits.yar.guice;
 
-import java.util.Collections;
-import java.util.function.Supplier;
 import com.google.common.reflect.TypeToken;
 import org.javabits.yar.Id;
 import org.javabits.yar.Ids;
@@ -9,7 +7,8 @@ import org.javabits.yar.Registry;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.inject.Provider;
+import java.lang.reflect.Type;
+import java.util.Collections;
 import java.util.List;
 
 import static java.util.Collections.emptyList;
@@ -82,9 +81,10 @@ public class SimpleRegistryTest {
 
     @Test
     public void testGetTypeToken() {
-        final TypeToken<List<String>> type = new TypeToken<List<String>>() {
+        final TypeToken<List<String>> typeToken = new TypeToken<List<String>>() {
         };
-        final Id<List<String>> id = GuiceId.of(type.getType(), null);
+        Type type = typeToken.getType();
+        final Id<List<String>> id = GuiceId.of(type, null);
         assertThat(registry.get(id), is(nullValue()));
 
         registry.put(id, GuiceSupplier.of(Collections::emptyList));
@@ -94,14 +94,15 @@ public class SimpleRegistryTest {
 
     @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetTypeTokenNullPointerException() throws Exception {
-        registry.get((TypeToken) null);
+        registry.get((Type) null);
     }
 
     @Test
     public void testGetAllTypeToken() {
-        final TypeToken<String> type = new TypeToken<String>() {
+        final TypeToken<String> typeToken = new TypeToken<String>() {
         };
-        final Id<String> id = GuiceId.of(type.getType(), null);
+        Type type = typeToken.getType();
+        final Id<String> id = GuiceId.of(type, null);
         assertThat(registry.get(id), is(nullValue()));
 
         registry.put(id, GuiceSupplier.of(() -> "test"));
@@ -112,7 +113,7 @@ public class SimpleRegistryTest {
 
     @Test(expected = NullPointerException.class) @SuppressWarnings("unchecked")
     public void testGetAllTypeTokenNullPointerException() throws Exception {
-        registry.getAll((TypeToken) null);
+        registry.getAll((Type) null);
     }
 
 }

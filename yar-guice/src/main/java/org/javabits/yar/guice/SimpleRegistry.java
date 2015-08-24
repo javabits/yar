@@ -16,13 +16,13 @@
 
 package org.javabits.yar.guice;
 
-import com.google.common.base.*;
+import com.google.common.base.FinalizableReferenceQueue;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.SettableFuture;
 import org.javabits.yar.*;
-import org.javabits.yar.Supplier;
 
 import javax.annotation.Nullable;
 import java.lang.InterruptedException;
@@ -31,7 +31,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -99,7 +101,7 @@ class SimpleRegistry implements Registry, RegistryHook, InternalRegistry {
     public Set<Id<?>> ids() {
         ImmutableSet.Builder<Id<?>> builder = ImmutableSet.builder();
         for (Type type : registrationContainer.types()) {
-            builder.addAll(Lists.transform(getAll(TypeToken.of(type)), new Function<Supplier<?>, Id<?>>() {
+            builder.addAll(Lists.transform(getAll(type), new Function<Supplier<?>, Id<?>>() {
                 @Nullable
                 @Override
                 public Id<?> apply(@Nullable Supplier<?> supplier) {
@@ -137,8 +139,8 @@ class SimpleRegistry implements Registry, RegistryHook, InternalRegistry {
     }
 
     @Override
-    public <T> List<Supplier<T>> getAll(TypeToken<T> typeToken) {
-        return viewOfEntries(registrationContainer.getAll(typeToken.getType()));
+    public <T> List<Supplier<T>> getAll(Type type) {
+        return viewOfEntries(registrationContainer.getAll(type));
     }
 
 
@@ -167,8 +169,8 @@ class SimpleRegistry implements Registry, RegistryHook, InternalRegistry {
     @Nullable
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Supplier<T> get(TypeToken<T> type) {
-        SupplierRegistration<?> registration = registrationContainer.getFirst(type.getType());
+    public <T> Supplier<T> get(Type type) {
+        SupplierRegistration<?> registration = registrationContainer.getFirst(type);
         if (registration == null) {
             return null;
         }
