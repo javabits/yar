@@ -1,8 +1,5 @@
 package org.javabits.yar.guice.osgi.internal;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import org.javabits.yar.RegistryHook;
 import org.javabits.yar.TypeEvent;
 import org.javabits.yar.TypeListener;
@@ -12,12 +9,12 @@ import org.osgi.framework.BundleReference;
 import org.osgi.framework.SynchronousBundleListener;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
-import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
 
-import static java.util.logging.Level.SEVERE;
 import static org.javabits.yar.guice.Reflections.getRawType;
 
 /**
@@ -30,12 +27,7 @@ import static org.javabits.yar.guice.Reflections.getRawType;
 class BundleTypeCleaner implements SynchronousBundleListener, TypeListener {
     private static final Logger LOG = Logger.getLogger(BundleTypeCleaner.class.getName());
     private final RegistryHook registryHook;
-    private final LoadingCache<Long, Set<Type>> loadingCache = CacheBuilder.newBuilder().build(new CacheLoader<Long, Set<Type>>() {
-        @Override
-        public Set<Type> load(Long key) {
-            return new CopyOnWriteArraySet<>();
-        }
-    });
+    private final Map<Long, Set<Type>> cache = new ConcurrentHashMap<>();
 
     BundleTypeCleaner(RegistryHook registryHook) {
         this.registryHook = registryHook;
@@ -46,15 +38,10 @@ class BundleTypeCleaner implements SynchronousBundleListener, TypeListener {
     public void bundleChanged(BundleEvent event) {
         switch (event.getType()) {
             case BundleEvent.STOPPING:
-                try {
-                    long bundleId = event.getBundle().getBundleId();
-                    Set<Type> types = loadingCache.get(bundleId);
-                    if (!types.isEmpty()) {
-                        registryHook.invalidateAll(types);
-                    }
-                    loadingCache.invalidate(bundleId);
-                } catch (ExecutionException e) {
-                    LOG.log(SEVERE, "Cannot clean up types on event: " + event, e);
+                long bundleId = event.getBundle().getBundleId();
+                Set<Type> types = cache.remove(bundleId);
+                if (types != null && !types.isEmpty()) {
+                    registryHook.invalidateAll(types);
                 }
                 break;
             default:
@@ -71,11 +58,7 @@ class BundleTypeCleaner implements SynchronousBundleListener, TypeListener {
                 ClassLoader classLoader = rawType.getClassLoader();
                 if (classLoader instanceof BundleReference) {
                     Bundle bundle = ((BundleReference) classLoader).getBundle();
-                    try {
-                        loadingCache.get(bundle.getBundleId()).add(type);
-                    } catch (ExecutionException e) {
-                        LOG.log(SEVERE, String.format("Cannot add type: %s", type), e);
-                    }
+                    cache.computeIfAbsent(bundle.getBundleId(), key -> new CopyOnWriteArraySet<>()).add(type);
                 } else {
                     LOG.warning(type + "'s class loader is not a BundleReference");
                 }
