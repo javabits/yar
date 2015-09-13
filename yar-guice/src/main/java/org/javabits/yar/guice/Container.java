@@ -44,7 +44,11 @@ public interface Container<K, V> {
 
     void invalidate(K key);
 
-    void invalidateAll(Iterable<K> keys);
+    default void invalidateAll(Iterable<K> keys) {
+        for (K key : keys) {
+            invalidate(key);
+        }
+    }
 
     void addKeyListener(KeyListener<K> keyListener);
 

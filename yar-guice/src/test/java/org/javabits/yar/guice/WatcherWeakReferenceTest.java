@@ -48,8 +48,8 @@ public class WatcherWeakReferenceTest {
         final AtomicInteger counter = new AtomicInteger();
         registerWatcherAndSupplier(registry, counter);
         forceGC();
-
         sleep(MAIN_STEP_WAIT_TIME);
+        forceGC();
         registry.put(ID, ()-> TRUE);
         assertThat(counter.get(), is(1));
     }
@@ -83,7 +83,6 @@ public class WatcherWeakReferenceTest {
         sleep(MAIN_STEP_WAIT_TIME);
 
         forceGC();
-        System.out.println("End of Memory cleanup");
         sleep(MAIN_STEP_WAIT_TIME);
         registry.put(id, ()-> TRUE);
         List<Supplier<Boolean>> idSuppliers = registry.getAll(id);
@@ -96,9 +95,11 @@ public class WatcherWeakReferenceTest {
         Runtime runtime = Runtime.getRuntime();
         int tableSize = Double.valueOf(runtime.freeMemory() / 8 * 0.4).intValue();
         for (int i = 0; i < 3; i++) {
+            System.gc();
             fillMemoryConsumer(tableSize);
             System.gc();
         }
+        System.gc();
         System.out.println("End of Memory cleanup");
     }
 
@@ -127,7 +128,6 @@ public class WatcherWeakReferenceTest {
         BlockingSupplierRegistry registry = newBlockingSupplierRegistry();
         getBlockingSupplierAndProvideSupplier(registry);
         forceGC();
-        System.out.println("End of Memory cleanup");
         sleep(MAIN_STEP_WAIT_TIME);
     }
 
