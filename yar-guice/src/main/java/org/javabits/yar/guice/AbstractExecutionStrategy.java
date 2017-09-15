@@ -73,7 +73,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
             addCallback(future, new FutureCallback<Void>() {
                 @Override
                 public void onSuccess(Void result) {
-                    LOG.log(Level.FINE, String.format("Listener task succeeded : %s", task));
+                    LOG.log(Level.FINE, ()-> String.format("Listener task succeeded : %s", task));
                 }
 
                 @Override
@@ -84,7 +84,7 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
         }
     }
 
-    public static ExecutionStrategy newExecutionStrategy(Type strategy) {
+    static ExecutionStrategy newExecutionStrategy(Type strategy) {
         switch (strategy) {
             case SAME_THREAD:
                 return new SameThread();
@@ -101,9 +101,9 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
         final ThreadGroup group;
         final AtomicInteger threadNumber = new AtomicInteger(1);
         final String namePrefix;
-        static final String nameSuffix = "]";
+        static final String NAME_SUFFIX = "]";
 
-        public DaemonThreadFactory(String poolName) {
+        DaemonThreadFactory(String poolName) {
             SecurityManager s = System.getSecurityManager();
             group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
             namePrefix = "YAR " + poolName + " Pool [Thread-";
@@ -113,10 +113,8 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
         public Thread newThread(@SuppressWarnings("NullableProblems") Runnable runnable) {
             checkNotNull(runnable, "runnable");
             Thread t = new Thread(group, runnable, namePrefix + threadNumber.getAndIncrement()
-                    + nameSuffix, 0);
+                    + NAME_SUFFIX, 0);
             t.setDaemon(true);
-            // if (t.getPriority() != Thread.NORM_PRIORITY)
-            // t.setPriority(Thread.NORM_PRIORITY);
             return t;
         }
     }

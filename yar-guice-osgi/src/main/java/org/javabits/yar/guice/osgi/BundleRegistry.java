@@ -1,6 +1,5 @@
 package org.javabits.yar.guice.osgi;
 
-import com.google.common.base.Function;
 import com.google.common.collect.Lists;
 import com.google.common.collect.MapMaker;
 import org.javabits.yar.*;
@@ -162,7 +161,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
     }
 
     private <T> void trackRegistration(final Id<T> id, final String registrationType, Registration<T> registration, final ConcurrentMap<Registration<?>, Id<?>> registrations) {
-        LOG.log(Level.FINER, registrationType + " Registration: " + id);
+        LOG.log(Level.FINER, () -> registrationType + " Registration: " + id);
         registrations.put(registration, id);
     }
 
@@ -258,13 +257,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
     }
 
     private <T> List<Supplier<T>> transformToBundleSuppliers(List<Supplier<T>> suppliers) {
-        return Lists.transform(suppliers, new Function<Supplier<T>, Supplier<T>>() {
-            @Nullable
-            @Override
-            public Supplier<T> apply(@Nullable Supplier<T> supplier) {
-                return new BundleSupplierWrapper<>(supplier);
-            }
-        });
+        return Lists.transform(suppliers, BundleSupplierWrapper::new);
     }
 
     private static <T> java.util.function.Supplier<? extends T> nativeSupplier(Supplier<T> delegate) {
@@ -293,7 +286,7 @@ class BundleRegistry implements BlockingSupplierRegistry, RegistryHook, OSGiRegi
         return ((SupplierWrapper<T>) supplier).getWrapped();
     }
 
-    <T> T injectAware(@Nullable T instance) {
+    private <T> T injectAware(@Nullable T instance) {
         if (instance instanceof Aware) {
             if (instance instanceof BundleAware) {
                 ((BundleAware) instance).setBundle(bundle);
