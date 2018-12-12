@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.javabits.yar</groupId>
     <artifactId>yar</artifactId>
-    <version>2.1-SNAPSHOT</version>
+    <version>3.0-SNAPSHOT</version>
     <properties>
         <java.compliance>11</java.compliance>
         <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
