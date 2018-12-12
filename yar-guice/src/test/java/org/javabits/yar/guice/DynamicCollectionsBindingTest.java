@@ -2,6 +2,7 @@ package org.javabits.yar.guice;
 
 import java.util.function.Supplier;
 import com.google.inject.*;
+import com.google.inject.Module;
 import com.google.inject.name.Names;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;

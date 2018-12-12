@@ -17,6 +17,7 @@
 package org.javabits.yar.guice;
 
 import com.google.inject.*;
+import com.google.inject.Module;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.junit.Test;
 
@@ -172,12 +173,7 @@ public class StandardBindingTest {
 
     @Singleton
     static class MySingletonCreation {
-        static ThreadLocal<Boolean> created = new ThreadLocal<Boolean>() {
-            @Override
-            protected Boolean initialValue() {
-                return FALSE;
-            }
-        };
+        static ThreadLocal<Boolean> created = ThreadLocal.withInitial(() -> FALSE);
 
         public MySingletonCreation() {
             created.set(TRUE);

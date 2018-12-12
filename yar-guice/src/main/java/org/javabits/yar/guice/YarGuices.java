@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import com.google.inject.Module;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.Id;
 import org.javabits.yar.Registry;

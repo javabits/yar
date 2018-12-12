@@ -86,7 +86,7 @@ public class OSGiYarsTest {
         assertThat(registryListenerHandler, is(injector.getInstance(type)));
     }
 
-    static interface IOSGiYarsTest {
+    interface IOSGiYarsTest {
 
     }
 

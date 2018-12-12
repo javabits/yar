@@ -17,10 +17,8 @@
 package org.javabits.yar.guice;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
-import com.google.common.util.concurrent.FutureCallback;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.javabits.yar.RegistryHook;
 
@@ -32,7 +30,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static com.google.common.util.concurrent.Futures.addCallback;
 
 /**
  * Date: 10/24/13
@@ -41,46 +38,59 @@ import static com.google.common.util.concurrent.Futures.addCallback;
 public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
     private static final Logger LOG = Logger.getLogger(ExecutionStrategy.class.getName());
 
-    private final Map<ListenableFuture<Void>, Callable<Void>> pendingTasks = Maps.newConcurrentMap();
+    private final Map<CompletableFuture<Void>, Callable<Void>> pendingTasks = Maps.newConcurrentMap();
 
-    abstract ListeningExecutorService executorService();
+    abstract Executor executor();
 
     public boolean hasPendingTasks() {
         return !pendingTasks.isEmpty();
     }
 
     public void addEndOfListenerUpdateTasksListener(final RegistryHook.EndOfListenerUpdateTasksListener pendingTaskLister) {
-        final Map<ListenableFuture<Void>, Callable<Void>> pendingTaskSnapshot = new ConcurrentHashMap<>(pendingTasks);
+        final Map<CompletableFuture<Void>, Callable<Void>> pendingTaskSnapshot = new ConcurrentHashMap<>(pendingTasks);
         if (pendingTaskSnapshot.isEmpty()) {
             pendingTaskLister.completed();
             return;
         }
-        for (final ListenableFuture<Void> future : pendingTaskSnapshot.keySet()) {
-            future.addListener(() -> {
+        for (final CompletableFuture<Void> future : pendingTaskSnapshot.keySet()) {
+            future.thenAcceptAsync(aVoid -> {
                 pendingTaskSnapshot.remove(future);
                 if (pendingTaskSnapshot.isEmpty())
                     pendingTaskLister.completed();
-            }, executorService());
+            }, executor());
         }
     }
 
-    public void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) throws InterruptedException {
+    public void execute(final List<Callable<Void>> tasks, final long timeout, final TimeUnit unit) {
         for (final Callable<Void> task : tasks) {
-            final ListenableFuture<Void> future = executorService().submit(task);
+            final CompletableFuture<Void> future = CompletableFuture.runAsync(new SafeRunnableAdapter(task), executor());
             pendingTasks.put(future, task);
-            future.addListener(() -> pendingTasks.remove(future), executorService());
-
-            addCallback(future, new FutureCallback<Void>() {
-                @Override
-                public void onSuccess(Void result) {
+            future.whenCompleteAsync((aVoid, throwable) -> pendingTasks.remove(future), executor());
+                    future.whenComplete((aVoid, throwable) -> {
+                if(throwable != null) {
+                    LOG.log(Level.SEVERE, String.format("Listener task failed: %s", task), throwable);
+                } else {
                     LOG.log(Level.FINE, ()-> String.format("Listener task succeeded : %s", task));
                 }
-
-                @Override
-                public void onFailure(Throwable t) {
-                    LOG.log(Level.SEVERE, String.format("Listener task failed: %s", task), t);
-                }
             });
+        }
+    }
+
+    static class SafeRunnableAdapter implements Runnable {
+        private final Callable<Void> task;
+
+        SafeRunnableAdapter(Callable<Void> task) {
+            this.task = task;
+        }
+
+        @Override
+        public void run() {
+            try {
+                task.call();
+            } catch (Exception e) {
+                Throwables.throwIfUnchecked(e);
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -122,31 +132,31 @@ public abstract class AbstractExecutionStrategy implements ExecutionStrategy {
 
     @VisibleForTesting
     private static class SameThread extends AbstractExecutionStrategy {
-        private final ListeningExecutorService executorService = MoreExecutors.newDirectExecutorService();
+        private final Executor executor = MoreExecutors.newDirectExecutorService();
 
         @Override
-        ListeningExecutorService executorService() {
-            return executorService;
+        Executor executor() {
+            return executor;
         }
     }
 
     private static class Parallel extends AbstractExecutionStrategy {
-        private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors
-                .newCachedThreadPool(new DaemonThreadFactory("parallel-listener-handler")));
+        private final Executor executor = Executors
+                .newCachedThreadPool(new DaemonThreadFactory("parallel-listener-handler"));
 
         @Override
-        ListeningExecutorService executorService() {
-            return executorService;
+        Executor executor() {
+            return executor;
         }
     }
 
     private static class Serialized extends AbstractExecutionStrategy {
-        private final ListeningExecutorService executorService = MoreExecutors.listeningDecorator(Executors
-                .newSingleThreadExecutor(new DaemonThreadFactory("serialized-listener-handler")));
+        private final Executor executor = Executors
+                .newSingleThreadExecutor(new DaemonThreadFactory("serialized-listener-handler"));
 
         @Override
-        ListeningExecutorService executorService() {
-            return executorService;
+        Executor executor() {
+            return executor;
         }
     }
 }
