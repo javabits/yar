@@ -12,7 +12,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.util.concurrent.Futures.getUnchecked;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 
-class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, SupplierWrapper<T> {
+class BlockingSupplierImpl<T> implements BlockingSupplier<T>, SupplierListener, SupplierWrapper<T>, com.google.common.base.Supplier<T> {
     private final AtomicReference<CompletableFuture<Supplier<T>>> supplierRef;
     private final Id<T> id;
     private final InternalRegistry registry;

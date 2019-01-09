@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.javabits.yar</groupId>
         <artifactId>yar-parent</artifactId>
-        <version>2.1-SNAPSHOT</version>
+        <version>3.0-SNAPSHOT</version>
         <relativePath>../yar-parent/pom.xml</relativePath>
     </parent>
 
@@ -79,7 +79,9 @@
                 <artifactId>maven-bundle-plugin</artifactId>
                 <configuration>
                     <instructions>
-                        <Import-Package>com.google.common.*;version=${guava.version},*</Import-Package>
+                        <Import-Package>com.google.common.*;version=${guava.version},javax.annotation;resolution:=optional,*</Import-Package>
+                        <!-- FIXME need to be removed when maven-bundle-plugin supports java 11 -->
+                        <_noee>true</_noee>
                     </instructions>
                 </configuration>
             </plugin>

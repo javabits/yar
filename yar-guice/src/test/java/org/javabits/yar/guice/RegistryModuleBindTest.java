@@ -18,6 +18,7 @@ package org.javabits.yar.guice;
 
 import com.google.common.reflect.TypeToken;
 import com.google.inject.*;
+import com.google.inject.Module;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;

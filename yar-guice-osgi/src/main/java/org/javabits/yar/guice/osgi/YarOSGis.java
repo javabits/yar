@@ -18,6 +18,7 @@ package org.javabits.yar.guice.osgi;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.*;
+import com.google.inject.Module;
 import com.google.inject.name.Names;
 import org.javabits.yar.BlockingSupplierRegistry;
 import org.javabits.yar.guice.RegistrationHandler;
@@ -119,10 +120,6 @@ public final class YarOSGis {
         attachStoppingListener(bundleContext, injector);
         initHandlers(registrationHandler, registryListenerHandler);
         return injector;
-    }
-
-    private static OSGiRegistry getBundleRegistryWrapper(Injector injector) {
-        return injector.getInstance(OSGiRegistry.class);
     }
 
     private static void initHandlers(RegistrationHandler registrationHandler, RegistryListenerHandler registryListenerHandler) {
