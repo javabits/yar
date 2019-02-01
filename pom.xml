@@ -5,7 +5,7 @@
     <artifactId>yar</artifactId>
     <version>3.1-SNAPSHOT</version>
     <properties>
-        <java.compliance>11</java.compliance>
+        <java.compliance>1.8</java.compliance>
         <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
         <!-- FIXME need to be updated when it will support java 11 -->
         <maven-bundle-plugin.version>3.5.1</maven-bundle-plugin.version>
