@@ -80,8 +80,6 @@
                 <configuration>
                     <instructions>
                         <Import-Package>com.google.common.*;version=${guava.version},javax.annotation;resolution:=optional,*</Import-Package>
-                        <!-- FIXME need to be removed when maven-bundle-plugin supports java 11 -->
-                        <_noee>true</_noee>
                     </instructions>
                 </configuration>
             </plugin>
