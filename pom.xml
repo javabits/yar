@@ -5,7 +5,7 @@
     <artifactId>yar</artifactId>
     <version>3.1-SNAPSHOT</version>
     <properties>
-        <java.compliance>11</java.compliance>
+        <java.compliance>1.8</java.compliance>
         <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
         <maven-bundle-plugin.version>4.1.0</maven-bundle-plugin.version>
         <maven-compiler-plugin.version>3.8.0</maven-compiler-plugin.version>
