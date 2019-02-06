@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.javabits.yar</groupId>
     <artifactId>yar</artifactId>
-    <version>3.1-SNAPSHOT</version>
+    <version>3.0.1.jre8</version>
     <properties>
         <java.compliance>1.8</java.compliance>
         <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
@@ -93,7 +93,7 @@
         <connection>scm:git:ssh://github.com/javabits/yar.git</connection>
         <developerConnection>scm:git:ssh://git@github.com/javabits/yar.git</developerConnection>
         <url>https://github.com/javabits/yar</url>
-        <tag>HEAD</tag>
+        <tag>yar-3.0.1.jre8</tag>
     </scm>
 
     <build>
